@@ -1,6 +1,5 @@
 from pyfann import libfann
 import hashlib
-import pyhash
 
 def train_network ():
     connection_rate = 1
@@ -41,26 +40,20 @@ def create_input_file(input):
     #Write the header "#of_cases #of_inputs #of_outputs
     f.write(str(len(input)) + ' 512 128\n')
     for word in input:
-        m = pyhash.murmur2_32()
-        fann_binary = convert_binary_to_FANN_format(change_to_binary(m(word), 16))
+        fann_binary = convert_binary_to_FANN_format(change_to_binary(hash_to_16_bits(word), 16))
         f.write(fann_binary + "\n")
         
         fann_binary = convert_binary_to_FANN_format(change_to_binary(pad_word(word), 16))
         f.write(fann_binary + "\n")
 
-    
-    
-#def read_hex_value_string(line):
-    #Find the value of the hex value encoded in the string
-#    value = ""
-#    index = 0
-#    chars = line.split(" ")
-#    for val in chars:
-#        if 
+  
+  #temporary so that we can prove our NN works.  
+def hash_to_16_bits(word):
+    return str(hash(word)&65535) #2^16 - 1
     
 def pad_word(hexword):
     #Pad the hex input to the hash function with 0's to make it 512 bits long
-    return hexword + ('0' * (128 - len(hexword)))
+    return hexword + ('0' * (16 - len(hexword)))
     
     
 def change_to_binary(original, current_base):
