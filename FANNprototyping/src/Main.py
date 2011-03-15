@@ -41,10 +41,10 @@ def create_input_file(input):
     for word in input:
         m = hashlib.md5()
         m.update(word)
-        fann_binary = convert_binary_to_FANN_format(change_to_binary(m.hexdigest()))
+        fann_binary = convert_binary_to_FANN_format(change_to_binary(m.hexdigest(), 16))
         f.write(fann_binary + "\n")
         
-        fann_binary = convert_binary_to_FANN_format(change_to_binary(pad_word(word)))
+        fann_binary = convert_binary_to_FANN_format(change_to_binary(pad_word(word), 16))
         f.write(fann_binary + "\n")
 
     
@@ -78,20 +78,21 @@ def convert_FANN_format_to_binary(fann_string):
     fann_string = fann_string.replace("1 ", "1")
     return fann_string
 
-#create_input_file(['aaa', 'bbb', '111'])
+create_input_file(['aaa', 'bbb', '111'])
 f = open('md5.data', 'r')
 #for line in f:
 #    read_hex_value_string(line)
 
-train_network()
-lastline = []
-params = True
-for line in f:
-    if params:
-        params = False
-        continue
-    lastline = line.split(" ")
-    print(len(lastline))
 
-lastline = [int(num_string) for num_string in lastline]
-test_network(lastline)
+#train_network()
+#lastline = []
+#params = True
+#for line in f:
+#    if params:
+#        params = False
+#        continue
+#    lastline = line.split(" ")
+#    print(len(lastline))
+#
+#lastline = [int(num_string) for num_string in lastline]
+#test_network(lastline)
