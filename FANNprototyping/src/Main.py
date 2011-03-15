@@ -41,35 +41,13 @@ def create_input_file(input):
     for word in input:
         m = hashlib.md5()
         m.update(word)
-        store_hex_as_binary(m.hexdigest(), f)
-        store_hex_as_binary(pad_word(word), f);
+        fann_binary = convert_binary_to_FANN_format(change_to_binary(m.hexdigest()))
+        f.write(fann_binary + "\n")
+        
+        fann_binary = convert_binary_to_FANN_format(change_to_binary(pad_word(word)))
+        f.write(fann_binary + "\n")
+
     
-def store_hex_as_binary(val, file):
-    #Store the hex value as 1's and -1's into the given file
-    first_char_written = False;
-    line_to_write = ""
-    for char in val:
-        if first_char_written:
-            line_to_write += " "
-        if char == '0' or char == '1' or char == '2' or char == '3' or char == '4' or char == '5' or char == '6' or char == '7':
-            line_to_write +=  "-1"
-        else:
-            line_to_write += "1"
-        if char == '0' or char == '1' or char == '2' or char == '3' or char == '8' or char == '9' or char == '10' or char == '11':
-            line_to_write += " -1"
-        else:
-            line_to_write += " 1"
-        if char == '0' or char == '1' or char == '4' or char == '5' or char == '8' or char == '9' or char == '12' or char == '13':
-            line_to_write += " -1"
-        else:
-            line_to_write += " 1"
-        if char == '0' or char == '2' or char == '4' or char == '6' or char == '8' or char == '10' or char == '12' or char == '14':
-            line_to_write += " -1"
-        else:
-            line_to_write += " 1"
-        first_char_written = True
-    file.write(line_to_write)
-    file.write('\n');
     
 #def read_hex_value_string(line):
     #Find the value of the hex value encoded in the string
@@ -83,6 +61,23 @@ def pad_word(hexword):
     #Pad the hex input to the hash function with 0's to make it 512 bits long
     return hexword + ('0' * (128 - len(hexword)))
     
+    
+def change_to_binary(original, current_base):
+    return bin(int(original, current_base))[2:]
+
+def change_to_hex(original, current_base):
+    return hex(int(original, current_base))
+
+def convert_binary_to_FANN_format(binary_string):
+    binary_string = binary_string.replace("1", "1 ")
+    binary_string = binary_string.replace("0", "-1 ")
+    return binary_string
+
+def convert_FANN_format_to_binary(fann_string):
+    fann_string = fann_string.replace("-1 ", "0")
+    fann_string = fann_string.replace("1 ", "1")
+    return fann_string
+
 #create_input_file(['aaa', 'bbb', '111'])
 f = open('md5.data', 'r')
 #for line in f:
