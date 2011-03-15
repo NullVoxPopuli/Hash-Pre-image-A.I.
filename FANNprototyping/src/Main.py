@@ -4,9 +4,9 @@ import hashlib
 def train_network ():
     connection_rate = 1
     learning_rate = 0.7
-    num_input = 512
-    num_neurons_hidden = 4
-    num_output = 128
+    num_input = 16
+    num_neurons_hidden = 128
+    num_output = 16
     
     desired_error = 0.0001
     max_iterations = 100000
@@ -30,6 +30,9 @@ def test_network (input):
     calc_out = ann.run(input)
     
     print(calc_out)
+    print(change_FANN_to_hex(calc_out))
+    
+    
 #    print("the input and the output are " + ( "the same" if (input == calc_out)  else "not the same"))
 
     ann.destroy()
@@ -38,12 +41,14 @@ def test_network (input):
 def create_input_file(input):
     f = open('md5.data', 'w')
     #Write the header "#of_cases #of_inputs #of_outputs
-    f.write(str(len(input)) + ' 512 128\n')
+    f.write(str(len(input)) + ' 16 16\n')
     for word in input:
-        fann_binary = convert_binary_to_FANN_format(change_to_binary(hash_to_16_bits(word), 16))
+        hashed_word = hash_to_16_bits(word)
+        print hashed_word
+        fann_binary = convert_binary_to_FANN_format(pad_word(change_to_binary(hashed_word, 10)))
         f.write(fann_binary + "\n")
         
-        fann_binary = convert_binary_to_FANN_format(change_to_binary(pad_word(word), 16))
+        fann_binary = convert_binary_to_FANN_format(pad_word(change_to_binary(word, 16)))
         f.write(fann_binary + "\n")
 
   
@@ -51,9 +56,9 @@ def create_input_file(input):
 def hash_to_16_bits(word):
     return str(hash(word)&65535) #2^16 - 1
     
-def pad_word(hexword):
+def pad_word(bin_word):
     #Pad the hex input to the hash function with 0's to make it 512 bits long
-    return hexword + ('0' * (16 - len(hexword)))
+    return bin_word + ('0' * (16 - len(bin_word)))
     
     
 def change_to_binary(original, current_base):
@@ -61,6 +66,17 @@ def change_to_binary(original, current_base):
 
 def change_to_hex(original, current_base):
     return hex(int(original, current_base))
+
+def change_FANN_to_hex(output_list):
+    for index, object in enumerate(output_list):
+        if (object == -1):
+            output_list[index] = 0
+
+    bin_string = ''
+    for element in output_list:
+        bin_string += str(int(element))
+    return change_to_hex(bin_string, 2)
+    
 
 def convert_binary_to_FANN_format(binary_string):
     binary_string = binary_string.replace("1", "1 ")
@@ -72,21 +88,10 @@ def convert_FANN_format_to_binary(fann_string):
     fann_string = fann_string.replace("1 ", "1")
     return fann_string
 
-create_input_file(['aaa', 'bbb', '111'])
-f = open('md5.data', 'r')
-#for line in f:
-#    read_hex_value_string(line)
 
+#create_input_file(['aaa', 'bbb', '111'])
 
 #train_network()
-#lastline = []
-#params = True
-#for line in f:
-#    if params:
-#        params = False
-#        continue
-#    lastline = line.split(" ")
-#    print(len(lastline))
-#
-#lastline = [int(num_string) for num_string in lastline]
-#test_network(lastline)
+
+#test_network([1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1, 1, -1, 1, -1, -1])
+test_network([1, -1, -1, 1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, -1])
