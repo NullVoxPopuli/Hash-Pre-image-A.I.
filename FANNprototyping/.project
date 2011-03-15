@@ -14,4 +14,10 @@
 	<natures>
 		<nature>org.python.pydev.pythonNature</nature>
 	</natures>
+	<variableList>
+		<variable>
+			<name>PYFANN</name>
+			<value>$%7BPROJECT_LOC%7D/pyfann</value>
+		</variable>
+	</variableList>
 </projectDescription>
