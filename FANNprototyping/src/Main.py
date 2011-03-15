@@ -1,5 +1,6 @@
 from pyfann import libfann
 import hashlib
+import pyhash
 
 def train_network ():
     connection_rate = 1
@@ -28,8 +29,9 @@ def test_network (input):
     ann.set_activation_function_output(libfann.THRESHOLD_SYMMETRIC)
 
     calc_out = ann.run(input)
-
-    print("the input and the output are " + ( "the same" if (input == calc_out)  else "not the same"))
+    
+    print(calc_out)
+#    print("the input and the output are " + ( "the same" if (input == calc_out)  else "not the same"))
 
     ann.destroy()
 
@@ -39,9 +41,8 @@ def create_input_file(input):
     #Write the header "#of_cases #of_inputs #of_outputs
     f.write(str(len(input)) + ' 512 128\n')
     for word in input:
-        m = hashlib.md5()
-        m.update(word)
-        fann_binary = convert_binary_to_FANN_format(change_to_binary(m.hexdigest(), 16))
+        m = pyhash.murmur2_32()
+        fann_binary = convert_binary_to_FANN_format(change_to_binary(m(word), 16))
         f.write(fann_binary + "\n")
         
         fann_binary = convert_binary_to_FANN_format(change_to_binary(pad_word(word), 16))
