@@ -1,15 +1,31 @@
-
+#include <stdio.h>
+#include <iostream>
 #include "fann_utils.h"
 
 using namespace std;
 
+int bits_in_a_nibble = 4;
+
+/*
+ Converts an ascii binary string to ascii hex 4 bits at a time
+ */
 string convert_binary_byte_to_hex(string binary_value, int number_of_bits)
 {
-    bitset<8> set(binary_value);	
     ostringstream result;
-    result << hex << set.to_ulong() << endl;
+
+    int number_of_nibbles = number_of_bits / 4;
+    
+    for (int i = 0; i < number_of_nibbles; i++)
+    {
+        cout << binary_value.substr(i * bits_in_a_nibble, bits_in_a_nibble) << "\n";
+        bitset<4> set(binary_value.substr(i * bits_in_a_nibble, bits_in_a_nibble));	
+        result << hex << set.to_ulong() << endl;
+    }
+
     return result.str();
 }
+
+
 
 // take from: 
 //http://stackoverflow.com/questions/3418231/c-replace-part-of-a-string-with-another-string

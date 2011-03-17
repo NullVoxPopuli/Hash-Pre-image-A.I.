@@ -73,10 +73,7 @@ int main (int argc, const char * argv[])
 //    
 //    fann_destroy(trained_network);
     
-    //cout << convert_binary_byte_to_hex("1111111100000000", 16);
-  //  cout << convert_binary_to_FANN_array("1001");
-//    cout << "\n";
-//    cout << convert_FANN_array_to_binary("1 1 -1 -1 1 1 ");
+    cout << convert_binary_byte_to_hex("1111111100000000", 16) << "\n";
+
     
-    cout << pad_word("a87f", 16);
 }
