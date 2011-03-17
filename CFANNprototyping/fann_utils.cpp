@@ -42,3 +42,15 @@ string convert_FANN_array_to_binary(string fann_array)
     
     return result;
 }
+
+string pad_word(string word_to_pad, int width)
+{
+    ostringstream result;
+    int padding_to_add = width - word_to_pad.length();
+    for (int i = 0; i < padding_to_add; i++)
+    {
+        result << "0";
+    }
+    result << word_to_pad;
+    return result.str();
+}
