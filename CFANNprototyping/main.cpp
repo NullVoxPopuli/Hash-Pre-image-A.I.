@@ -3,9 +3,15 @@
 #include <string>
 #include <bitset>
 #include <sstream>
+#include <algorithm>
+
 
 #include "fann.h"
 #include "floatfann.h"
+
+#include "main.h"
+#include "fann_utils.h"
+
 
 using namespace std;
 
@@ -13,24 +19,6 @@ const char* network_save_name = "network_float_save.net";
 const char* data_file_name = "data_file.fanndata";
 
 struct fann *trained_network;
-
-string convert_binary_to_hex(string binary_value, int number_of_bits)
-{
-    bitset<8> set(binary_value);	
-    ostringstream result;
-    result << hex << set.to_ulong() << endl;
-    return result.str();
-}
-
-string convert_binary_to_FANN_array(string binary_string)
-{
-    
-}
-
-string convert_FANN_array_to_binary(string fann_array)
-{
-    
-}
 
 void train_network()
 {
@@ -85,5 +73,8 @@ int main (int argc, const char * argv[])
 //    
 //    fann_destroy(trained_network);
     
-    cout << convert_binary_to_hex("1111111100000000", 16);
+    //cout << convert_binary_byte_to_hex("1111111100000000", 16);
+    cout << convert_binary_to_FANN_array("1001");
+    cout << "\n";
+    cout << convert_FANN_array_to_binary("1 1 -1 -1 1 1 ");
 }
