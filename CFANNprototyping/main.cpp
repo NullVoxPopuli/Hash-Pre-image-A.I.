@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include <string>
 #include <bitset>
 #include <sstream>
-#include <algorithm>
+#include <fstream>
+#include <time.h>
 
 
 #include "fann.h"
@@ -11,7 +13,6 @@
 
 #include "main.h"
 #include "fann_utils.h"
-
 
 using namespace std;
 
@@ -28,10 +29,11 @@ void train_network()
     const unsigned int num_layers = 3;
     const unsigned int num_neurons_hidden = 3;
     const float desired_error = (const float) 0.001;
-    const unsigned int max_epochs = 500000;
-    const unsigned int epochs_between_reports = 1000;
+    const unsigned int max_epochs = 1000;
+    const unsigned int epochs_between_reports = 100;
     struct fann *ann = fann_create_standard(num_layers, num_input,
                                             num_neurons_hidden, num_output);
+    
     fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
     fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
     fann_train_on_file(ann, data_file_name, max_epochs,
@@ -63,9 +65,44 @@ void test_network()
 
 }
 
+//http://stackoverflow.com/questions/5354194/how-do-i-change-the-default-local-time-format-in-c
+string get_current_time()
+{
+    time_t rawtime;
+    struct tm * timeinfo;
+    
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    
+    char output[30];
+    strftime(output, 30, "%Y %m-%d %H-%M-%S %a", timeinfo);
+    
+    return string(output);
+}
+
+
+
 int main (int argc, const char * argv[])
 {
-//    train_network();
+    
+    
+    string fname = get_current_time();
+    fname.append(".txt");
+    char *filename = (char*)fname.c_str();
+
+    FILE  *fs;
+    cout << "File name for this run is going to be: " << filename << "\n";
+    
+    //cout.rdbuf(fs.rdbuf()); // redirect cout
+    
+    if((fs=freopen(filename, "w" ,stdout)) == NULL) {
+        printf("Cannot open file.\n");
+        exit(1);
+    }
+    
+    
+    
+    train_network();
 //    
 //    load_trained_network()
 //    
@@ -73,7 +110,7 @@ int main (int argc, const char * argv[])
 //    
 //    fann_destroy(trained_network);
     
-    cout << convert_binary_byte_to_hex("1111111100000000", 16) << "\n";
+//    cout << convert_binary_byte_to_hex("1111111100000000", 16) << "\n";
 
     
 }
