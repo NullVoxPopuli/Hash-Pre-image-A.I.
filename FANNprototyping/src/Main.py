@@ -5,16 +5,17 @@ def train_network ():
     connection_rate = .5
     learning_rate = .7
     num_input = 16
-    num_neurons_hidden = 1500
+    num_neurons_hidden = 1000
     num_output = 16
     
     desired_error = 0.0001
     max_iterations = 1000
-    iterations_between_reports = 100
+    iterations_between_reports = 50
     
     ann = libfann.neural_net()
     ann.create_sparse_array(connection_rate, (num_input, num_neurons_hidden, num_output))
     ann.set_learning_rate(learning_rate)
+    ann.set_training_algorithm(libfann.TRAIN_BATCH)
     ann.set_activation_function_hidden(libfann.SIGMOID_SYMMETRIC)
     ann.set_activation_function_output(libfann.SIGMOID_SYMMETRIC)
     
@@ -40,16 +41,16 @@ def test_network (input):
     ann.destroy()
 
 def create_input_file(numberOfValues):
-    f = open('sixteen_bit_hexes.data', 'w')
+    f = open('/home/skaggskd/workspace/FANNtest/sixteen.data', 'w')
     max = 65535
     i = 0
     f.write(str(numberOfValues) + ' 16 16\n')
     while (i < numberOfValues):
         i += 1
-        value_to_use = hex(randint(0, max))
+        value_to_use = str(randint(0, max))
         hashed_value = hash_to_16_bits(value_to_use)
         fann_binary_input = convert_binary_to_FANN_format(pad_word(change_to_binary(hashed_value, 10)))
-        fann_binary_output = convert_binary_to_FANN_format(pad_word(change_to_binary(value_to_use, 16)))
+        fann_binary_output = convert_binary_to_FANN_format(pad_word(change_to_binary(value_to_use, 10)))
         f.write(fann_binary_input + '\n')
         f.write(fann_binary_output + '\n')
         
@@ -71,7 +72,15 @@ def create_input_file(numberOfValues):
   
 #temporary so that we can prove our NN works.  
 def hash_to_16_bits(word):
-    return str(hash(word)&65535) #2^16 - 1
+    hash = str(myhash(word))
+    print(hex(int(word, 10)) + ' -> ' + hex(int(hash, 10)))
+    return hash #2^16 - 1
+
+def myhash(word):
+    firsthalf = int(word, 10) >> 8
+    secondhalf = int(word, 10) & 0x00ff
+    secondhalf |= firsthalf
+    return (secondhalf << 8 | firsthalf)
     
 def pad_word(bin_word):
     #Pad the hex input to the hash function with 0's to make it 512 bits long
@@ -115,9 +124,9 @@ def convert_FANN_format_to_binary(fann_string):
     return fann_string
 
 
-#create_input_file(10000)
+create_input_file(5000)
 
-train_network()
+#train_network()
 
 #test_network('1234')
 #test_network([1, -1, -1, 1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, -1])
