@@ -41,17 +41,21 @@ def test_network (input):
     ann.destroy()
 
 def create_input_file(numberOfValues):
-    f = open('/home/skaggskd/workspace/FANNtest/sixteen.data', 'w')
-    max = 65535
+    f = open('/home/skaggskd/workspace/FANNtest/data_file.fanndata', 'w')
+    max = 256
     i = 0
-    f.write(str(numberOfValues) + ' 16 16\n')
-    while (i < numberOfValues):
+    f.write(str(numberOfValues) + ' 8 8\n')
+#    while (i < numberOfValues):
+    for value_to_use in range(256):
         i += 1
-        value_to_use = str(randint(0, max))
+#        value_to_use = str(randint(0, max))
+        value_to_use = str(value_to_use)
         hashed_value = hash_to_16_bits(value_to_use)
         fann_binary_input = convert_binary_to_FANN_format(pad_word(change_to_binary(hashed_value, 10)))
         fann_binary_output = convert_binary_to_FANN_format(pad_word(change_to_binary(value_to_use, 10)))
+#        f.write(hex(int(value_to_use, 10)) + '\n')
         f.write(fann_binary_input + '\n')
+#        f.write(hex(int(hashed_value, 10)) + '\n')
         f.write(fann_binary_output + '\n')
         
 
@@ -77,14 +81,14 @@ def hash_to_16_bits(word):
     return hash #2^16 - 1
 
 def myhash(word):
-    firsthalf = int(word, 10) >> 8
-    secondhalf = int(word, 10) & 0x00ff
+    secondhalf = int(word, 10) >> 4
+    firsthalf = int(word, 10) & 0x0f
     secondhalf |= firsthalf
-    return (secondhalf << 8 | firsthalf)
+    return (firsthalf << 4 | secondhalf)
     
 def pad_word(bin_word):
     #Pad the hex input to the hash function with 0's to make it 512 bits long
-    return ('0' * (16 - len(bin_word))) + bin_word
+    return ('0' * (8 - len(bin_word))) + bin_word
     
     
 def change_to_binary(original, current_base):
@@ -106,7 +110,7 @@ def change_FANN_to_hex(output_list):
 
 def convert_binary_to_FANN_format(binary_string):
     binary_string = binary_string.replace("1", "1 ")
-    binary_string = binary_string.replace("0", "-1 ")
+    binary_string = binary_string.replace("0", "0 ")
     return binary_string
 #test_network('AAAA')
 def convert_binary_to_FANN_list(binary_string):
@@ -124,7 +128,7 @@ def convert_FANN_format_to_binary(fann_string):
     return fann_string
 
 
-create_input_file(5000)
+create_input_file(256)
 
 #train_network()
 
