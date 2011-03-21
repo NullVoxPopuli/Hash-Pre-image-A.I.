@@ -10,5 +10,5 @@ main.o: src/main.cpp src/main.h
 	g++ -c src/main.cpp
 
 clean: 
-	rm -rf src/*o cfann
-	rm -rf *o cfann
+	rm -rf src/*o
+	rm -rf *o
