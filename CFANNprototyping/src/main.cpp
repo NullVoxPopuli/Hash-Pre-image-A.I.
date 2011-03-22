@@ -27,12 +27,12 @@ void train_network()
     const unsigned int num_input = 8;
     const unsigned int num_output = 8;
     const unsigned int num_layers = 4;
-    const unsigned int num_neurons_hidden = 17;
+    const unsigned int num_neurons_hidden = 16;
     const float desired_error = (const float) 0.001;
     const unsigned int max_epochs = 10000;
     const unsigned int epochs_between_reports = 500;
     struct fann *ann = fann_create_standard(num_layers, num_input,
-                                            num_neurons_hidden, 9, num_output);
+                                            num_neurons_hidden, 16, num_output);
     
     fann_set_activation_function_hidden(ann, FANN_LINEAR);
     fann_set_activation_function_output(ann, FANN_GAUSSIAN_SYMMETRIC);
@@ -134,6 +134,39 @@ int main (int argc, const char * argv[])
 			{
 				// bypasses all functions, used for testing single functions
 				BYPASS_EVERYTHING = true;
+			}
+			else if (strcmp(argv[i], "-i") == 0) // input
+			{
+				
+			}
+			else if (strcmp(argv[i], "-nin") == 0) // # input neurons
+			{
+				
+			}
+			else if (strcmp(argv[i], "-non") == 0) // # output neurons
+			{
+				
+			}
+			else if (strcmp(argv[i], "-nl") == 0) // # layers
+			{
+				
+			}
+			else if (strcmp(argv[i], "-nnil") == 0) // number of neurons in each layer
+			{
+				// should be formatted 8,16,6,8
+				// as in in,middle,middle,out
+			}
+			else if (strcmp(argv[i], "-de") == 0) // desired error
+			{
+				
+			}
+			else if (strcmp(argv[i], "-epochs") == 0) // max epochs
+			{
+				
+			}
+			else if (strcmp(argv[i], "-reports") == 0) // reports every number of epochs
+			{
+				
 			}
 			else
 			{
