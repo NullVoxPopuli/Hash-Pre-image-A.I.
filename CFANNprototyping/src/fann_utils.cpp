@@ -1,10 +1,44 @@
 #include <stdio.h>
 #include <iostream>
+#include "fann.h"
+#include "floatfann.h"
+
 #include "fann_utils.h"
+
 
 using namespace std;
 
 int bits_in_a_nibble = 4;
+
+unsigned char convert_fann_out_to_binary(fann_type * net_out, int len)
+{
+	ostringstream str_result;
+	unsigned char result = 0;
+	int neuron_output;
+	for (int i = 0; i < len; i++)
+	{
+		if (net_out[i] > 0.5)
+			neuron_output = 1;
+		else
+			neuron_output = 0;
+			
+		str_result << neuron_output;
+	}
+	const char * out = str_result.str().c_str();\
+	char * end; // throwaway
+	return strtol(out, &end, 2);
+}
+
+/*
+	Developed by Kenny Skaggs for initial hash testing
+*/
+unsigned char kennys_hash(unsigned char out)
+{
+	char first_half = out >> 4;
+	char second_half = out & 0x0f;
+	second_half |= first_half;
+	return ( second_half << 4 | first_half );
+}
 
 /*
  Converts an ascii binary string to ascii hex 4 bits at a time

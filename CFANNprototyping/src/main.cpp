@@ -67,19 +67,27 @@ void test_network()
     fann_type input[8];
     
     
-    input[0] = 1;
-    input[1] = 1;
-	input[2] = 1;
-	input[3] = 1;
-	input[4] = 1;
-	input[5] = 1;
-	input[6] = 1;
+    input[0] = 0;
+    input[1] = 0;
+	input[2] = 0;
+	input[3] = 0;
+	input[4] = 0;
+	input[5] = 0;
+	input[6] = 0;
 	input[7] = 1;
     calc_out = fann_run(trained_network, input);
 
     // printf("xor test (%f,%f) -> %f\n", input[0], input[1], calc_out[0]);
 	cout << "Input: " << convert_array_to_string(input, 8) << "\n";
 	cout << "Output: " << convert_array_to_string(calc_out, 8) << "\n";
+	
+	unsigned char output_binary = convert_fann_out_to_binary(calc_out, 8);
+	unsigned char hashed = kennys_hash(output_binary);
+	
+	
+	
+	printf("Output: %d, Which hashes back to: %x", output_binary, hashed);
+	
 }
 
 //http://stackoverflow.com/questions/5354194/how-do-i-change-the-default-local-time-format-in-c
@@ -110,17 +118,22 @@ int main (int argc, const char * argv[])
 	{
 		for (int i = 1; i < argc; i++)
 		{
-			if (strcmp(argv[i], "-test"))
+			if (strcmp(argv[i], "-test") == 0)
 			{
 				NEED_TO_TEST = true;
 			}
-			else if (strcmp(argv[i], "-train"))
+			else if (strcmp(argv[i], "-train") == 0)
 			{
 				NEED_TO_TRAIN = true;
 			}
-			else if (strcmp(argv[i], "-file"))
+			else if (strcmp(argv[i], "-file") == 0)
 			{
 				OUTPUT_TO_FILE = true;
+			}
+			else if (strcmp(argv[i], "-bypass") == 0)
+			{
+				// bypasses all functions, used for testing single functions
+				BYPASS_EVERYTHING = true;
 			}
 			else
 			{
@@ -129,34 +142,39 @@ int main (int argc, const char * argv[])
 		}
 	}
 	
-
-	// actually begin executing
-    string fname = get_current_time();
-    fname.append(".txt");
-	// fname = "output/".append(fname);
-    char *filename = (char*)fname.c_str();
-	
-    FILE  *fs;
-    if (OUTPUT_TO_FILE)
+	if (!BYPASS_EVERYTHING)
 	{
-		cout << "File name for this run is going to be: " << filename << "\n";
-    
-	    //cout.rdbuf(fs.rdbuf()); // redirect cout
-    
-	    if((fs=freopen(filename, "w" ,stdout)) == NULL) {
-	        printf("Cannot open file.\n");
-	        exit(1);
-	    }
-	
-	}
+		// actually begin executing
+	    string fname = get_current_time();
+	    fname.append(".txt");
+		// fname = "output/".append(fname);
+	    char *filename = (char*)fname.c_str();
 
-    
-    if (NEED_TO_TRAIN) train_network();
-    if (NEED_TO_TEST)
-	{
-		load_trained_network();
-		test_network();     
-		fann_destroy(trained_network);
+	    FILE  *fs;
+	    if (OUTPUT_TO_FILE)
+		{
+			cout << "File name for this run is going to be: " << filename << "\n";
+
+		    if((fs=freopen(filename, "w" ,stdout)) == NULL) {
+		        printf("Cannot open file.\n");
+		        exit(1);
+		    }
+
+		}
+
+
+	    if (NEED_TO_TRAIN) train_network();
+	    if (NEED_TO_TEST)
+		{
+			load_trained_network();
+			test_network();     
+			fann_destroy(trained_network);
+		}
 	}
+	else
+	{
+		cout << kennys_hash(1) << "\n";
+	}
+	
 
 }
