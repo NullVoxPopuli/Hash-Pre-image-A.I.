@@ -26,18 +26,16 @@ void train_network()
     printf("Training ... \n");
     const unsigned int num_input = 8;
     const unsigned int num_output = 8;
-    const unsigned int num_layers = 4;
+    const unsigned int num_layers = 5;
     const unsigned int num_neurons_hidden = 16;
-    const float desired_error = (const float) 0.001;
-    const unsigned int max_epochs = 10000;
-    const unsigned int epochs_between_reports = 500;
+
     struct fann *ann = fann_create_standard(num_layers, num_input,
-                                            num_neurons_hidden, 16, num_output);
-    
+                                            num_neurons_hidden,16, 8, num_output);
+	fann_set_learning_rate(ann, LEARNING_RATE);
     fann_set_activation_function_hidden(ann, FANN_LINEAR);
     fann_set_activation_function_output(ann, FANN_GAUSSIAN_SYMMETRIC);
-    fann_train_on_file(ann, data_file_name, max_epochs,
-                       epochs_between_reports, desired_error);
+    fann_train_on_file(ann, data_file_name, MAX_EPOCHS,
+                       REPORT_EVERY, DESIRED_ERROR);
     fann_save(ann, network_save_name);
     fann_destroy(ann);
     
@@ -84,9 +82,7 @@ void test_network()
 	unsigned char output_binary = convert_fann_out_to_binary(calc_out, 8);
 	unsigned char hashed = kennys_hash(output_binary);
 	
-	
-	
-	printf("Output: %d, Which hashes back to: %x", output_binary, hashed);
+	printf("Output: %d, Which hashes back to: %x\n\n", output_binary, hashed);
 	
 }
 
@@ -158,15 +154,19 @@ int main (int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-de") == 0) // desired error
 			{
-				
+				DESIRED_ERROR = atoi(argv[i + 1]);
+			}
+			else if (strcmp(argv[i], "-lrate") == 0) // learning rate
+			{
+				LEARNING_RATE = atoi(argv[i + 1]);
 			}
 			else if (strcmp(argv[i], "-epochs") == 0) // max epochs
 			{
-				
+				MAX_EPOCHS = atoi(argv[i + 1]);
 			}
 			else if (strcmp(argv[i], "-reports") == 0) // reports every number of epochs
 			{
-				
+				REPORT_EVERY = atoi(argv[i + 1]);
 			}
 			else
 			{
