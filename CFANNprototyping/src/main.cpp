@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
+
 #include <iostream>
-#include <string>
 #include <bitset>
 #include <sstream>
 #include <fstream>
@@ -16,8 +14,7 @@
 
 using namespace std;
 
-const char* network_save_name = "network_float_save.net";
-const char* data_file_name = "8bithash.fanndata";
+
 
 struct fann *trained_network;
 
@@ -26,16 +23,19 @@ void train_network()
     printf("Training ... \n");
     const unsigned int num_input = 8;
     const unsigned int num_output = 8;
-    const unsigned int num_layers = 5;
+    const unsigned int num_layers = 4;
     const unsigned int num_neurons_hidden = 16;
 
     struct fann *ann = fann_create_standard(num_layers, num_input,
-                                            num_neurons_hidden,16, 8, num_output);
+                                                 num_neurons_hidden, 8, num_output);
+
+	// struct fann *ann = fann_create_shortcut(3, 8, 16, 8);
+
 	fann_set_learning_rate(ann, LEARNING_RATE);
     fann_set_activation_function_hidden(ann, FANN_LINEAR);
     fann_set_activation_function_output(ann, FANN_GAUSSIAN_SYMMETRIC);
-    fann_train_on_file(ann, data_file_name, MAX_EPOCHS,
-                       REPORT_EVERY, DESIRED_ERROR);
+    fann_train_on_file(ann, data_file_name, MAX_EPOCHS, REPORT_EVERY, DESIRED_ERROR);
+	// fann_cascadetrain_on_file(ann, data_file_name, 200, 1, DESIRED_ERROR);
     fann_save(ann, network_save_name);
     fann_destroy(ann);
     
@@ -62,26 +62,16 @@ void test_network()
     printf("Running trained network ... \n ");
     
     fann_type *calc_out;
-    fann_type input[8];
-    
-    
-    input[0] = 0;
-    input[1] = 0;
-	input[2] = 0;
-	input[3] = 0;
-	input[4] = 0;
-	input[5] = 0;
-	input[6] = 0;
-	input[7] = 1;
-    calc_out = fann_run(trained_network, input);
+
+    calc_out = fann_run(trained_network, fann_input);
 
     // printf("xor test (%f,%f) -> %f\n", input[0], input[1], calc_out[0]);
-	cout << "Input: " << convert_array_to_string(input, 8) << "\n";
+	cout << "Input: " << convert_array_to_string(fann_input, 8) << "\n";
 	cout << "Output: " << convert_array_to_string(calc_out, 8) << "\n";
 	
 	unsigned char output_binary = convert_fann_out_to_binary(calc_out, 8);
 	unsigned char hashed = kennys_hash(output_binary);
-	
+
 	printf("Output: %d, Which hashes back to: %x\n\n", output_binary, hashed);
 	
 }
@@ -114,9 +104,20 @@ int main (int argc, const char * argv[])
 	{
 		for (int i = 1; i < argc; i++)
 		{
+			if (argv[i][0] != '-') continue;
+			
 			if (strcmp(argv[i], "-test") == 0)
 			{
 				NEED_TO_TEST = true;
+				// next var is going to be the input
+
+				char temp_array[8];
+				strcpy(temp_array, argv[i + 1]);
+				
+				for(int j = 0; j < 8; j++)
+				{
+					fann_input[j] = (float)(temp_array[j] - '0');
+				}
 			}
 			else if (strcmp(argv[i], "-train") == 0)
 			{
@@ -172,7 +173,9 @@ int main (int argc, const char * argv[])
 			{
 				cout << "Argument not recognized: " << argv[i] << "\n";
 			}
+			
 		}
+		
 	}
 	
 	if (!BYPASS_EVERYTHING)
@@ -180,8 +183,10 @@ int main (int argc, const char * argv[])
 		// actually begin executing
 	    string fname = get_current_time();
 	    fname.append(".txt");
-		// fname = "output/".append(fname);
+
+
 	    char *filename = (char*)fname.c_str();
+
 
 	    FILE  *fs;
 	    if (OUTPUT_TO_FILE)
@@ -194,7 +199,7 @@ int main (int argc, const char * argv[])
 		    }
 
 		}
-
+		
 
 	    if (NEED_TO_TRAIN) train_network();
 	    if (NEED_TO_TEST)
@@ -203,6 +208,7 @@ int main (int argc, const char * argv[])
 			test_network();     
 			fann_destroy(trained_network);
 		}
+		
 	}
 	else
 	{

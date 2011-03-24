@@ -34,10 +34,11 @@ unsigned char convert_fann_out_to_binary(fann_type * net_out, int len)
 */
 unsigned char kennys_hash(unsigned char out)
 {
-	char first_half = out >> 4;
-	char second_half = out & 0x0f;
+	char second_half = out >> 4;
+	char first_half = out & 0x0fu;
+
 	second_half |= first_half;
-	return ( second_half << 4 | first_half );
+	return ( first_half << 4 | second_half );
 }
 
 /*
@@ -105,3 +106,7 @@ string pad_word(string word_to_pad, int width)
     return result.str();
 }
 
+void generate_train_file()
+{
+	
+}
