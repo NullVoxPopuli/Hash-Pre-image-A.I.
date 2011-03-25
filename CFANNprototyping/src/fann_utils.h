@@ -15,3 +15,4 @@ string convert_binary_to_FANN_array(string binary_string);
 string convert_FANN_array_to_binary(string fann_array);
 
 string pad_word(string word_to_pad, int width);
+void generate_train_file();

@@ -1,9 +1,13 @@
 #include <stdio.h>
+#include <fstream>
 #include <iostream>
+#include <bitset>
+
 #include "fann.h"
 #include "floatfann.h"
 
 #include "fann_utils.h"
+#include "config.h"
 
 
 using namespace std;
@@ -79,7 +83,7 @@ string convert_binary_to_FANN_array(string binary_string)
     string result = binary_string;
     
     replaceAll(result, "1", "1 ");
-    replaceAll(result, "0", "-1 ");
+    replaceAll(result, "0", "0 ");
     
     return result;
 }
@@ -88,7 +92,7 @@ string convert_FANN_array_to_binary(string fann_array)
 {
     string result = fann_array;
     
-    replaceAll(result, "-1 ", "0");
+    replaceAll(result, "0 ", "0");
     replaceAll(result, "1 ", "1");
     
     return result;
@@ -108,5 +112,29 @@ string pad_word(string word_to_pad, int width)
 
 void generate_train_file()
 {
+	cout << "Generating training file ... \n";
+	int max_num_data = 256;
+	ofstream file;
+	file.open(DATA_FILE_NAME);
+	unsigned char cur_value = 0x00u;
 	
+	file << max_num_data << " " << 8 << " " << 8 << "\n";
+	
+	for(int i = 0; i < max_num_data; i++)
+	{
+		bitset<8> bits_hash(kennys_hash(cur_value));
+		bitset<8> bits_value(cur_value);
+		if (cur_value == 254)
+		{
+			cout << bits_hash << "\n";
+				cout << bits_value << "\n";
+		}
+		file << convert_binary_to_FANN_array(bits_hash.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
+		file << convert_binary_to_FANN_array(bits_value.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
+		cur_value++;
+		
+	}
+	file.close();
+	
+	cout << "Done\n\n";
 }

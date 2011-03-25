@@ -9,8 +9,9 @@
 #include "fann.h"
 #include "floatfann.h"
 
-#include "main.h"
+#include "config.h"
 #include "fann_utils.h"
+#include "main.h"
 
 using namespace std;
 
@@ -34,16 +35,16 @@ void train_network()
 	fann_set_learning_rate(ann, LEARNING_RATE);
     fann_set_activation_function_hidden(ann, FANN_LINEAR);
     fann_set_activation_function_output(ann, FANN_GAUSSIAN_SYMMETRIC);
-    fann_train_on_file(ann, data_file_name, MAX_EPOCHS, REPORT_EVERY, DESIRED_ERROR);
+    fann_train_on_file(ann, DATA_FILE_NAME, MAX_EPOCHS, REPORT_EVERY, DESIRED_ERROR);
 	// fann_cascadetrain_on_file(ann, data_file_name, 200, 1, DESIRED_ERROR);
-    fann_save(ann, network_save_name);
+    fann_save(ann, NETWORK_SAVE_NAME);
     fann_destroy(ann);
     
 }
 
 void load_trained_network()
 {
-    trained_network = fann_create_from_file(network_save_name);
+    trained_network = fann_create_from_file(NETWORK_SAVE_NAME);
 
 }
 
@@ -118,6 +119,10 @@ int main (int argc, const char * argv[])
 				{
 					fann_input[j] = (float)(temp_array[j] - '0');
 				}
+			}
+			else if (strcmp(argv[i], "-genTrain") == 0)
+			{
+				GENERATE_TRAIN_DATA = true;
 			}
 			else if (strcmp(argv[i], "-train") == 0)
 			{
@@ -200,7 +205,7 @@ int main (int argc, const char * argv[])
 
 		}
 		
-
+		if (GENERATE_TRAIN_DATA) generate_train_file();
 	    if (NEED_TO_TRAIN) train_network();
 	    if (NEED_TO_TEST)
 		{
