@@ -14,7 +14,7 @@ using namespace std;
 
 int bits_in_a_nibble = 4;
 
-unsigned char convert_fann_out_to_binary(fann_type * net_out, int len)
+unsigned short convert_fann_out_to_binary(fann_type * net_out, int len)
 {
 	ostringstream str_result;
 	unsigned char result = 0;
@@ -43,6 +43,22 @@ unsigned char kennys_hash(unsigned char out)
 
 	second_half |= first_half;
 	return ( first_half << 4 | second_half );
+}
+
+unsigned short kennys_hash_16(unsigned short out)
+{
+	unsigned char lookup[] = {0x01u, 0x0fu, 0xfcu, 0xe9u, 0x50u, 0x22u, 0xa3u, 0x8au};
+	
+	short second_half = out >> 8;
+	short first_half = out & 0x00ffu;
+	
+	short lookup_index = second_half >> 5;
+
+	second_half |= first_half;
+	
+	first_half |= lookup[lookup_index];
+	
+	return ( first_half << 8 | second_half );
 }
 
 /*
@@ -113,22 +129,18 @@ string pad_word(string word_to_pad, int width)
 void generate_train_file()
 {
 	cout << "Generating training file ... \n";
-	int max_num_data = 256;
+	int max_num_data = 65535;
 	ofstream file;
 	file.open(DATA_FILE_NAME);
-	unsigned char cur_value = 0x00u;
+	unsigned char cur_value = 0x0000u;
 	
-	file << max_num_data << " " << 8 << " " << 8 << "\n";
+	file << max_num_data << " " << hash_width_in_bits << " " << hash_width_in_bits << "\n";
 	
 	for(int i = 0; i < max_num_data; i++)
 	{
-		bitset<8> bits_hash(kennys_hash(cur_value));
-		bitset<8> bits_value(cur_value);
-		if (cur_value == 254)
-		{
-			cout << bits_hash << "\n";
-				cout << bits_value << "\n";
-		}
+		bitset<16> bits_hash(kennys_hash_16(cur_value));
+		bitset<16> bits_value(cur_value);
+
 		file << convert_binary_to_FANN_array(bits_hash.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
 		file << convert_binary_to_FANN_array(bits_value.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
 		cur_value++;
