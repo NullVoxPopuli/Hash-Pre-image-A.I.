@@ -102,7 +102,7 @@ string pad_word(string word_to_pad, int width)
 void generate_train_file()
 {
 	cout << "Generating training file ... \n";
-	int max_num_data = 100000000;
+	int max_num_data = 10000000;
 	ofstream file;
 	file.open(DATA_FILE_NAME);
 	unsigned int cur_value = 0x00000000u;
