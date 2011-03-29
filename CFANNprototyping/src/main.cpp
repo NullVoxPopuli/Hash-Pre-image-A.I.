@@ -11,6 +11,7 @@
 
 #include "config.h"
 #include "fann_utils.h"
+#include "hashes.h"
 #include "main.h"
 
 using namespace std;
@@ -23,12 +24,12 @@ void train_network()
 {
     printf("Training ... \n");
     const unsigned int num_input = hash_width_in_bits;
-    const unsigned int num_output = 16;
+    const unsigned int num_output = 32;
     const unsigned int num_layers = 4;
-    const unsigned int num_neurons_hidden = 16;
+    const unsigned int num_neurons_hidden = 32;
 
     struct fann *ann = fann_create_standard(num_layers, num_input,
-                                                 num_neurons_hidden, 16, num_output);
+                                                 num_neurons_hidden, num_neurons_hidden, num_output);
 
 	// struct fann *ann = fann_create_shortcut(3, 8, 16, 8);
 
@@ -70,8 +71,8 @@ void test_network()
 	cout << "Input: " << convert_array_to_string(fann_input, hash_width_in_bits) << "\n";
 	cout << "Output: " << convert_array_to_string(calc_out, hash_width_in_bits) << "\n";
 	
-	unsigned short output_binary = convert_fann_out_to_binary(calc_out, hash_width_in_bits);
-	unsigned short hashed = kennys_hash_16(output_binary);
+	unsigned int output_binary = convert_fann_out_to_binary(calc_out, hash_width_in_bits);
+	unsigned int hashed = MurmurHash(output_binary, hash_width_in_bits, 0);
 
 	printf("Output: ... meh, Which hashes back to: %x\n\n", hashed);
 	
@@ -217,7 +218,7 @@ int main (int argc, const char * argv[])
 	}
 	else
 	{
-		cout << kennys_hash(1) << "\n";
+		cout << "Nothing here at the moment...\n\n";
 	}
 	
 
