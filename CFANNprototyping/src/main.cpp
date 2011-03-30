@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <time.h>
+#include <string.h>
 
 
 #include "fann.h"
@@ -39,7 +40,111 @@ void train_network()
 	// fann_cascadetrain_on_file(ann, data_file_name, 200, 1, DESIRED_ERROR);
     fann_save(ann, NETWORK_SAVE_NAME);
     fann_destroy(ann);
-    
+}
+
+void train_network_no_file()
+{
+	printf("Training without file ... \n");
+    const unsigned int num_input = 8;
+    const unsigned int num_output = 8;
+    const unsigned int num_layers = 4;
+    const unsigned int num_neurons_hidden = 16;
+
+    float error = DESIRED_ERROR + 1;
+    unsigned int epoch = 0;
+    int desired_error_reached;
+    int acceptable = false;
+
+    struct fann *ann = fann_create_standard(num_layers, num_input,
+                                                 num_neurons_hidden, 8, num_output);
+
+	fann_set_learning_rate(ann, LEARNING_RATE);
+    fann_set_activation_function_hidden(ann, FANN_LINEAR);
+    fann_set_activation_function_output(ann, FANN_GAUSSIAN_SYMMETRIC);
+
+    while (!acceptable && epoch < MAX_EPOCHS)
+    {
+		for(epoch = 0; epoch <= MAX_EPOCHS; epoch++)
+		{
+			struct fann_train_data *data = generate_data(num_input, num_output, 200, 0, pow(2, hash_width_in_bits));
+			error = fann_train_epoch(ann, data);
+			fann_destroy_train(data);
+			desired_error_reached = fann_desired_error_reached(ann, DESIRED_ERROR);
+
+			if(epoch % REPORT_EVERY == 0 || epoch == MAX_EPOCHS || epoch == 1 ||
+						desired_error_reached == 0)
+					{
+						printf("Epochs     %8d. Current error: %.10f. Bit fail %d.\n", epoch, error,
+							   ann->num_bit_fail);
+					}
+
+			if(desired_error_reached == 0)
+				break;
+		}
+
+		struct fann_train_data *data = generate_data(num_input, num_output, 600, 0, 2^hash_width_in_bits);
+		error = fann_train_epoch(ann, data);
+		if (fann_desired_error_reached(ann, DESIRED_ERROR))
+		{
+			acceptable = true;
+		}
+    }
+
+    fann_save(ann, NETWORK_SAVE_NAME);
+    fann_destroy(ann);
+}
+
+struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_output, unsigned int num_pairs, unsigned int min_value, unsigned int max_value)
+{
+	struct fann_train_data *data = (struct fann_train_data *) malloc(sizeof(struct fann_train_data));
+	fann_init_error_data((struct fann_error *) data);
+	unsigned int i, j;
+	fann_type *data_input, *data_output;
+
+	data->num_data = num_pairs;
+	data->num_input = num_input;
+	data->num_output = num_output;
+	data->input = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
+	data->output = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
+	srand(time(0));
+
+	data_input = (fann_type *) calloc(num_input * num_pairs, sizeof(fann_type));
+	data_output = (fann_type *) calloc(num_output * num_pairs, sizeof(fann_type));
+
+	for(i = 0; i != num_pairs; i++)
+	{
+		unsigned int value = (rand() % max_value) + min_value;
+		unsigned int hash = kennys_hash(value);
+
+		unsigned int mask = pow(2, hash_width_in_bits-1);
+
+		data->input[i] = data_input;
+		data_input += num_input;
+		unsigned int tempMask = mask;
+
+		for(j = 0; j != num_input; j++)
+		{
+			if ((hash & tempMask) > 0)
+				data->input[i][j] = 1;
+			else
+				data->input[i][j] = 0;
+			tempMask >>= 1;
+		}
+
+		data->output[i] = data_output;
+		data_output += num_output;
+		tempMask = mask;
+
+		for(j = 0; j != num_output; j++)
+		{
+			if ((value & tempMask) > 0)
+				data->output[i][j] = 1;
+			else
+				data->output[i][j] = 0;
+			tempMask >>= 1;
+		}
+	}
+	return data;
 }
 
 void load_trained_network()
@@ -174,6 +279,11 @@ int main (int argc, const char * argv[])
 			{
 				REPORT_EVERY = atoi(argv[i + 1]);
 			}
+			else if (strcmp(argv[i], "-nofile") == 0)
+			{
+				NEED_TO_TRAIN = true;
+				NO_FILE_TRAIN = true;
+			}
 			else
 			{
 				cout << "Argument not recognized: " << argv[i] << "\n";
@@ -206,7 +316,14 @@ int main (int argc, const char * argv[])
 		}
 		
 		if (GENERATE_TRAIN_DATA) generate_train_file();
-	    if (NEED_TO_TRAIN) train_network();
+	    if (NEED_TO_TRAIN)
+	    {
+	    	if (NO_FILE_TRAIN) {
+	    		train_network_no_file();
+	    	} else {
+	    		train_network();
+	    	}
+	    }
 	    if (NEED_TO_TEST)
 		{
 			load_trained_network();

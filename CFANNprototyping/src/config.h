@@ -6,6 +6,7 @@
 
 static int OUTPUT_TO_FILE = false;
 static int NEED_TO_TRAIN = false;
+static int NO_FILE_TRAIN = false;
 static int NEED_TO_TEST = false;
 static int BYPASS_EVERYTHING = false;
 static int GENERATE_TRAIN_DATA = false;
