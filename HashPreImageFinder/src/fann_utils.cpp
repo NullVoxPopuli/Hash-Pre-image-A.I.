@@ -107,11 +107,11 @@ void generate_train_file()
 	file.open(DATA_FILE_NAME);
 	unsigned int cur_value = 0x00000000u;
 	
-	file << max_num_data << " " << hash_width_in_bits << " " << hash_width_in_bits << "\n";
+	file << max_num_data << " " << HASH_WIDTH_IN_BITS << " " << HASH_WIDTH_IN_BITS << "\n";
 	
 	for(int i = 0; i < max_num_data; i++)
 	{
-		bitset<32> bits_hash(MurmurHash(cur_value, hash_width_in_bits, 0));
+		bitset<32> bits_hash(MurmurHash(cur_value, HASH_WIDTH_IN_BITS, 0));
 		bitset<32> bits_value(cur_value);
 
 		file << convert_binary_to_FANN_array(bits_hash.to_string<char,char_traits<char>,allocator<char> >()) << "\n";

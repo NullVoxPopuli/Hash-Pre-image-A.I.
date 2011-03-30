@@ -4,12 +4,14 @@
 #include <sstream>
 #include <fstream>
 #include <time.h>
+#include <string.h>
 
 
 #include "fann.h"
 #include "floatfann.h"
 
 #include "config.h"
+
 #include "fann_utils.h"
 #include "hashes.h"
 #include "main.h"
@@ -23,8 +25,8 @@ struct fann *trained_network;
 void train_network()
 {
     printf("Training ... \n");
-    const unsigned int num_input = hash_width_in_bits;
-    const unsigned int num_output = 32;
+    const unsigned int num_input = NUMBER_OF_INPUT_NEURONS;
+    const unsigned int num_output = NUMBER_OF_OUTPUT_NEURONS;
     const unsigned int num_layers = 4;
     const unsigned int num_neurons_hidden = 32;
 
@@ -40,7 +42,109 @@ void train_network()
 	// fann_cascadetrain_on_file(ann, data_file_name, 200, 1, DESIRED_ERROR);
     fann_save(ann, NETWORK_SAVE_NAME);
     fann_destroy(ann);
-    
+}
+
+void train_network_no_file()
+{
+	printf("Training without file ... \n");
+    const unsigned int num_layers = 4;
+    const unsigned int num_neurons_hidden = 32;
+
+    float error = DESIRED_ERROR + 1;
+    unsigned int epoch = 0;
+    int desired_error_reached;
+    int acceptable = false;
+
+    struct fann *ann = fann_create_standard(num_layers, NUMBER_OF_INPUT_NEURONS,
+                                                 num_neurons_hidden, num_neurons_hidden, NUMBER_OF_OUTPUT_NEURONS);
+
+	fann_set_learning_rate(ann, LEARNING_RATE);
+    fann_set_activation_function_hidden(ann, FANN_LINEAR);
+    fann_set_activation_function_output(ann, FANN_GAUSSIAN_SYMMETRIC);
+
+    while (!acceptable && epoch < MAX_EPOCHS)
+    {
+		for(epoch = 0; epoch <= MAX_EPOCHS; epoch++)
+		{
+			struct fann_train_data *data = generate_data(NUMBER_OF_INPUT_NEURONS, NUMBER_OF_OUTPUT_NEURONS, 200, 0, pow(2, HASH_WIDTH_IN_BITS));
+			error = fann_train_epoch(ann, data);
+			fann_destroy_train(data);
+			desired_error_reached = fann_desired_error_reached(ann, DESIRED_ERROR);
+
+			if(epoch % REPORT_EVERY == 0 || epoch == MAX_EPOCHS || epoch == 1 ||
+						desired_error_reached == 0)
+					{
+						printf("Epochs     %8d. Current error: %.10f. Bit fail %d.\n", epoch, error,
+							   ann->num_bit_fail);
+					}
+
+			if(desired_error_reached == 0)
+				break;
+		}
+
+		struct fann_train_data *data = generate_data(NUMBER_OF_INPUT_NEURONS, NUMBER_OF_OUTPUT_NEURONS, 600, 0, pow(2, HASH_WIDTH_IN_BITS));
+		error = fann_train_epoch(ann, data);
+		if (fann_desired_error_reached(ann, DESIRED_ERROR))
+		{
+			acceptable = true;
+		}
+    }
+
+    fann_save(ann, NETWORK_SAVE_NAME);
+    fann_destroy(ann);
+}
+
+struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_output, unsigned int num_pairs, unsigned int min_value, unsigned int max_value)
+{
+	struct fann_train_data *data = (struct fann_train_data *) malloc(sizeof(struct fann_train_data));
+	fann_init_error_data((struct fann_error *) data);
+	unsigned int i, j;
+	fann_type *data_input, *data_output;
+
+	data->num_data = num_pairs;
+	data->num_input = num_input;
+	data->num_output = num_output;
+	data->input = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
+	data->output = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
+	srand(time(0));
+
+	data_input = (fann_type *) calloc(num_input * num_pairs, sizeof(fann_type));
+	data_output = (fann_type *) calloc(num_output * num_pairs, sizeof(fann_type));
+
+	for(i = 0; i != num_pairs; i++)
+	{
+		unsigned int value = (rand() % max_value) + min_value;
+		unsigned int hash = kennys_hash_16(value);
+
+		unsigned int mask = pow(2, HASH_WIDTH_IN_BITS-1);
+
+		data->input[i] = data_input;
+		data_input += num_input;
+		unsigned int tempMask = mask;
+
+		for(j = 0; j != num_input; j++)
+		{
+			if ((hash & tempMask) > 0)
+				data->input[i][j] = 1;
+			else
+				data->input[i][j] = 0;
+			tempMask >>= 1;
+		}
+
+		data->output[i] = data_output;
+		data_output += num_output;
+		tempMask = mask;
+
+		for(j = 0; j != num_output; j++)
+		{
+			if ((value & tempMask) > 0)
+				data->output[i][j] = 1;
+			else
+				data->output[i][j] = 0;
+			tempMask >>= 1;
+		}
+	}
+	return data;
 }
 
 void load_trained_network()
@@ -68,11 +172,11 @@ void test_network()
     calc_out = fann_run(trained_network, fann_input);
 
     // printf("xor test (%f,%f) -> %f\n", input[0], input[1], calc_out[0]);
-	cout << "Input: " << convert_array_to_string(fann_input, hash_width_in_bits) << "\n";
-	cout << "Output: " << convert_array_to_string(calc_out, hash_width_in_bits) << "\n";
+	cout << "Input: " << convert_array_to_string(fann_input, HASH_WIDTH_IN_BITS) << "\n";
+	cout << "Output: " << convert_array_to_string(calc_out, HASH_WIDTH_IN_BITS) << "\n";
 	
-	unsigned int output_binary = convert_fann_out_to_binary(calc_out, hash_width_in_bits);
-	unsigned int hashed = MurmurHash(output_binary, hash_width_in_bits, 0);
+	unsigned int output_binary = convert_fann_out_to_binary(calc_out, HASH_WIDTH_IN_BITS);
+	unsigned int hashed = MurmurHash(output_binary, HASH_WIDTH_IN_BITS, 0);
 
 	printf("Output: ... meh, Which hashes back to: %x\n\n", hashed);
 	
@@ -113,10 +217,10 @@ int main (int argc, const char * argv[])
 				NEED_TO_TEST = true;
 				// next var is going to be the input
 
-				char temp_array[hash_width_in_bits];
+				char temp_array[HASH_WIDTH_IN_BITS];
 				strcpy(temp_array, argv[i + 1]);
 				
-				for(int j = 0; j < hash_width_in_bits; j++)
+				for(int j = 0; j < HASH_WIDTH_IN_BITS; j++)
 				{
 					fann_input[j] = (float)(temp_array[j] - '0');
 				}
@@ -144,11 +248,11 @@ int main (int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-nin") == 0) // # input neurons
 			{
-				
+				NUMBER_OF_INPUT_NEURONS = atoi(argv[i + 1]);
 			}
 			else if (strcmp(argv[i], "-non") == 0) // # output neurons
 			{
-				
+				NUMBER_OF_OUTPUT_NEURONS = atoi(argv[i + 1]);
 			}
 			else if (strcmp(argv[i], "-nl") == 0) // # layers
 			{
@@ -158,6 +262,11 @@ int main (int argc, const char * argv[])
 			{
 				// should be formatted 8,16,6,8
 				// as in in,middle,middle,out
+				
+			}
+			else if (strcmp(argv[i], "-nb") == 0)
+			{
+				NUMBER_OF_BITS_FOR_INPUT = atoi(argv[i + 1]);
 			}
 			else if (strcmp(argv[i], "-de") == 0) // desired error
 			{
@@ -178,6 +287,11 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-help") == 0)
 			{
 				display_help();
+			}
+			else if (strcmp(argv[i], "-nofile") == 0)
+			{
+				NEED_TO_TRAIN = true;
+				NO_FILE_TRAIN = true;
 			}
 			else
 			{
@@ -211,7 +325,14 @@ int main (int argc, const char * argv[])
 		}
 		
 		if (GENERATE_TRAIN_DATA) generate_train_file();
-	    if (NEED_TO_TRAIN) train_network();
+	    if (NEED_TO_TRAIN)
+	    {
+	    	if (NO_FILE_TRAIN) {
+	    		train_network_no_file();
+	    	} else {
+	    		train_network();
+	    	}
+	    }
 	    if (NEED_TO_TEST)
 		{
 			load_trained_network();
@@ -228,7 +349,6 @@ int main (int argc, const char * argv[])
 
 }
 
-
 void display_help()
 {
 	cout << "\n\n";
@@ -240,7 +360,9 @@ void display_help()
 	cout << "\t\t\t L. Preston Sego III and Kenny Skaggs\n\n";
 	
 	cout << "Available Options: \n";
-	cout << "\t -genTrain \t\tGenerates the training file to train the neural network with\n\n";
+	cout << "\t -genTrain \t\tGenerates the training file to train the neural network with\n";
+	cout << "\t -noFile \t\tTraines the network without generating a file. Data  will only be \n";
+	cout << "\t\t\t\t generated until the desired error is achived.\n\n";
 	cout << "\t -train \t\tTrain's the network, given that there is an already generated training file\n";
 	cout << "\t -test 1010101001 \tRuns a trained network with the given input (should be the hash you\n";
 						cout << "\t\t\t\t are trying to find the pre-image for)\n";
@@ -249,23 +371,25 @@ void display_help()
 	
 	cout << "\n\nNetwork Configuration: \n";
 	cout << "\t -i \t\tInput? [Not Yet Implemented]\n";
-	cout << "\t -nin \t\tNumber of input neurons [Not Yet Implemented]\n";
-	cout << "\t -non \t\tNumber of output neuors [Not Yet Implemented]\n";
+	cout << "\t -nin \t\t[" << NUMBER_OF_INPUT_NEURONS << "] Number of input neurons \n";
+	cout << "\t -non \t\t[" << NUMBER_OF_OUTPUT_NEURONS << "] Number of output neuors\n";
 	cout << "\t -nl \t\tNumber of layers [Not Yet Implemented]\n";
 	cout << "\t -nnil \t\tNumber of neurons in each layer [Not Yet Implemented]\n";
-	cout << "\t -nb \t\tNumber of bits the network should expect for the input [Not Yet Implemented]\n";
+	cout << "\t -nb \t\t[" << NUMBER_OF_BITS_FOR_INPUT << "] Number of bits the network should expect for the input\n";
 	
 	cout << "\n\nNetwork Training Constants:\n";
-	cout << "\t -de 0.00001 \t\tDesired Error\n";
-	cout << "\t -lrate 0.73 \t\tLearning Rate\n";
-	cout << "\t -epochs 10000 \t\tNumber of training iterations (epochs)\n";
-	cout << "\t -reports 500 \t\tAfter how many epochs should should the training report each time?\n";
+	cout << "\t -de 0.00001 \t\t[" << DESIRED_ERROR << "] Desired Error\n";
+	cout << "\t -lrate 0.73 \t\t[" << LEARNING_RATE << "] Learning Rate\n";
+	cout << "\t -epochs 10000 \t\t[" << MAX_EPOCHS << "] Number of training iterations (epochs)\n";
+	cout << "\t -reports 500 \t\t[" << REPORT_EVERY << "]After how many epochs should should the training report each time?\n";
 	
 	cout << "\n\nDeveloper Options: \n";
 	cout << "\t -bypass \tUsed for skipping all normal functionality and for testing specific functions\n";
 	
 	cout << "\n\n Example: ./hPif -genTrain -train -test 1111000011110000\n";
 	cout << "\t\t Generates the training file, trains the network, and tests the network (assuming the \n";
-	cout << "\t\t\tnetwork is set up for a 16 bit hash) with the value F0F0";
+	cout << "\t\t\tnetwork is set up for a 16 bit hash) with the value F0F0\n\n";
+	
+	cout << "* Numbers contained in brackets ( [number] ) are the default value...\n\n";
 	
 }
