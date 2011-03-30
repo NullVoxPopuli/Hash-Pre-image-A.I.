@@ -8,16 +8,17 @@
 
 #include "fann_utils.h"
 #include "config.h"
+#include "hashes.h"
 
 
 using namespace std;
 
 int bits_in_a_nibble = 4;
 
-unsigned char convert_fann_out_to_binary(fann_type * net_out, int len)
+unsigned int convert_fann_out_to_binary(fann_type * net_out, int len)
 {
 	ostringstream str_result;
-	unsigned char result = 0;
+	unsigned int result = 0;
 	int neuron_output;
 	for (int i = 0; i < len; i++)
 	{
@@ -31,18 +32,6 @@ unsigned char convert_fann_out_to_binary(fann_type * net_out, int len)
 	const char * out = str_result.str().c_str();\
 	char * end; // throwaway
 	return strtol(out, &end, 2);
-}
-
-/*
-	Developed by Kenny Skaggs for initial hash testing
-*/
-unsigned char kennys_hash(unsigned char out)
-{
-	char second_half = out >> 4;
-	char first_half = out & 0x0fu;
-
-	second_half |= first_half;
-	return ( first_half << 4 | second_half );
 }
 
 /*
@@ -113,22 +102,18 @@ string pad_word(string word_to_pad, int width)
 void generate_train_file()
 {
 	cout << "Generating training file ... \n";
-	int max_num_data = 256;
+	int max_num_data = 10000000;
 	ofstream file;
 	file.open(DATA_FILE_NAME);
-	unsigned char cur_value = 0x00u;
+	unsigned int cur_value = 0x00000000u;
 	
-	file << max_num_data << " " << 8 << " " << 8 << "\n";
+	file << max_num_data << " " << hash_width_in_bits << " " << hash_width_in_bits << "\n";
 	
 	for(int i = 0; i < max_num_data; i++)
 	{
-		bitset<8> bits_hash(kennys_hash(cur_value));
-		bitset<8> bits_value(cur_value);
-		if (cur_value == 254)
-		{
-			cout << bits_hash << "\n";
-				cout << bits_value << "\n";
-		}
+		bitset<32> bits_hash(MurmurHash(cur_value, hash_width_in_bits, 0));
+		bitset<32> bits_value(cur_value);
+
 		file << convert_binary_to_FANN_array(bits_hash.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
 		file << convert_binary_to_FANN_array(bits_value.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
 		cur_value++;

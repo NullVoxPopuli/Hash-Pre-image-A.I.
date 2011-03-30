@@ -4,9 +4,7 @@
 
 using namespace std;
 
-unsigned char convert_fann_out_to_binary(fann_type * net_out, int len);
-
-unsigned char kennys_hash(unsigned char out);
+unsigned int convert_fann_out_to_binary(fann_type * net_out, int len);
 
 void replaceAll(std::string& str, const std::string& from, const std::string& to);
 

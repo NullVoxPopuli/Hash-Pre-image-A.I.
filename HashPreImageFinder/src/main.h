@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 
-fann_type fann_input[8];
+fann_type fann_input[16];
 
 
 void train_network();

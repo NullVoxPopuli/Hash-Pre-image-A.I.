@@ -12,6 +12,7 @@
 
 #include "config.h"
 #include "fann_utils.h"
+#include "hashes.h"
 #include "main.h"
 
 using namespace std;
@@ -23,13 +24,13 @@ struct fann *trained_network;
 void train_network()
 {
     printf("Training ... \n");
-    const unsigned int num_input = 8;
-    const unsigned int num_output = 8;
+    const unsigned int num_input = hash_width_in_bits;
+    const unsigned int num_output = 32;
     const unsigned int num_layers = 4;
-    const unsigned int num_neurons_hidden = 16;
+    const unsigned int num_neurons_hidden = 32;
 
     struct fann *ann = fann_create_standard(num_layers, num_input,
-                                                 num_neurons_hidden, 8, num_output);
+                                                 num_neurons_hidden, num_neurons_hidden, num_output);
 
 	// struct fann *ann = fann_create_shortcut(3, 8, 16, 8);
 
@@ -172,13 +173,13 @@ void test_network()
     calc_out = fann_run(trained_network, fann_input);
 
     // printf("xor test (%f,%f) -> %f\n", input[0], input[1], calc_out[0]);
-	cout << "Input: " << convert_array_to_string(fann_input, 8) << "\n";
-	cout << "Output: " << convert_array_to_string(calc_out, 8) << "\n";
+	cout << "Input: " << convert_array_to_string(fann_input, hash_width_in_bits) << "\n";
+	cout << "Output: " << convert_array_to_string(calc_out, hash_width_in_bits) << "\n";
 	
-	unsigned char output_binary = convert_fann_out_to_binary(calc_out, 8);
-	unsigned char hashed = kennys_hash(output_binary);
+	unsigned int output_binary = convert_fann_out_to_binary(calc_out, hash_width_in_bits);
+	unsigned int hashed = MurmurHash(output_binary, hash_width_in_bits, 0);
 
-	printf("Output: %d, Which hashes back to: %x\n\n", output_binary, hashed);
+	printf("Output: ... meh, Which hashes back to: %x\n\n", hashed);
 	
 }
 
@@ -217,10 +218,10 @@ int main (int argc, const char * argv[])
 				NEED_TO_TEST = true;
 				// next var is going to be the input
 
-				char temp_array[8];
+				char temp_array[hash_width_in_bits];
 				strcpy(temp_array, argv[i + 1]);
 				
-				for(int j = 0; j < 8; j++)
+				for(int j = 0; j < hash_width_in_bits; j++)
 				{
 					fann_input[j] = (float)(temp_array[j] - '0');
 				}
@@ -334,7 +335,7 @@ int main (int argc, const char * argv[])
 	}
 	else
 	{
-		cout << kennys_hash(1) << "\n";
+		cout << "Nothing here at the moment...\n\n";
 	}
 	
 
