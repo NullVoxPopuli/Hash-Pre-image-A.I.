@@ -288,7 +288,7 @@ int main (int argc, const char * argv[])
 			{
 				display_help();
 			}
-			else if (strcmp(argv[i], "-nofile") == 0)
+			else if (strcmp(argv[i], "-noFile") == 0)
 			{
 				NEED_TO_TRAIN = true;
 				NO_FILE_TRAIN = true;
