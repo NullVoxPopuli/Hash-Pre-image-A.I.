@@ -13,3 +13,5 @@ void train_network();
 void load_trained_network();
 
 int main (int argc, const char * argv[]);
+
+void display_help();

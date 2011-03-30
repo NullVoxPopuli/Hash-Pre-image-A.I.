@@ -100,7 +100,7 @@ int main (int argc, const char * argv[])
     // handle arguments
     if (argc < 2)
 	{
-		cout << "Need to at least train or test\n\n";
+		display_help();
 	}
 	else
 	{
@@ -175,9 +175,13 @@ int main (int argc, const char * argv[])
 			{
 				REPORT_EVERY = atoi(argv[i + 1]);
 			}
+			else if (strcmp(argv[i], "-help") == 0)
+			{
+				display_help();
+			}
 			else
 			{
-				cout << "Argument not recognized: " << argv[i] << "\n";
+				display_help();
 			}
 			
 		}
@@ -222,4 +226,46 @@ int main (int argc, const char * argv[])
 	}
 	
 
+}
+
+
+void display_help()
+{
+	cout << "\n\n";
+	cout << "\t :::::::::::::::::::::::::::::\n";
+	cout << "\t ::: Hash Pre-Image Finder ::: \n";
+	cout << "\t :::::::::::::::::::::::::::::\n";
+	
+	cout << "\t\t by:\n";
+	cout << "\t\t\t L. Preston Sego III and Kenny Skaggs\n\n";
+	
+	cout << "Available Options: \n";
+	cout << "\t -genTrain \t\tGenerates the training file to train the neural network with\n\n";
+	cout << "\t -train \t\tTrain's the network, given that there is an already generated training file\n";
+	cout << "\t -test 1010101001 \tRuns a trained network with the given input (should be the hash you\n";
+						cout << "\t\t\t\t are trying to find the pre-image for)\n";
+	cout << "\t -file \t\t\tInstead of standard out, outputting to the console, including this will have\n";
+						cout << "\t\t\t\t all output go to a file with the date and time\n";
+	
+	cout << "\n\nNetwork Configuration: \n";
+	cout << "\t -i \t\tInput? [Not Yet Implemented]\n";
+	cout << "\t -nin \t\tNumber of input neurons [Not Yet Implemented]\n";
+	cout << "\t -non \t\tNumber of output neuors [Not Yet Implemented]\n";
+	cout << "\t -nl \t\tNumber of layers [Not Yet Implemented]\n";
+	cout << "\t -nnil \t\tNumber of neurons in each layer [Not Yet Implemented]\n";
+	cout << "\t -nb \t\tNumber of bits the network should expect for the input [Not Yet Implemented]\n";
+	
+	cout << "\n\nNetwork Training Constants:\n";
+	cout << "\t -de 0.00001 \t\tDesired Error\n";
+	cout << "\t -lrate 0.73 \t\tLearning Rate\n";
+	cout << "\t -epochs 10000 \t\tNumber of training iterations (epochs)\n";
+	cout << "\t -reports 500 \t\tAfter how many epochs should should the training report each time?\n";
+	
+	cout << "\n\nDeveloper Options: \n";
+	cout << "\t -bypass \tUsed for skipping all normal functionality and for testing specific functions\n";
+	
+	cout << "\n\n Example: ./hPif -genTrain -train -test 1111000011110000\n";
+	cout << "\t\t Generates the training file, trains the network, and tests the network (assuming the \n";
+	cout << "\t\t\tnetwork is set up for a 16 bit hash) with the value F0F0";
+	
 }
