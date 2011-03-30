@@ -83,7 +83,7 @@ void train_network_no_file()
 				break;
 		}
 
-		struct fann_train_data *data = generate_data(num_input, num_output, 600, 0, 2^hash_width_in_bits);
+		struct fann_train_data *data = generate_data(num_input, num_output, 600, 0, pow(2, hash_width_in_bits));
 		error = fann_train_epoch(ann, data);
 		if (fann_desired_error_reached(ann, DESIRED_ERROR))
 		{
@@ -115,7 +115,7 @@ struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_o
 	for(i = 0; i != num_pairs; i++)
 	{
 		unsigned int value = (rand() % max_value) + min_value;
-		unsigned int hash = kennys_hash(value);
+		unsigned int hash = kennys_hash_16(value);
 
 		unsigned int mask = pow(2, hash_width_in_bits-1);
 

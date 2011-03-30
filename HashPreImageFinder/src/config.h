@@ -20,4 +20,4 @@ static double DESIRED_ERROR = 0.00001;
 static const char* NETWORK_SAVE_NAME = "network_float_save.net";
 static const char* DATA_FILE_NAME = "8bithash.fanndata";
 
-static int hash_width_in_bits = 32;
+static int hash_width_in_bits = 16;
