@@ -123,3 +123,25 @@ void generate_train_file()
 	
 	cout << "Done\n\n";
 }
+
+//http://forums.nvidia.com/index.php?showtopic=170346
+void fann_run_many(struct fann **anns, fann_type * input, fann_type **output, int num_anns, int num_runs)
+{
+        unsigned int ann_num, i;
+        
+        printf("Running Scalar!\n");
+   
+        for(ann_num = 0; ann_num < num_anns; ++ann_num) {
+                unsigned int num_outputs, num_inputs;
+                struct fann *ann = anns[ann_num];
+                
+                num_inputs = ann->num_input;
+                num_outputs = ann->num_output;
+                
+                for(i=0; i<num_runs; ++i)
+                        memcpy(&(output[ann_num][num_outputs*i]
+),
+                                   fann_run(ann, &input[num_inputs*i]),
+                                   sizeof(fann_type)*num_outputs);
+        }
+}

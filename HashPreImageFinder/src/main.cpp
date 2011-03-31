@@ -28,7 +28,7 @@ void train_network()
     const unsigned int num_input = NUMBER_OF_INPUT_NEURONS;
     const unsigned int num_output = NUMBER_OF_OUTPUT_NEURONS;
     const unsigned int num_layers = 4;
-    const unsigned int num_neurons_hidden = 32;
+    const unsigned int num_neurons_hidden = HASH_WIDTH_IN_BITS;
 
     struct fann *ann = fann_create_standard(num_layers, num_input,
                                                  num_neurons_hidden, num_neurons_hidden, num_output);
@@ -114,7 +114,7 @@ struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_o
 	for(i = 0; i != num_pairs; i++)
 	{
 		unsigned int value = (rand() % max_value) + min_value;
-		unsigned int hash = kennys_hash_16(value);
+		unsigned int hash = MurmurHash(value, HASH_WIDTH_IN_BITS, 0);
 
 		unsigned int mask = pow(2, HASH_WIDTH_IN_BITS-1);
 
