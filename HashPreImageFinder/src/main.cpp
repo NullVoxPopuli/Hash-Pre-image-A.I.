@@ -67,7 +67,7 @@ void train_network_no_file()
     {
 		for(epoch = 0; epoch <= MAX_EPOCHS; epoch++)
 		{
-			struct fann_train_data *data = generate_data(num_input, num_output, 200, 0, pow(2, hash_width_in_bits));
+			struct fann_train_data *data = generate_data(num_input, num_output, 10000, 0, pow(2, hash_width_in_bits));
 			error = fann_train_epoch(ann, data);
 			fann_destroy_train(data);
 			desired_error_reached = fann_desired_error_reached(ann, DESIRED_ERROR);
