@@ -1,7 +1,7 @@
-all: cfann clean
+all: hPif clean
 
-cfann : src/main.o src/fann_utils.o src/hashes.o
-	g++ src/main.o src/fann_utils.o src/hashes.o -lfann -L/usr/local/lib -o cfann
+hPif : src/main.o src/fann_utils.o src/hashes.o
+	g++ src/main.o src/fann_utils.o src/hashes.o -lfann -L/usr/local/lib -o hPif
 
 hashes.o : src/hashes.cpp src/hashes.h
 	g++ -c src/hashes.cpp
