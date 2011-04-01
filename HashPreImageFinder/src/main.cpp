@@ -5,6 +5,10 @@
 #include <fstream>
 #include <time.h>
 #include <string.h>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 
 #include "fann.h"
@@ -66,7 +70,7 @@ void train_network_no_file()
     {
 		for(epoch = 0; epoch <= MAX_EPOCHS; epoch++)
 		{
-			struct fann_train_data *data = generate_data(NUMBER_OF_INPUT_NEURONS, NUMBER_OF_OUTPUT_NEURONS, 200, 0, pow(2, HASH_WIDTH_IN_BITS));
+			struct fann_train_data *data = generate_data(NUMBER_OF_INPUT_NEURONS, NUMBER_OF_OUTPUT_NEURONS, 600);
 			error = fann_train_epoch(ann, data);
 			fann_destroy_train(data);
 			desired_error_reached = fann_desired_error_reached(ann, DESIRED_ERROR);
@@ -82,8 +86,9 @@ void train_network_no_file()
 				break;
 		}
 
-		struct fann_train_data *data = generate_data(NUMBER_OF_INPUT_NEURONS, NUMBER_OF_OUTPUT_NEURONS, 600, 0, pow(2, HASH_WIDTH_IN_BITS));
+		struct fann_train_data *data = generate_data(NUMBER_OF_INPUT_NEURONS, NUMBER_OF_OUTPUT_NEURONS, 600);
 		error = fann_train_epoch(ann, data);
+		fann_destroy_train(data);
 		if (fann_desired_error_reached(ann, DESIRED_ERROR))
 		{
 			acceptable = true;
@@ -94,7 +99,7 @@ void train_network_no_file()
     fann_destroy(ann);
 }
 
-struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_output, unsigned int num_pairs, unsigned int min_value, unsigned int max_value)
+struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_output, unsigned int num_pairs)
 {
 	struct fann_train_data *data = (struct fann_train_data *) malloc(sizeof(struct fann_train_data));
 	fann_init_error_data((struct fann_error *) data);
@@ -106,42 +111,34 @@ struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_o
 	data->num_output = num_output;
 	data->input = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
 	data->output = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
-	srand(time(0));
+
+	boost::mt19937 gen;
 
 	data_input = (fann_type *) calloc(num_input * num_pairs, sizeof(fann_type));
 	data_output = (fann_type *) calloc(num_output * num_pairs, sizeof(fann_type));
 
 	for(i = 0; i != num_pairs; i++)
 	{
-		unsigned int value = (rand() % max_value) + min_value;
-		unsigned int hash = kennys_hash_16(value);
+		boost::uniform_real<> dist(0, pow(2, HASH_WIDTH_IN_BITS));
+		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
 
-		unsigned int mask = pow(2, HASH_WIDTH_IN_BITS-1);
+		boost::dynamic_bitset<> value(HASH_WIDTH_IN_BITS, random());
+		boost::dynamic_bitset<> hash(HASH_WIDTH_IN_BITS, kennys_hash_16(value.to_ulong()));
 
 		data->input[i] = data_input;
 		data_input += num_input;
-		unsigned int tempMask = mask;
 
 		for(j = 0; j != num_input; j++)
 		{
-			if ((hash & tempMask) > 0)
-				data->input[i][j] = 1;
-			else
-				data->input[i][j] = 0;
-			tempMask >>= 1;
+			data->input[i][j] = hash[j];
 		}
 
 		data->output[i] = data_output;
 		data_output += num_output;
-		tempMask = mask;
 
 		for(j = 0; j != num_output; j++)
 		{
-			if ((value & tempMask) > 0)
-				data->output[i][j] = 1;
-			else
-				data->output[i][j] = 0;
-			tempMask >>= 1;
+			data->output[i][j] = value[j];
 		}
 	}
 	return data;

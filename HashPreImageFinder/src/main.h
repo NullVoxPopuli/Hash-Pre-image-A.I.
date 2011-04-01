@@ -15,4 +15,4 @@ int main (int argc, const char * argv[]);
 
 void display_help();
 
-struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_output, unsigned int num_pairs, unsigned int min_value, unsigned int max_value);
+struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_output, unsigned int num_pairs);

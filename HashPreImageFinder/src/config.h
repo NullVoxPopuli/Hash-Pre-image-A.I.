@@ -11,7 +11,7 @@ static int NEED_TO_TEST = false;
 static int BYPASS_EVERYTHING = false;
 static int GENERATE_TRAIN_DATA = false;
 
-static int HASH_WIDTH_IN_BITS = 32;
+static int HASH_WIDTH_IN_BITS = 16;
 static int NUMBER_OF_INPUT_NEURONS = HASH_WIDTH_IN_BITS;
 static int NUMBER_OF_OUTPUT_NEURONS = HASH_WIDTH_IN_BITS;
 static int NUMBER_OF_BITS_FOR_INPUT = HASH_WIDTH_IN_BITS;
