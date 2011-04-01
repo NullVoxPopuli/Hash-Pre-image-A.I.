@@ -102,17 +102,17 @@ string pad_word(string word_to_pad, int width)
 void generate_train_file()
 {
 	cout << "Generating training file ... \n";
-	int max_num_data = 10000000;
+	int max_num_data = 30000;
 	ofstream file;
 	file.open(DATA_FILE_NAME);
-	unsigned int cur_value = 0x00000000u;
+	unsigned char cur_value = 0x0000u;
 	
 	file << max_num_data << " " << HASH_WIDTH_IN_BITS << " " << HASH_WIDTH_IN_BITS << "\n";
 	
 	for(int i = 0; i < max_num_data; i++)
 	{
-		bitset<32> bits_hash(MurmurHash(cur_value, HASH_WIDTH_IN_BITS, 0));
-		bitset<32> bits_value(cur_value);
+		bitset<16> bits_hash(kennys_hash_16(cur_value));
+		bitset<16> bits_value(cur_value);
 
 		file << convert_binary_to_FANN_array(bits_hash.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
 		file << convert_binary_to_FANN_array(bits_value.to_string<char,char_traits<char>,allocator<char> >()) << "\n";

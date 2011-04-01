@@ -32,7 +32,7 @@ void train_network()
     const unsigned int num_input = NUMBER_OF_INPUT_NEURONS;
     const unsigned int num_output = NUMBER_OF_OUTPUT_NEURONS;
     const unsigned int num_layers = 4;
-    const unsigned int num_neurons_hidden = 32;
+    const unsigned int num_neurons_hidden = 16;
 
     struct fann *ann = fann_create_standard(num_layers, num_input,
                                                  num_neurons_hidden, num_neurons_hidden, num_output);
@@ -52,7 +52,7 @@ void train_network_no_file()
 {
 	printf("Training without file ... \n");
     const unsigned int num_layers = 4;
-    const unsigned int num_neurons_hidden = 32;
+    const unsigned int num_neurons_hidden = 16;
 
     float error = DESIRED_ERROR + 1;
     unsigned int epoch = 0;
@@ -70,7 +70,7 @@ void train_network_no_file()
     {
 		for(epoch = 0; epoch <= MAX_EPOCHS; epoch++)
 		{
-			struct fann_train_data *data = generate_data(NUMBER_OF_INPUT_NEURONS, NUMBER_OF_OUTPUT_NEURONS, 600);
+			struct fann_train_data *data = generate_data(NUMBER_OF_INPUT_NEURONS, NUMBER_OF_OUTPUT_NEURONS, 30000);
 			error = fann_train_epoch(ann, data);
 			fann_destroy_train(data);
 			desired_error_reached = fann_desired_error_reached(ann, DESIRED_ERROR);
@@ -173,7 +173,7 @@ void test_network()
 	cout << "Output: " << convert_array_to_string(calc_out, HASH_WIDTH_IN_BITS) << "\n";
 	
 	unsigned int output_binary = convert_fann_out_to_binary(calc_out, HASH_WIDTH_IN_BITS);
-	unsigned int hashed = MurmurHash(output_binary, HASH_WIDTH_IN_BITS, 0);
+	unsigned int hashed = kennys_hash_16(output_binary);
 
 	printf("Output: ... meh, Which hashes back to: %x\n\n", hashed);
 	
