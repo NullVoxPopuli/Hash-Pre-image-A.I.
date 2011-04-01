@@ -6,8 +6,10 @@
 #include "fann.h"
 #include "floatfann.h"
 
-#include "fann_utils.h"
 #include "Config.h"
+
+
+#include "fann_utils.h"
 #include "hashes.h"
 
 
