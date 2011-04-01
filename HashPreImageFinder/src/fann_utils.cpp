@@ -7,7 +7,7 @@
 #include "floatfann.h"
 
 #include "fann_utils.h"
-#include "config.h"
+#include "Config.h"
 #include "hashes.h"
 
 
@@ -102,17 +102,16 @@ string pad_word(string word_to_pad, int width)
 void generate_train_file()
 {
 	cout << "Generating training file ... \n";
-	int max_num_data = 10000000;
 	ofstream file;
-	file.open(DATA_FILE_NAME);
-	unsigned int cur_value = 0x00000000u;
+	file.open(Config::DATA_FILE_NAME);
+	unsigned int cur_value = 0x00u;	
 	
-	file << max_num_data << " " << HASH_WIDTH_IN_BITS << " " << HASH_WIDTH_IN_BITS << "\n";
+	file << Config::MAX_NUMBER_OF_TRAINING_DATA << " " << Config::HASH_WIDTH_IN_BITS << " " << Config::HASH_WIDTH_IN_BITS << "\n";
 	
-	for(int i = 0; i < max_num_data; i++)
+	for(int i = 0; i < Config::MAX_NUMBER_OF_TRAINING_DATA; i++)
 	{
-		bitset<32> bits_hash(MurmurHash(cur_value, HASH_WIDTH_IN_BITS, 0));
-		bitset<32> bits_value(cur_value);
+		bitset<16> bits_hash(kennys_hash_16(cur_value));
+		bitset<16> bits_value(cur_value);
 
 		file << convert_binary_to_FANN_array(bits_hash.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
 		file << convert_binary_to_FANN_array(bits_value.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
@@ -121,7 +120,7 @@ void generate_train_file()
 	}
 	file.close();
 	
-	cout << "Done\n\n";
+	cout << "Number of data sets generated: " << Config::MAX_NUMBER_OF_TRAINING_DATA << "\n\n";
 }
 
 //http://forums.nvidia.com/index.php?showtopic=170346
