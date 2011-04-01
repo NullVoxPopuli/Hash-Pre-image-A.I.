@@ -305,11 +305,14 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-mTrnData") == 0)
 			{
 				Config::MAX_NUMBER_OF_TRAINING_DATA = atoi(argv[i + 1]);
-				cout << "Number of data sets to be generated: " << Config::MAX_NUMBER_OF_TRAINING_DATA << "\n\n";	
+			}
+			else if (atoi(argv[i]) > 0)
+			{
+				display_help();
 			}
 			else
 			{
-				display_help();
+				
 			}
 			
 		}
