@@ -6,6 +6,7 @@
 #include <time.h>
 #include <string.h>
 
+#include "fann_gpu.h"
 
 #include "fann.h"
 #include "floatfann.h"
@@ -92,7 +93,7 @@ void train_network_no_file()
 		struct fann_train_data *data = generate_data(Config::NUMBER_OF_INPUT_NEURONS, 
 													Config::NUMBER_OF_OUTPUT_NEURONS, 600, 0, 
 													pow(2, Config::HASH_WIDTH_IN_BITS));
-		error = fann_train_epoch(ann, data);
+		error = fann_train_epoch_cl(ann, data);
 		if (fann_desired_error_reached(ann, Config::DESIRED_ERROR))
 		{
 			acceptable = true;
