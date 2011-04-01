@@ -61,7 +61,7 @@ unsigned char kennys_hash(unsigned char out)
 	return ( first_half << 4 | second_half );
 }
 
-unsigned short kennys_hash_16(unsigned short out)
+unsigned short kennys_hash_16(unsigned int out)
 {
 	unsigned char lookup[] = {0x01u, 0x0fu, 0xfcu, 0xe9u, 0x50u, 0x22u, 0xa3u, 0x8au};
 	
