@@ -70,17 +70,19 @@ void train_network_no_file()
     {
 		for(epoch = 0; epoch <= MAX_EPOCHS; epoch++)
 		{
-			struct fann_train_data *data = generate_data(NUMBER_OF_INPUT_NEURONS, NUMBER_OF_OUTPUT_NEURONS, 30000);
+			struct fann_train_data *data = generate_data(NUMBER_OF_INPUT_NEURONS, NUMBER_OF_OUTPUT_NEURONS, 5000);
 			error = fann_train_epoch(ann, data);
 			fann_destroy_train(data);
 			desired_error_reached = fann_desired_error_reached(ann, DESIRED_ERROR);
-
 			if(epoch % REPORT_EVERY == 0 || epoch == MAX_EPOCHS || epoch == 1 ||
 						desired_error_reached == 0)
 					{
-						printf("Epochs     %8d. Current error: %.10f. Bit fail %d.\n", epoch, error,
-							   ann->num_bit_fail);
+						cout << "\nEpochs     " << epoch << ". Current error: " << error << ". Bit fail " << ann->num_bit_fail << "\n";
 					}
+			else
+			{
+				cout << "\r" << epoch;
+			}
 
 			if(desired_error_reached == 0)
 				break;
@@ -229,6 +231,29 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-train") == 0)
 			{
 				NEED_TO_TRAIN = true;
+				bool printHelpAndExit = false;
+				if (i+1 >= argc)
+				{
+					printHelpAndExit = true;
+				}
+				else if (strcmp(argv[i+1], "file") == 0)
+				{
+					NO_FILE_TRAIN = false;
+				}
+				else if (strcmp(argv[i+1], "block") == 0)
+				{
+					NO_FILE_TRAIN = true;
+				}
+				else
+				{
+					printHelpAndExit = true;
+				}
+
+				if (printHelpAndExit)
+				{
+					cout << "need to specify train mode ('file' or 'block')\n";
+					exit(1);
+				}
 			}
 			else if (strcmp(argv[i], "-file") == 0)
 			{
@@ -284,11 +309,6 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-help") == 0)
 			{
 				display_help();
-			}
-			else if (strcmp(argv[i], "-noFile") == 0)
-			{
-				NEED_TO_TRAIN = true;
-				NO_FILE_TRAIN = true;
 			}
 			else
 			{
@@ -358,14 +378,16 @@ void display_help()
 	
 	cout << "Available Options: \n";
 	cout << "\t -genTrain \t\tGenerates the training file to train the neural network with\n";
-	cout << "\t -noFile \t\tTraines the network without generating a file. Data  will only be \n";
-	cout << "\t\t\t\t generated until the desired error is achived.\n\n";
-	cout << "\t -train \t\tTrain's the network, given that there is an already generated training file\n";
+	cout << "\t -train <mode> \t\tTrains the network using the specified training mode\n";
 	cout << "\t -test 1010101001 \tRuns a trained network with the given input (should be the hash you\n";
 						cout << "\t\t\t\t are trying to find the pre-image for)\n";
 	cout << "\t -file \t\t\tInstead of standard out, outputting to the console, including this will have\n";
 						cout << "\t\t\t\t all output go to a file with the date and time\n";
 	
+	cout << "\n\nTraining Modes: \n";
+	cout << "\t block\t\tTrains the network using dynamically generated, random data\n";
+	cout << "\t file\t\tTrains the network using a pre-generated data file\n";
+
 	cout << "\n\nNetwork Configuration: \n";
 	cout << "\t -i \t\tInput? [Not Yet Implemented]\n";
 	cout << "\t -nin \t\t[" << NUMBER_OF_INPUT_NEURONS << "] Number of input neurons \n";
