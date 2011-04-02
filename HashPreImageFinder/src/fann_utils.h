@@ -5,6 +5,8 @@
 using namespace std;
 
 unsigned int convert_fann_out_to_binary(fann_type * net_out, int len);
+void fann_run_many(struct fann **anns, fann_type * input, fann_type **output, int num_anns, int num_runs);
+
 
 void replaceAll(std::string& str, const std::string& from, const std::string& to);
 

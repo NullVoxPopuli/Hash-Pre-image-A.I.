@@ -6,8 +6,10 @@
 #include "fann.h"
 #include "floatfann.h"
 
+#include "Config.h"
+
+
 #include "fann_utils.h"
-#include "config.h"
 #include "hashes.h"
 
 
@@ -102,14 +104,14 @@ string pad_word(string word_to_pad, int width)
 void generate_train_file()
 {
 	cout << "Generating training file ... \n";
-	int max_num_data = 30000;
+
 	ofstream file;
-	file.open(DATA_FILE_NAME);
-	unsigned char cur_value = 0x0000u;
+	file.open(Config::DATA_FILE_NAME);
+	unsigned int cur_value = 0x00u;	
 	
-	file << max_num_data << " " << HASH_WIDTH_IN_BITS << " " << HASH_WIDTH_IN_BITS << "\n";
+	file << Config::MAX_NUMBER_OF_TRAINING_DATA << " " << Config::HASH_WIDTH_IN_BITS << " " << Config::HASH_WIDTH_IN_BITS << "\n";
 	
-	for(int i = 0; i < max_num_data; i++)
+	for(int i = 0; i < Config::MAX_NUMBER_OF_TRAINING_DATA; i++)
 	{
 		bitset<16> bits_hash(kennys_hash_16(cur_value));
 		bitset<16> bits_value(cur_value);
@@ -121,5 +123,27 @@ void generate_train_file()
 	}
 	file.close();
 	
-	cout << "Done\n\n";
+	cout << "Number of data sets generated: " << Config::MAX_NUMBER_OF_TRAINING_DATA << "\n\n";
+}
+
+//http://forums.nvidia.com/index.php?showtopic=170346
+void fann_run_many(struct fann **anns, fann_type * input, fann_type **output, int num_anns, int num_runs)
+{
+        unsigned int ann_num, i;
+        
+        printf("Running Scalar!\n");
+   
+        for(ann_num = 0; ann_num < num_anns; ++ann_num) {
+                unsigned int num_outputs, num_inputs;
+                struct fann *ann = anns[ann_num];
+                
+                num_inputs = ann->num_input;
+                num_outputs = ann->num_output;
+                
+                for(i=0; i<num_runs; ++i)
+                        memcpy(&(output[ann_num][num_outputs*i]
+),
+                                   fann_run(ann, &input[num_inputs*i]),
+                                   sizeof(fann_type)*num_outputs);
+        }
 }
