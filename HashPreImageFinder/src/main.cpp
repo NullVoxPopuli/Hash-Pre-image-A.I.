@@ -1,4 +1,5 @@
-
+#include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include <bitset>
 #include <sstream>
@@ -192,21 +193,21 @@ void test_network()
 
 unsigned int test_network_with_value(int hash_value)
 {
-	fann_type auto_fann_input[HASH_WIDTH_IN_BITS];
-	char buffer[Config::HASH_WIDTH_IN_BITS];
-	itoa(hash_value, buffer, 2); // convert to binary, store to string
-	
+	fann_type auto_fann_input[Config::HASH_WIDTH_IN_BITS];
+	string buffer = bitset<16>(hash_value).to_string();// convert to binary, store to string
 	
 	// convert to fann format
 	for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
 	{
-		auto_fann_input[j] = (float)(buffer[j] - '0');
+		auto_fann_input[j] = (float)(buffer[j]);
 	}
 	
 	fann_type *calc_out;
-    calc_out = fann_run(trained_network, auto_fann_input);
-
-	return convert_fann_out_to_binary(calc_out, Config::HASH_WIDTH_IN_BITS);
+	calc_out = fann_run(trained_network, auto_fann_input);
+	
+	unsigned int output_binary = convert_fann_out_to_binary(calc_out, Config::HASH_WIDTH_IN_BITS);
+	
+	return output_binary;
 }
 
 void auto_test_network_with_random_data(unsigned int start, unsigned int end, unsigned int num_of_data_sets_to_test)
@@ -216,6 +217,9 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 	unsigned int random_pre_image_value;
 	unsigned int hashed_value;
 	unsigned int result;
+	int failed = false;
+	
+	load_trained_network();
 	
 	for (unsigned int i = 0; i < num_of_data_sets_to_test; i ++)
 	{
@@ -225,6 +229,7 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 		
 		if (result != random_pre_image_value)
 		{
+			failed = true;
 			cout << "Error:\n";
 			cout << "   Hash:             " << hashed_value << "\n";
 			cout << "   Result:           " << result << "\n";
@@ -232,7 +237,12 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 		}
 	}
 	
+	if (!failed)
+	{
+		cout << "All tested hashes were reversed successfully... \n";
+	}
 	
+	fann_destroy(trained_network);
 	
 }
 
@@ -282,7 +292,7 @@ int main (int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-autoTest") == 0)
 			{
-				auto_test_network_with_random_data(itoa(argv[i + 1]), itoa(argv[i + 2]), itoa(argv[i + 3]));
+				auto_test_network_with_random_data(atoi(argv[i + 1]), atoi(argv[i + 2]), atoi(argv[i + 3]));
 			}
 			else if (strcmp(argv[i], "-genTrain") == 0)
 			{
@@ -370,19 +380,18 @@ int main (int argc, const char * argv[])
 			{
 				display_help();
 			}
-			else
 //=======
 //			else if (strcmp(argv[i], "-noFile") == 0)
 //			{
 //				Config::NEED_TO_TRAIN = true;
 //				Config::NO_FILE_TRAIN = true;
 //			}
-//			else if (strcmp(argv[i], "-mTrnData") == 0)
-//			{
-//				Config::MAX_NUMBER_OF_TRAINING_DATA = atoi(argv[i + 1]);
-//			}
+			else if (strcmp(argv[i], "-mTrnData") == 0)
+			{
+				Config::MAX_NUMBER_OF_TRAINING_DATA = atoi(argv[i + 1]);
+			}
 //			else if (atoi(argv[i]) > 0)
-//>>>>>>> 37d0b6c27bca833b96cff98fd280ceca1eeebd0e
+			else
 			{
 				display_help();
 			}
@@ -454,6 +463,7 @@ void display_help()
 	cout << "\t -train <mode> \t\tTrains the network using the specified training mode\n";
 	cout << "\t -test 1010101001 \tRuns a trained network with the given input (should be the hash you\n";
 						cout << "\t\t\t\t are trying to find the pre-image for)\n";
+	cout << "\t -autoTest strt end n \t Auto test a trained newwork between two values for n number of values.\n";
 	cout << "\t -file \t\t\tInstead of standard out, outputting to the console, including this will have\n";
 						cout << "\t\t\t\t all output go to a file with the date and time\n";
 	
