@@ -190,6 +190,53 @@ void test_network()
 	
 }
 
+unsigned int test_network_with_value(int hash_value)
+{
+	fann_type auto_fann_input[HASH_WIDTH_IN_BITS];
+	char buffer[Config::HASH_WIDTH_IN_BITS];
+	itoa(hash_value, buffer, 2); // convert to binary, store to string
+	
+	
+	// convert to fann format
+	for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
+	{
+		auto_fann_input[j] = (float)(buffer[j] - '0');
+	}
+	
+	fann_type *calc_out;
+    calc_out = fann_run(trained_network, auto_fann_input);
+
+	return convert_fann_out_to_binary(calc_out, Config::HASH_WIDTH_IN_BITS);
+}
+
+void auto_test_network_with_random_data(unsigned int start, unsigned int end, unsigned int num_of_data_sets_to_test)
+{
+	// init randomness 
+	srand((unsigned)time(0));
+	unsigned int random_pre_image_value;
+	unsigned int hashed_value;
+	unsigned int result;
+	
+	for (unsigned int i = 0; i < num_of_data_sets_to_test; i ++)
+	{
+		random_pre_image_value = start + (unsigned int)(((end - start) * rand()) / (RAND_MAX + 1.0));
+		hashed_value = kennys_hash_16(random_pre_image_value);
+		result = test_network_with_value(hashed_value); 
+		
+		if (result != random_pre_image_value)
+		{
+			cout << "Error:\n";
+			cout << "   Hash:             " << hashed_value << "\n";
+			cout << "   Result:           " << result << "\n";
+			cout << "   Should Have been: " << random_pre_image_value << "\n\n";
+		}
+	}
+	
+	
+	
+}
+
+
 //http://stackoverflow.com/questions/5354194/how-do-i-change-the-default-local-time-format-in-c
 string get_current_time()
 {
@@ -232,6 +279,10 @@ int main (int argc, const char * argv[])
 				{
 					fann_input[j] = (float)(temp_array[j] - '0');
 				}
+			}
+			else if (strcmp(argv[i], "-autoTest") == 0)
+			{
+				auto_test_network_with_random_data(itoa(argv[i + 1]), itoa(argv[i + 2]), itoa(argv[i + 3]));
 			}
 			else if (strcmp(argv[i], "-genTrain") == 0)
 			{
