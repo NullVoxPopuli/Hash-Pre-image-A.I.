@@ -1,0 +1,3 @@
+To-Do:
+• Implement random hash tester
+-- When we train a network, testing to see if the network has been successfully trained takes a while to do by hand. So if we implement a function, that will generate random hashes, and check the pre-image for accuracy. 
