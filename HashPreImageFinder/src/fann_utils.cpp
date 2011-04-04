@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <bitset>
+#include <cstring>
 
 #include "fann.h"
 #include "floatfann.h"

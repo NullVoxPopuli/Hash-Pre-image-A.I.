@@ -239,8 +239,7 @@ int main (int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-train") == 0)
 			{
-<<<<<<< HEAD
-				NEED_TO_TRAIN = true;
+				Config::NEED_TO_TRAIN = true;
 				bool printHelpAndExit = false;
 				if (i+1 >= argc)
 				{
@@ -248,11 +247,11 @@ int main (int argc, const char * argv[])
 				}
 				else if (strcmp(argv[i+1], "file") == 0)
 				{
-					NO_FILE_TRAIN = false;
+					Config::NO_FILE_TRAIN = false;
 				}
 				else if (strcmp(argv[i+1], "block") == 0)
 				{
-					NO_FILE_TRAIN = true;
+					Config::NO_FILE_TRAIN = true;
 				}
 				else
 				{
@@ -264,9 +263,6 @@ int main (int argc, const char * argv[])
 					cout << "need to specify train mode ('file' or 'block')\n";
 					exit(1);
 				}
-=======
-				Config::NEED_TO_TRAIN = true;
->>>>>>> 37d0b6c27bca833b96cff98fd280ceca1eeebd0e
 			}
 			else if (strcmp(argv[i], "-file") == 0)
 			{
@@ -323,26 +319,21 @@ int main (int argc, const char * argv[])
 			{
 				display_help();
 			}
-<<<<<<< HEAD
 			else
-=======
-			else if (strcmp(argv[i], "-noFile") == 0)
-			{
-				Config::NEED_TO_TRAIN = true;
-				Config::NO_FILE_TRAIN = true;
-			}
-			else if (strcmp(argv[i], "-mTrnData") == 0)
-			{
-				Config::MAX_NUMBER_OF_TRAINING_DATA = atoi(argv[i + 1]);
-			}
-			else if (atoi(argv[i]) > 0)
->>>>>>> 37d0b6c27bca833b96cff98fd280ceca1eeebd0e
+//=======
+//			else if (strcmp(argv[i], "-noFile") == 0)
+//			{
+//				Config::NEED_TO_TRAIN = true;
+//				Config::NO_FILE_TRAIN = true;
+//			}
+//			else if (strcmp(argv[i], "-mTrnData") == 0)
+//			{
+//				Config::MAX_NUMBER_OF_TRAINING_DATA = atoi(argv[i + 1]);
+//			}
+//			else if (atoi(argv[i]) > 0)
+//>>>>>>> 37d0b6c27bca833b96cff98fd280ceca1eeebd0e
 			{
 				display_help();
-			}
-			else
-			{
-				
 			}
 			
 		}
