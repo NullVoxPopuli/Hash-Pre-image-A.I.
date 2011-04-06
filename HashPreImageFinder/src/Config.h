@@ -17,7 +17,10 @@ public:
 	static int NUMBER_OF_INPUT_NEURONS;
 	static int NUMBER_OF_OUTPUT_NEURONS;
 	static int NUMBER_OF_BITS_FOR_INPUT;
+	static int NUMBER_OF_LAYERS;
 
+	static unsigned int LAYERS[];
+	
 	static int MAX_EPOCHS;
 	static int REPORT_EVERY;
 
@@ -26,4 +29,5 @@ public:
 
 	static const char* NETWORK_SAVE_NAME;
 	static const char* DATA_FILE_NAME;
+	
 };

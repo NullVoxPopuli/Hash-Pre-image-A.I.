@@ -27,17 +27,42 @@ using namespace std;
 
 
 struct fann *trained_network;
+struct fann *fann_create_network(int num, unsigned int args[])
+{
+	return fann_create_standard_array(num, &args[0]);
+}
 
+void print_config()
+{
+	cout << "Configuration: \n";
+	cout << "     Network: \n";
+	cout << "\t Network save name: " << Config::NETWORK_SAVE_NAME << "\n";
+	cout << "\t #input: " << Config::NUMBER_OF_INPUT_NEURONS << "\n";
+	for(int i = 1; i < Config::NUMBER_OF_LAYERS - 1; i++)
+	{
+		cout << "\t #hidden: " << Config::LAYERS[i] << "\n";
+	}
+	cout << "\t #output: " << Config::NUMBER_OF_OUTPUT_NEURONS << "\n";
+
+	
+	cout << "     Training: \n";
+	cout << "\t Max Epochs: " << Config::MAX_EPOCHS << "\n";
+	cout << "\t Reports every: " << Config::REPORT_EVERY << "\n";
+	cout << "\t Desired error: " << Config::DESIRED_ERROR << "\n";
+	cout << "\t Learning Rate: " << Config::LEARNING_RATE << "\n";
+	cout << "\n";
+}
 void train_network()
 {
     printf("Training ... \n");
-    const unsigned int num_layers = 4;
+	print_config();
+    // struct fann *ann = fann_create_standard(num_layers, 
+    // 											Config::NUMBER_OF_INPUT_NEURONS,
+    //                                            Config::HASH_WIDTH_IN_BITS, 
+    // 											Config::HASH_WIDTH_IN_BITS, 
+    // 											Config::NUMBER_OF_OUTPUT_NEURONS);
 
-    struct fann *ann = fann_create_standard(num_layers, 
-											Config::NUMBER_OF_INPUT_NEURONS,
-                                            Config::HASH_WIDTH_IN_BITS, 
-											Config::HASH_WIDTH_IN_BITS, 
-											Config::NUMBER_OF_OUTPUT_NEURONS);
+	struct fann *ann = fann_create_network(Config::NUMBER_OF_LAYERS, Config::LAYERS);
 
 	// struct fann *ann = fann_create_shortcut(3, 8, 16, 8);
 
@@ -66,8 +91,8 @@ void train_network_no_file()
     int desired_error_reached;
     int acceptable = false;
 
-    struct fann *ann = fann_create_standard(num_layers, Config::NUMBER_OF_INPUT_NEURONS,
-                                                 num_neurons_hidden, num_neurons_hidden, Config::NUMBER_OF_OUTPUT_NEURONS);
+	struct fann *ann = fann_create_network(Config::NUMBER_OF_LAYERS, Config::LAYERS);
+	
 
 	fann_set_learning_rate(ann, Config::LEARNING_RATE);
     fann_set_activation_function_hidden(ann, FANN_LINEAR);
@@ -261,7 +286,21 @@ string get_current_time()
     
     return string(output);
 }
-
+#include <vector>
+#include <functional>
+//http://www.blog.highub.com/c-plus-plus/c-parse-split-delimited-string/
+void split(const string& s, char c,
+           vector<string>& v) {
+   string::size_type i = 0;
+   string::size_type j = s.find(c);
+   while (j != string::npos) {
+      v.push_back(s.substr(i, j-i));
+      i = ++j;
+      j = s.find(c, j);
+      if (j == string::npos)
+         v.push_back(s.substr(i, s.length( )));
+   }
+}
 
 
 int main (int argc, const char * argv[])
@@ -338,23 +377,18 @@ int main (int argc, const char * argv[])
 			{
 				
 			}
-			else if (strcmp(argv[i], "-nin") == 0) // # input neurons
-			{
-				Config::NUMBER_OF_INPUT_NEURONS = atoi(argv[i + 1]);
-			}
-			else if (strcmp(argv[i], "-non") == 0) // # output neurons
-			{
-				Config::NUMBER_OF_OUTPUT_NEURONS = atoi(argv[i + 1]);
-			}
-			else if (strcmp(argv[i], "-nl") == 0) // # layers
-			{
-				
-			}
 			else if (strcmp(argv[i], "-nnil") == 0) // number of neurons in each layer
 			{
 				// should be formatted 8,16,6,8
 				// as in in,middle,middle,out
-				
+				vector<string> v;
+				split(argv[i + 1], ',', v);
+				for (int i = 0; i < v.size( ); ++i) {
+					Config::LAYERS[i] = atoi(v[i].c_str());
+			   	}
+				Config::NUMBER_OF_INPUT_NEURONS = Config::LAYERS[0];
+				Config::NUMBER_OF_OUTPUT_NEURONS = Config::LAYERS[v.size() - 1];
+				Config::NUMBER_OF_LAYERS = v.size();					
 			}
 			else if (strcmp(argv[i], "-nb") == 0)
 			{
@@ -473,10 +507,7 @@ void display_help()
 
 	cout << "\n\nNetwork Configuration: \n";
 	cout << "\t -i \t\tInput? [Not Yet Implemented]\n";
-	cout << "\t -nin \t\t[" << Config::NUMBER_OF_INPUT_NEURONS << "] Number of input neurons \n";
-	cout << "\t -non \t\t[" << Config::NUMBER_OF_OUTPUT_NEURONS << "] Number of output neuors\n";
-	cout << "\t -nl \t\tNumber of layers [Not Yet Implemented]\n";
-	cout << "\t -nnil \t\tNumber of neurons in each layer [Not Yet Implemented]\n";
+	cout << "\t -nnil in,...,out \tNumber of neurons in each layer\n";
 	cout << "\t -nb \t\t[" << Config::NUMBER_OF_BITS_FOR_INPUT << "] Number of bits the network should expect for the input\n";
 	
 	cout << "\n\nNetwork Training Constants:\n";

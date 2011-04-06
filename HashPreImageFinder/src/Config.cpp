@@ -13,6 +13,9 @@ int Config::HASH_WIDTH_IN_BITS = 16;
 int Config::NUMBER_OF_INPUT_NEURONS = HASH_WIDTH_IN_BITS;
 int Config::NUMBER_OF_OUTPUT_NEURONS = HASH_WIDTH_IN_BITS;
 int Config::NUMBER_OF_BITS_FOR_INPUT = HASH_WIDTH_IN_BITS;
+int Config::NUMBER_OF_LAYERS = 4;
+
+int unsigned Config::LAYERS[] = {HASH_WIDTH_IN_BITS, HASH_WIDTH_IN_BITS};
 
 int Config::MAX_EPOCHS = 10000;
 int Config::REPORT_EVERY = 500;
@@ -22,3 +25,4 @@ double Config::DESIRED_ERROR = 0.00001;
 
 const char* Config::NETWORK_SAVE_NAME = "network_state.fannnet";
 const char* Config::DATA_FILE_NAME = "hash_training_data.fanndata";
+
