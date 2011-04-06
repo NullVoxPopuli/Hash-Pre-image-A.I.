@@ -19,7 +19,7 @@ public:
 	static int NUMBER_OF_BITS_FOR_INPUT;
 	static int NUMBER_OF_LAYERS;
 
-	static unsigned int LAYERS[];
+	static unsigned int LAYERS[100];
 	
 	static int MAX_EPOCHS;
 	static int REPORT_EVERY;
