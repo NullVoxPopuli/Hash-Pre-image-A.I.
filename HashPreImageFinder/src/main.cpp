@@ -526,9 +526,9 @@ void display_help()
 						cout << "\t\t\t\t all output go to a file with the date and time\n";
 	
 	cout << "\n\nSelecting Hashes: \n";
-	cout << "\t -kennys_hash_16\t\t [default] simple 16 bit hash";
-	cout << "\t -kennys_hash_8\t\t simple 8 bit hash";
-	cout << "\t -murmur\t\t\t 32 bit hash";
+	cout << "\t -kennys_hash_16\t [default] simple 16 bit hash\n";
+	cout << "\t -kennys_hash_8\t\t simple 8 bit hash\n";
+	cout << "\t -murmur\t\t 32 bit hash\n";
 	
 	cout << "\n\nTraining Modes: \n";
 	cout << "\t block\t\tTrains the network using dynamically generated, random data\n";
