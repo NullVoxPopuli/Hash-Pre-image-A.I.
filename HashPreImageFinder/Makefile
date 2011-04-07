@@ -1,7 +1,7 @@
 all: hPif clean
 
 hPif : src/main.o src/fann_utils.o src/hashes.o src/Config.o src/hashes/Murmur.o
-	g++ -o hPif src/main.o src/fann_utils.o src/hashes.o src/Config.o -lfann -L/usr/local/lib 
+	g++ -o hPif src/main.o src/fann_utils.o src/hashes.o src/Config.o src/hashes/Murmur.o -lfann -L/usr/local/lib 
 
 Murmur.o : src/hashes/Murmur.cpp src/hashes/Murmur.h
 	g++ -c src/hashes/Murmur.cpp

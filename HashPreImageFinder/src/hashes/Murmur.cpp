@@ -6,8 +6,11 @@
 using namespace std;
 
 //http://tanjent.livejournal.com/756623.html
-unsigned int Murmur::hash ( unsigned int output_binary, int len, unsigned int h )
+unsigned int Murmur::hash ( unsigned int output_binary)
 {
+	unsigned int h = 0; // seed
+	int len = 32; // length of the input
+	
 	const unsigned char * data;
 	ostringstream num;
 	num << output_binary;
@@ -16,7 +19,7 @@ unsigned int Murmur::hash ( unsigned int output_binary, int len, unsigned int h 
 	const unsigned int m = 0x7fd652ad;
 	const int r = 16;
 
-	h = Murmur::add_constant(h, 0xdeadbeef);
+	h += 0xdeadbeef;
 
 	while(len >= 4)
 	{
@@ -46,10 +49,4 @@ unsigned int Murmur::hash ( unsigned int output_binary, int len, unsigned int h 
 	h ^= h >> 17;
 
 	return h;
-}
-
-
-unsigned int Murmur::add_constant(unsigned int original, unsigned int constant)
-{
-	return original + constant;
 }

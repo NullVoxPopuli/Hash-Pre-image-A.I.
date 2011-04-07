@@ -17,6 +17,7 @@
 
 #include "Config.h"
 
+#include "hashes/Murmur.h"
 #include "hashes.h"
 #include "main.h"
 #include "fann_utils.h"
@@ -442,6 +443,12 @@ int main (int argc, const char * argv[])
 				Config::current_hash_function = &kennys_hash;
 				Config::HASH_WIDTH_IN_BITS = 8;
 			}
+			else if (strcmp(argv[i], "-murmur") == 0)
+			{
+				// need to figure out the syntax for this since the hash is in a class
+				Config::current_hash_function = Murmur::hash;
+				Config::HASH_WIDTH_IN_BITS = 32;
+			}
 			else
 			{
 				display_help();
@@ -517,6 +524,11 @@ void display_help()
 	cout << "\t -autoTest strt end n \t Auto test a trained newwork between two values for n number of values.\n";
 	cout << "\t -file \t\t\tInstead of standard out, outputting to the console, including this will have\n";
 						cout << "\t\t\t\t all output go to a file with the date and time\n";
+	
+	cout << "\n\nSelecting Hashes: \n";
+	cout << "\t -kennys_hash_16\t\t [default] simple 16 bit hash";
+	cout << "\t -kennys_hash_8\t\t simple 8 bit hash";
+	cout << "\t -murmur\t\t\t 32 bit hash";
 	
 	cout << "\n\nTraining Modes: \n";
 	cout << "\t block\t\tTrains the network using dynamically generated, random data\n";
