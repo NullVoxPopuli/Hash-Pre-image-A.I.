@@ -19,4 +19,6 @@ main.o: src/main.cpp src/main.h src/hashes.h src/Config.h
 	g++ -c src/main.cpp
 
 clean: 
-	rm -rf *o
+	rm -rf src/hashes/*.o
+	rm -rf src/*.o
+	rm -rf *.o
