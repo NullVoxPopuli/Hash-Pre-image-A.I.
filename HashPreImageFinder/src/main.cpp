@@ -36,6 +36,7 @@ void print_config()
 {
 	cout << "Configuration: \n";
 	cout << "     Network: \n";
+	cout << "\t # layers: " << Config::NUMBER_OF_LAYERS << "\n";
 	cout << "\t Network save name: " << Config::NETWORK_SAVE_NAME << "\n";
 	cout << "\t #input: " << Config::NUMBER_OF_INPUT_NEURONS << "\n";
 	for(int i = 1; i < Config::NUMBER_OF_LAYERS - 1; i++)
@@ -159,7 +160,7 @@ struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_o
 		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
 
 		boost::dynamic_bitset<> value( Config::HASH_WIDTH_IN_BITS, random());
-		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, kennys_hash_16(value.to_ulong()));
+		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, Config::current_hash_function(value.to_ulong()));
 
 		data->input[i] = data_input;
 		data_input += num_input;
@@ -210,16 +211,19 @@ void test_network()
 	
 	unsigned int output_binary = convert_fann_out_to_binary(calc_out, Config::HASH_WIDTH_IN_BITS);
 
-	unsigned int hashed = kennys_hash_16(output_binary);
+	unsigned int hashed = Config::current_hash_function(output_binary);
 
 	printf("Output: ... meh, Which hashes back to: %x\n\n", hashed);
 	
 }
 
-unsigned int test_network_with_value(int hash_value)
+unsigned int test_network_with_value(unsigned int hash_value)
 {
 	fann_type auto_fann_input[Config::HASH_WIDTH_IN_BITS];
-	string buffer = bitset<16>(hash_value).to_string();// convert to binary, store to string
+	
+	boost::dynamic_bitset<> bit_value(Config::HASH_WIDTH_IN_BITS, hash_value);
+	string buffer;
+	to_string(bit_value, buffer);
 	
 	// convert to fann format
 	for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
@@ -229,7 +233,7 @@ unsigned int test_network_with_value(int hash_value)
 	
 	fann_type *calc_out;
 	calc_out = fann_run(trained_network, auto_fann_input);
-	
+
 	unsigned int output_binary = convert_fann_out_to_binary(calc_out, Config::HASH_WIDTH_IN_BITS);
 	
 	return output_binary;
@@ -243,13 +247,13 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 	unsigned int hashed_value;
 	unsigned int result;
 	int failed = false;
-	
+	int num_failed = 0;
 	load_trained_network();
 	
 	for (unsigned int i = 0; i < num_of_data_sets_to_test; i ++)
 	{
 		random_pre_image_value = start + (unsigned int)(((end - start) * rand()) / (RAND_MAX + 1.0));
-		hashed_value = kennys_hash_16(random_pre_image_value);
+		hashed_value = Config::current_hash_function(random_pre_image_value);
 		result = test_network_with_value(hashed_value); 
 		
 		if (result != random_pre_image_value)
@@ -257,8 +261,9 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 			failed = true;
 			cout << "Error:\n";
 			cout << "   Hash:             " << hashed_value << "\n";
-			cout << "   Result:           " << result << "\n";
+			cout << "   Pre-Image:        " << result << "\n";
 			cout << "   Should Have been: " << random_pre_image_value << "\n\n";
+			num_failed++;
 		}
 	}
 	
@@ -266,7 +271,7 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 	{
 		cout << "All tested hashes were reversed successfully... \n";
 	}
-	
+	cout << "Number of failed tests: " << num_failed << "\n";
 	fann_destroy(trained_network);
 	
 }
@@ -388,6 +393,8 @@ int main (int argc, const char * argv[])
 			   	}
 				Config::NUMBER_OF_INPUT_NEURONS = Config::LAYERS[0];
 				Config::NUMBER_OF_OUTPUT_NEURONS = Config::LAYERS[v.size() - 1];
+				Config::NUMBER_OF_BITS_FOR_INPUT = Config::NUMBER_OF_INPUT_NEURONS;
+				Config::HASH_WIDTH_IN_BITS = Config::NUMBER_OF_INPUT_NEURONS;
 				Config::NUMBER_OF_LAYERS = v.size();					
 			}
 			else if (strcmp(argv[i], "-nb") == 0)
@@ -425,6 +432,16 @@ int main (int argc, const char * argv[])
 				Config::MAX_NUMBER_OF_TRAINING_DATA = atoi(argv[i + 1]);
 			}
 //			else if (atoi(argv[i]) > 0)
+			else if (strcmp(argv[i], "-kennys_hash_16") == 0)
+			{
+				Config::current_hash_function = &kennys_hash_16;
+				Config::HASH_WIDTH_IN_BITS = 16;
+			}
+			else if (strcmp(argv[i], "-kennys_hash_8") == 0)
+			{
+				Config::current_hash_function = &kennys_hash;
+				Config::HASH_WIDTH_IN_BITS = 8;
+			}
 			else
 			{
 				display_help();

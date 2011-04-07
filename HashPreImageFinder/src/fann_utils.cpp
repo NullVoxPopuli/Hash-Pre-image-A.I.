@@ -4,6 +4,9 @@
 #include <bitset>
 #include <cstring>
 
+#include <boost/dynamic_bitset.hpp>
+
+
 #include "fann.h"
 #include "floatfann.h"
 
@@ -114,11 +117,14 @@ void generate_train_file()
 	
 	for(int i = 0; i < Config::MAX_NUMBER_OF_TRAINING_DATA; i++)
 	{
-		bitset<16> bits_hash(kennys_hash_16(cur_value));
-		bitset<16> bits_value(cur_value);
-
-		file << convert_binary_to_FANN_array(bits_hash.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
-		file << convert_binary_to_FANN_array(bits_value.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
+		boost::dynamic_bitset<> bits_hash(Config::HASH_WIDTH_IN_BITS, Config::current_hash_function(cur_value));
+		boost::dynamic_bitset<> bits_value(Config::HASH_WIDTH_IN_BITS, cur_value);
+		
+		string buffer;
+		to_string(bits_hash, buffer);
+		file << convert_binary_to_FANN_array(buffer) << "\n";
+		to_string(bits_value, buffer);
+		file << convert_binary_to_FANN_array(buffer) << "\n";
 		cur_value++;
 		
 	}
