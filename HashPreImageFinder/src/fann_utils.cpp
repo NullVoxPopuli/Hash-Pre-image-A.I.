@@ -111,7 +111,7 @@ void generate_train_file()
 
 	ofstream file;
 	file.open(Config::DATA_FILE_NAME);
-	unsigned int cur_value = 0x00u;	
+	unsigned int cur_value = 0x0000u;	
 	
 	file << Config::MAX_NUMBER_OF_TRAINING_DATA << " " << Config::HASH_WIDTH_IN_BITS << " " << Config::HASH_WIDTH_IN_BITS << "\n";
 	
