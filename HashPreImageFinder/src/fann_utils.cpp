@@ -118,7 +118,7 @@ void generate_train_file()
 		bitset<16> bits_value(cur_value);
 
 		file << convert_binary_to_FANN_array(bits_hash.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
-		file << convert_binary_to_FANN_array(bits_value.to_string<char,char_traits<char>,allocator<char> >()) << "\n";
+		file << bits_value[0] << "\n";
 		cur_value++;
 		
 	}

@@ -10,6 +10,7 @@ public:
 	static int NEED_TO_TEST;
 	static int BYPASS_EVERYTHING;
 	static int GENERATE_TRAIN_DATA;
+	static int USE_SWARM;
 
 	static int MAX_NUMBER_OF_TRAINING_DATA;
 

@@ -25,8 +25,8 @@
 using namespace std;
 
 
-
 struct fann *trained_network;
+
 struct fann *fann_create_network(int num, unsigned int args[])
 {
 	return fann_create_standard_array(num, &args[0]);
@@ -52,6 +52,7 @@ void print_config()
 	cout << "\t Learning Rate: " << Config::LEARNING_RATE << "\n";
 	cout << "\n";
 }
+
 void train_network()
 {
     printf("Training ... \n");
@@ -178,6 +179,90 @@ struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_o
 		}
 	}
 	return data;
+}
+
+struct fann_train_data *generate_swarm_data(unsigned int num_input, unsigned int num_pairs, unsigned int output_position)
+{
+	struct fann_train_data *data = (struct fann_train_data *) malloc(sizeof(struct fann_train_data));
+	fann_init_error_data((struct fann_error *) data);
+	unsigned int i, j;
+	fann_type *data_input, *data_output;
+
+	data->num_data = num_pairs;
+	data->num_input = num_input;
+	data->num_output = 1;
+	data->input = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
+	data->output = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
+
+	boost::mt19937 gen;
+
+	data_input = (fann_type *) calloc(num_input * num_pairs, sizeof(fann_type));
+	data_output = (fann_type *) calloc(num_pairs, sizeof(fann_type));
+
+	for(i = 0; i != num_pairs; i++)
+	{
+		boost::uniform_real<> dist(0, pow(2,  Config::HASH_WIDTH_IN_BITS));
+		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
+
+		boost::dynamic_bitset<> value( Config::HASH_WIDTH_IN_BITS, random());
+		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, kennys_hash_16(value.to_ulong()));
+//		cout << value << " hashes to " << hash << "\n";
+
+		data->input[i] = data_input;
+		data_input += num_input;
+
+		for(j = 0; j != num_input; j++)
+		{
+			data->input[i][j] = hash[j];
+		}
+
+		data->output[i] = data_output;
+		data_output += 1;
+
+		data->output[i][0] = value[output_position];
+//		cout << "this network should map to " << value[output_position] << "\n";
+	}
+	return data;
+}
+
+struct fann **allocate_swarm()
+{
+	struct fann **for_the_swarm;
+	for_the_swarm = (fann**) malloc(sizeof(fann*) * Config::NUMBER_OF_OUTPUT_NEURONS);
+
+	int unsigned lastlayer = Config::LAYERS[Config::NUMBER_OF_LAYERS-1];
+	for(int i=0; i<Config::NUMBER_OF_OUTPUT_NEURONS; i++)
+	{
+		for_the_swarm[i] = fann_create_network(Config::NUMBER_OF_LAYERS, Config::LAYERS);
+		fann_set_learning_rate(for_the_swarm[i], Config::LEARNING_RATE);
+	    fann_set_activation_function_hidden(for_the_swarm[i], FANN_SIN_SYMMETRIC);
+	    fann_set_activation_function_output(for_the_swarm[i], FANN_COS_SYMMETRIC);
+	    fann_set_training_algorithm(for_the_swarm[i], FANN_TRAIN_BATCH);
+//	    fann_set_learning_momentum(for_the_swarm[i], 0.6);
+	}
+
+	return for_the_swarm;
+}
+
+void train_the_swarm(struct fann **swarm)
+{
+	for(int i=0; i<Config::NUMBER_OF_OUTPUT_NEURONS; i++)
+	{
+		cout << "Training ANN " << i+1 << " of " << Config::NUMBER_OF_OUTPUT_NEURONS << "\n";
+		struct fann_train_data *data = generate_swarm_data(Config::NUMBER_OF_INPUT_NEURONS, 10000, i);
+		fann_train_on_data(swarm[i], data, Config::MAX_EPOCHS, Config::REPORT_EVERY, Config::DESIRED_ERROR);
+		fann_destroy_train(data);
+		cout << "\n";
+	}
+}
+
+void free_the_swarm(struct fann **swarm)
+{
+	for(int i=0; i<Config::NUMBER_OF_OUTPUT_NEURONS; i++)
+	{
+		fann_destroy(swarm[i]);
+	}
+	free(swarm);
 }
 
 void load_trained_network()
@@ -414,17 +499,14 @@ int main (int argc, const char * argv[])
 			{
 				display_help();
 			}
-//=======
-//			else if (strcmp(argv[i], "-noFile") == 0)
-//			{
-//				Config::NEED_TO_TRAIN = true;
-//				Config::NO_FILE_TRAIN = true;
-//			}
 			else if (strcmp(argv[i], "-mTrnData") == 0)
 			{
 				Config::MAX_NUMBER_OF_TRAINING_DATA = atoi(argv[i + 1]);
 			}
-//			else if (atoi(argv[i]) > 0)
+			else if (strcmp(argv[i], "-useSwarm") == 0)
+			{
+				Config::USE_SWARM = true;
+			}
 			else
 			{
 				display_help();
@@ -443,6 +525,12 @@ int main (int argc, const char * argv[])
 
 	    char *filename = (char*)fname.c_str();
 
+	    if (Config::USE_SWARM)
+	    {
+	    	struct fann **swarm = allocate_swarm();
+	    	train_the_swarm(swarm);
+	    	free_the_swarm(swarm);
+	    }
 
 	    FILE  *fs;
 	    if (Config::OUTPUT_TO_FILE)
