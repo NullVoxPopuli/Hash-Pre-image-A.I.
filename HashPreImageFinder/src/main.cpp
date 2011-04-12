@@ -404,7 +404,14 @@ int main (int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-de") == 0) // desired error
 			{
-				Config::DESIRED_ERROR = atoi(argv[i + 1]);
+				if (strcmp(argv[i+1], "auto") == 0)
+				{
+					Config::DESIRED_ERROR = 1.0 / Config::MAX_NUMBER_OF_TRAINING_DATA / 2.0;
+				}
+				else
+				{
+					Config::DESIRED_ERROR = atoi(argv[i + 1]);
+				}
 			}
 			else if (strcmp(argv[i], "-lrate") == 0) // learning rate
 			{
@@ -540,7 +547,7 @@ void display_help()
 	cout << "\t -nb \t\t[" << Config::NUMBER_OF_BITS_FOR_INPUT << "] Number of bits the network should expect for the input\n";
 	
 	cout << "\n\nNetwork Training Constants:\n";
-	cout << "\t -de 0.00001 \t\t[" << Config::DESIRED_ERROR << "] Desired Error\n";
+	cout << "\t -de 0.00001 \t\t[" << Config::DESIRED_ERROR << "] Desired Error. You may use 'auto' instead of a number.\n";
 	cout << "\t -lrate 0.73 \t\t[" << Config::LEARNING_RATE << "] Learning Rate\n";
 	cout << "\t -epochs 10000 \t\t[" << Config::MAX_EPOCHS << "] Number of training iterations (epochs)\n";
 	cout << "\t -reports 500 \t\t[" << Config::REPORT_EVERY << "]After how many epochs should should the training report each time?\n";
