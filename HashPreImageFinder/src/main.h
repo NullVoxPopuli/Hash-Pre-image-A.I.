@@ -1,23 +1,21 @@
-
-
-#include <string>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
+#include <bitset>
+#include <sstream>
+#include <fstream>
+#include <time.h>
+#include <string.h>
+#include <vector>
+#include <functional>
 
-fann_type fann_input[32];
+#include "hashes/Murmur.h"
+#include "hashes.h"
 
 
-void train_network();
-void test_network();
-unsigned int test_network_with_value(int hash_image);
-void auto_test_network_with_random_data(unsigned int start, unsigned int end, unsigned int num_of_data_sets_to_test);
+#include "neural_network_basic.h"
 
-
-
-void load_trained_network();
 
 int main (int argc, const char * argv[]);
 
 void display_help();
-
-struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_output, unsigned int num_pairs);
