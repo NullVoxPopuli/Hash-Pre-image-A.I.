@@ -10,6 +10,7 @@
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/lexical_cast.hpp>
 
 
 #include "fann.h"
@@ -149,7 +150,8 @@ struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_o
 	data->input = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
 	data->output = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
 
-	boost::mt19937 gen;
+	time_t T = time(0);
+	boost::mt19937 gen(T);
 
 	data_input = (fann_type *) calloc(num_input * num_pairs, sizeof(fann_type));
 	data_output = (fann_type *) calloc(num_output * num_pairs, sizeof(fann_type));
@@ -194,7 +196,8 @@ struct fann_train_data *generate_swarm_data(unsigned int num_input, unsigned int
 	data->input = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
 	data->output = (fann_type **) calloc(num_pairs, sizeof(fann_type *));
 
-	boost::mt19937 gen;
+	time_t T = time(0);
+	boost::mt19937 gen(T);
 
 	data_input = (fann_type *) calloc(num_input * num_pairs, sizeof(fann_type));
 	data_output = (fann_type *) calloc(num_pairs, sizeof(fann_type));
@@ -238,7 +241,6 @@ struct fann **allocate_swarm()
 	    fann_set_activation_function_hidden(for_the_swarm[i], FANN_SIN_SYMMETRIC);
 	    fann_set_activation_function_output(for_the_swarm[i], FANN_COS_SYMMETRIC);
 	    fann_set_training_algorithm(for_the_swarm[i], FANN_TRAIN_BATCH);
-//	    fann_set_learning_momentum(for_the_swarm[i], 0.6);
 	}
 
 	return for_the_swarm;
@@ -249,7 +251,7 @@ void train_the_swarm(struct fann **swarm)
 	for(int i=0; i<Config::NUMBER_OF_OUTPUT_NEURONS; i++)
 	{
 		cout << "Training ANN " << i+1 << " of " << Config::NUMBER_OF_OUTPUT_NEURONS << "\n";
-		struct fann_train_data *data = generate_swarm_data(Config::NUMBER_OF_INPUT_NEURONS, 10000, i);
+		struct fann_train_data *data = generate_swarm_data(Config::NUMBER_OF_INPUT_NEURONS, Config::MAX_NUMBER_OF_TRAINING_DATA, i);
 		fann_train_on_data(swarm[i], data, Config::MAX_EPOCHS, Config::REPORT_EVERY, Config::DESIRED_ERROR);
 		fann_destroy_train(data);
 		cout << "\n";
@@ -260,7 +262,13 @@ void free_the_swarm(struct fann **swarm)
 {
 	for(int i=0; i<Config::NUMBER_OF_OUTPUT_NEURONS; i++)
 	{
+		//First, forever freeze the swarm
+		char *save_name = new char[100];
+		strcpy(save_name, Config::NETWORK_SAVE_NAME);
+		strcat(save_name, boost::lexical_cast<std::string>(i).c_str());
+	    fann_save(swarm[i], save_name);
 		fann_destroy(swarm[i]);
+		free(save_name);
 	}
 	free(swarm);
 }
@@ -268,7 +276,23 @@ void free_the_swarm(struct fann **swarm)
 void load_trained_network()
 {
     trained_network = fann_create_from_file(Config::NETWORK_SAVE_NAME);
+}
 
+struct fann **load_trained_swarm()
+{
+    struct fann **for_the_swarm;
+	for_the_swarm = (fann**) malloc(sizeof(fann*) * Config::NUMBER_OF_OUTPUT_NEURONS);
+	
+	for(int i=0; i<Config::NUMBER_OF_OUTPUT_NEURONS; i++)
+	{
+		char *load_name = new char[100];
+		strcpy(load_name, Config::NETWORK_SAVE_NAME);
+		strcat(load_name, boost::lexical_cast<std::string>(i).c_str());
+	    for_the_swarm[i] = fann_create_from_file(load_name);
+		free(load_name);
+	}
+	
+	return for_the_swarm;
 }
 
 string convert_array_to_string(fann_type *arr, int width)
@@ -320,6 +344,32 @@ unsigned int test_network_with_value(int hash_value)
 	return output_binary;
 }
 
+unsigned int test_swarm_with_value(struct fann **swarm, int hash_value)
+{
+	boost::dynamic_bitset<> output (Config::NUMBER_OF_OUTPUT_NEURONS);
+	boost::dynamic_bitset<> buffer( Config::HASH_WIDTH_IN_BITS, hash_value);
+	fann_type auto_fann_input[Config::HASH_WIDTH_IN_BITS];
+
+	for(int j=0; j < Config::HASH_WIDTH_IN_BITS; j++)
+	{
+		auto_fann_input[j] = (float)(buffer[j]);
+	}
+	
+	for(int i=0; i < Config::HASH_WIDTH_IN_BITS; i++)
+	{
+		fann_type *calc_out;
+		calc_out = fann_run(swarm[i], auto_fann_input);
+//		unsigned int output_binary = convert_fann_out_to_binary(calc_out, 1);
+//		cout << output_binary << "\n";
+		if (calc_out[0] > 0.5)
+			output[i] = 1;
+		else
+			output[i] = 0;
+	}
+//	cout << output << "\n";
+	return output.to_ulong();
+}
+
 void auto_test_network_with_random_data(unsigned int start, unsigned int end, unsigned int num_of_data_sets_to_test)
 {
 	// init randomness 
@@ -353,9 +403,49 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 	}
 	
 	fann_destroy(trained_network);
-	
 }
 
+void auto_test_swarm(struct fann **swarm, unsigned int num_of_data_sets_to_test)
+{
+	srand((unsigned)time(0));
+	unsigned int random_pre_image_value;
+	unsigned int hashed_value;
+	unsigned int result;
+	int failed = false;
+	int num_fail = 0;
+	time_t T = time(0);
+	boost::mt19937 gen(T);
+	
+	for (unsigned int i=0; i<num_of_data_sets_to_test; i++)
+	{
+		boost::uniform_real<> dist(0, pow(2,  Config::HASH_WIDTH_IN_BITS));
+		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
+
+		random_pre_image_value = random();
+		hashed_value = kennys_hash_16(random_pre_image_value);
+		result = test_swarm_with_value(swarm, hashed_value);
+
+		unsigned int result_hash = (unsigned int)kennys_hash_16(result);
+		if (result_hash != hashed_value)
+		{
+			failed = true;
+			cout << "Error:\n";
+			cout << "   Hash:             " << hashed_value << "\n";
+			cout << "   Result:           " << result << " (which hashes to " << (int)kennys_hash_16(result) << ")\n";
+			cout << "   Should Have been: " << random_pre_image_value << "\n\n";
+			num_fail += 1;
+		}
+	}
+	
+	if (!failed)
+	{
+		cout << "All tested hashes were reversed successfully... \n";
+	}
+	else
+	{
+		cout << num_fail << " of " << num_of_data_sets_to_test << " failed\n";
+	}
+}
 
 //http://stackoverflow.com/questions/5354194/how-do-i-change-the-default-local-time-format-in-c
 string get_current_time()
@@ -406,13 +496,13 @@ int main (int argc, const char * argv[])
 				Config::NEED_TO_TEST = true;
 				// next var is going to be the input
 
-				char temp_array[Config::HASH_WIDTH_IN_BITS];
-				strcpy(temp_array, argv[i + 1]);
-				
-				for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
-				{
-					fann_input[j] = (float)(temp_array[j] - '0');
-				}
+//				char temp_array[Config::HASH_WIDTH_IN_BITS];
+//				strcpy(temp_array, argv[i + 1]);
+//				
+//				for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
+//				{
+//					fann_input[j] = (float)(temp_array[j] - '0');
+//				}
 			}
 			else if (strcmp(argv[i], "-autoTest") == 0)
 			{
@@ -437,6 +527,10 @@ int main (int argc, const char * argv[])
 				else if (strcmp(argv[i+1], "block") == 0)
 				{
 					Config::NO_FILE_TRAIN = true;
+				}
+				else if (strcmp(argv[i+1], "swarm") == 0)
+				{
+					printHelpAndExit = false;
 				}
 				else
 				{
@@ -524,13 +618,7 @@ int main (int argc, const char * argv[])
 
 
 	    char *filename = (char*)fname.c_str();
-
-	    if (Config::USE_SWARM)
-	    {
-	    	struct fann **swarm = allocate_swarm();
-	    	train_the_swarm(swarm);
-	    	free_the_swarm(swarm);
-	    }
+		struct fann **swarm;
 
 	    FILE  *fs;
 	    if (Config::OUTPUT_TO_FILE)
@@ -549,17 +637,32 @@ int main (int argc, const char * argv[])
 	    {
 	    	if (Config::NO_FILE_TRAIN) {
 	    		train_network_no_file();
+			} else if (Config::USE_SWARM) {
+				swarm = allocate_swarm();
+				train_the_swarm(swarm);
 	    	} else {
 	    		train_network();
 	    	}
 	    }
 	    if (Config::NEED_TO_TEST)
 		{
-			load_trained_network();
-			test_network();     
-			fann_destroy(trained_network);
+			if (Config::USE_SWARM)
+			{
+				swarm = load_trained_swarm();
+				auto_test_swarm(swarm, 1000);
+			}
+			else
+			{
+				load_trained_network();
+				test_network();     
+				fann_destroy(trained_network);
+			}
 		}
 		
+	    if (Config::USE_SWARM)
+	    {
+	    	free_the_swarm(swarm);
+	    }
 	}
 	else
 	{
