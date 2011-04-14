@@ -456,6 +456,15 @@ int main (int argc, const char * argv[])
 				Config::current_hash_function = Murmur::hash;
 				Config::HASH_WIDTH_IN_BITS = 32;
 			}
+			else if (strcmp(argv[i], "-client") == 0)
+			{
+				// -client host_address port
+			}
+			else if (strcmp(argv[i], "-server") == 0)
+			{
+				// -server port#
+				
+			}
 			else
 			{
 				display_help();
