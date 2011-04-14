@@ -320,7 +320,12 @@ int main (int argc, const char * argv[])
 	{
 		for (int i = 1; i < argc; i++)
 		{
-			if (argv[i][0] != '-') continue;
+			if (argv[i][0] != '-') 
+			{
+				// bad argument
+				display_help();
+				exit(1);
+			}
 			
 			if (strcmp(argv[i], "-test") == 0)
 			{
@@ -329,6 +334,7 @@ int main (int argc, const char * argv[])
 
 				char temp_array[Config::HASH_WIDTH_IN_BITS];
 				strcpy(temp_array, argv[i + 1]);
+				i++;
 				
 				for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
 				{
@@ -338,6 +344,7 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-autoTest") == 0)
 			{
 				auto_test_network_with_random_data(atoi(argv[i + 1]), atoi(argv[i + 2]), atoi(argv[i + 3]));
+				i += 3;
 			}
 			else if (strcmp(argv[i], "-genTrain") == 0)
 			{
@@ -346,25 +353,19 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-train") == 0)
 			{
 				Config::NEED_TO_TRAIN = true;
-				bool printHelpAndExit = false;
-				if (i+1 >= argc)
+				if (strcmp(argv[i+1], "file") == 0)
 				{
-					printHelpAndExit = true;
-				}
-				else if (strcmp(argv[i+1], "file") == 0)
-				{
+					cout << "Training on file data... \n";
 					Config::NO_FILE_TRAIN = false;
+					i++;
 				}
 				else if (strcmp(argv[i+1], "block") == 0)
 				{
+					cout << "Training on generated data.... \n";
 					Config::NO_FILE_TRAIN = true;
+					i++;
 				}
 				else
-				{
-					printHelpAndExit = true;
-				}
-
-				if (printHelpAndExit)
 				{
 					cout << "need to specify train mode ('file' or 'block')\n";
 					exit(1);
@@ -379,28 +380,27 @@ int main (int argc, const char * argv[])
 				// bypasses all functions, used for testing single functions
 				Config::BYPASS_EVERYTHING = true;
 			}
-			else if (strcmp(argv[i], "-i") == 0) // input
-			{
-				
-			}
 			else if (strcmp(argv[i], "-nnil") == 0) // number of neurons in each layer
 			{
 				// should be formatted 8,16,6,8
 				// as in in,middle,middle,out
 				vector<string> v;
 				split(argv[i + 1], ',', v);
-				for (int i = 0; i < v.size( ); ++i) {
-					Config::LAYERS[i] = atoi(v[i].c_str());
+				for (int j = 0; j < v.size( ); ++j) {
+					Config::LAYERS[j] = atoi(v[j].c_str());
 			   	}
 				Config::NUMBER_OF_INPUT_NEURONS = Config::LAYERS[0];
 				Config::NUMBER_OF_OUTPUT_NEURONS = Config::LAYERS[v.size() - 1];
 				Config::NUMBER_OF_BITS_FOR_INPUT = Config::NUMBER_OF_INPUT_NEURONS;
 				Config::HASH_WIDTH_IN_BITS = Config::NUMBER_OF_INPUT_NEURONS;
-				Config::NUMBER_OF_LAYERS = v.size();					
+				Config::NUMBER_OF_LAYERS = v.size();
+				
+				i++;					
 			}
 			else if (strcmp(argv[i], "-nb") == 0)
 			{
 				Config::NUMBER_OF_BITS_FOR_INPUT = atoi(argv[i + 1]);
+				i++;
 			}
 			else if (strcmp(argv[i], "-de") == 0) // desired error
 			{
@@ -412,18 +412,22 @@ int main (int argc, const char * argv[])
 				{
 					Config::DESIRED_ERROR = atoi(argv[i + 1]);
 				}
+				i++;
 			}
 			else if (strcmp(argv[i], "-lrate") == 0) // learning rate
 			{
 				Config::LEARNING_RATE = atoi(argv[i + 1]);
+				i++;
 			}
 			else if (strcmp(argv[i], "-epochs") == 0) // max epochs
 			{
 				Config::MAX_EPOCHS = atoi(argv[i + 1]);
+				i++;
 			}
 			else if (strcmp(argv[i], "-reports") == 0) // reports every number of epochs
 			{
 				Config::REPORT_EVERY = atoi(argv[i + 1]);
+				i++;
 			}
 			else if (strcmp(argv[i], "-help") == 0)
 			{
@@ -438,6 +442,7 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-mTrnData") == 0)
 			{
 				Config::MAX_NUMBER_OF_TRAINING_DATA = atoi(argv[i + 1]);
+				i++;
 			}
 //			else if (atoi(argv[i]) > 0)
 			else if (strcmp(argv[i], "-kennys_hash_16") == 0)
@@ -542,7 +547,6 @@ void display_help()
 	cout << "\t file\t\tTrains the network using a pre-generated data file\n";
 
 	cout << "\n\nNetwork Configuration: \n";
-	cout << "\t -i \t\tInput? [Not Yet Implemented]\n";
 	cout << "\t -nnil in,...,out \tNumber of neurons in each layer\n";
 	cout << "\t -nb \t\t[" << Config::NUMBER_OF_BITS_FOR_INPUT << "] Number of bits the network should expect for the input\n";
 	
