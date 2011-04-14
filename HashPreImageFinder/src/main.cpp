@@ -162,7 +162,7 @@ struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_o
 		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
 
 		boost::dynamic_bitset<> value( Config::HASH_WIDTH_IN_BITS, random());
-		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, kennys_hash_16(value.to_ulong()));
+		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, kennys_hash(value.to_ulong()));
 
 		data->input[i] = data_input;
 		data_input += num_input;
@@ -208,7 +208,7 @@ struct fann_train_data *generate_swarm_data(unsigned int num_input, unsigned int
 		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
 
 		boost::dynamic_bitset<> value( Config::HASH_WIDTH_IN_BITS, random());
-		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, kennys_hash_16(value.to_ulong()));
+		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, kennys_hash(value.to_ulong()));
 //		cout << value << " hashes to " << hash << "\n";
 
 		data->input[i] = data_input;
@@ -233,7 +233,7 @@ struct fann **allocate_swarm()
 	struct fann **for_the_swarm;
 	for_the_swarm = (fann**) malloc(sizeof(fann*) * Config::NUMBER_OF_OUTPUT_NEURONS);
 
-	int unsigned lastlayer = Config::LAYERS[Config::NUMBER_OF_LAYERS-1];
+	Config::LAYERS[Config::NUMBER_OF_LAYERS-1] = 1;
 	for(int i=0; i<Config::NUMBER_OF_OUTPUT_NEURONS; i++)
 	{
 		for_the_swarm[i] = fann_create_network(Config::NUMBER_OF_LAYERS, Config::LAYERS);
@@ -319,7 +319,7 @@ void test_network()
 	
 	unsigned int output_binary = convert_fann_out_to_binary(calc_out, Config::HASH_WIDTH_IN_BITS);
 
-	unsigned int hashed = kennys_hash_16(output_binary);
+	unsigned int hashed = kennys_hash(output_binary);
 
 	printf("Output: ... meh, Which hashes back to: %x\n\n", hashed);
 	
@@ -384,7 +384,7 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 	for (unsigned int i = 0; i < num_of_data_sets_to_test; i ++)
 	{
 		random_pre_image_value = start + (unsigned int)(((end - start) * rand()) / (RAND_MAX + 1.0));
-		hashed_value = kennys_hash_16(random_pre_image_value);
+		hashed_value = kennys_hash(random_pre_image_value);
 		result = test_network_with_value(hashed_value); 
 		
 		if (result != random_pre_image_value)
@@ -422,16 +422,16 @@ void auto_test_swarm(struct fann **swarm, unsigned int num_of_data_sets_to_test)
 		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
 
 		random_pre_image_value = random();
-		hashed_value = kennys_hash_16(random_pre_image_value);
+		hashed_value = kennys_hash(random_pre_image_value);
 		result = test_swarm_with_value(swarm, hashed_value);
 
-		unsigned int result_hash = (unsigned int)kennys_hash_16(result);
+		unsigned int result_hash = (unsigned int)kennys_hash(result);
 		if (result_hash != hashed_value)
 		{
 			failed = true;
 			cout << "Error:\n";
 			cout << "   Hash:             " << hashed_value << "\n";
-			cout << "   Result:           " << result << " (which hashes to " << (int)kennys_hash_16(result) << ")\n";
+			cout << "   Result:           " << result << " (which hashes to " << (int)kennys_hash(result) << ")\n";
 			cout << "   Should Have been: " << random_pre_image_value << "\n\n";
 			num_fail += 1;
 		}
@@ -494,6 +494,7 @@ int main (int argc, const char * argv[])
 			if (strcmp(argv[i], "-test") == 0)
 			{
 				Config::NEED_TO_TEST = true;
+				Config::NUM_TEST_POINTS = atoi(argv[i+1]);
 				// next var is going to be the input
 
 //				char temp_array[Config::HASH_WIDTH_IN_BITS];
@@ -649,7 +650,7 @@ int main (int argc, const char * argv[])
 			if (Config::USE_SWARM)
 			{
 				swarm = load_trained_swarm();
-				auto_test_swarm(swarm, 1000);
+				auto_test_swarm(swarm, Config::NUM_TEST_POINTS);
 			}
 			else
 			{
