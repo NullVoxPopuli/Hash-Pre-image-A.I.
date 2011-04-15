@@ -34,6 +34,8 @@ void split(const string& s, char c,
 
 int main (int argc, const char * argv[])
 {
+	fann_type *fann_input;
+	
     // handle arguments
     if (argc < 2)
 	{
@@ -95,7 +97,7 @@ int main (int argc, const char * argv[])
 				}
 				else if (strcmp(argv[i+1], "swarm") == 0)
 				{
-					printHelpAndExit = false;
+					i++;
 				}
 				else
 				{
@@ -173,6 +175,7 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-useSwarm") == 0)
 			{
 				Config::USE_SWARM = true;
+			}
 			else if (strcmp(argv[i], "-kennys_hash_16") == 0)
 			{
 				Config::current_hash_function = &kennys_hash_16;
@@ -236,12 +239,13 @@ int main (int argc, const char * argv[])
 		{
 			if (Config::USE_SWARM)
 			{
-				cout << "Normal testing not yet implemented for swarms"
+				cout << "Normal testing not yet implemented for swarms";
 			}
 			else
 			{
-				load_trained_network();
-				test_network();
+				struct fann * trained_network = load_trained_network();
+				test_network(trained_network, fann_input);
+				fann_destroy(trained_network); 
 			}
 		}
 		if (Config::NEED_TO_AUTOTEST)

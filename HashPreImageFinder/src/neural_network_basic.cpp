@@ -1,4 +1,3 @@
-
 #include "neural_network_basic.h"
 
 struct fann *fann_create_network(int num, unsigned int args[])
@@ -246,9 +245,9 @@ void free_the_swarm(struct fann **swarm)
 	free(swarm);
 }
 
-void load_trained_network()
+struct fann * load_trained_network()
 {
-    trained_network = fann_create_from_file(Config::NETWORK_SAVE_NAME);
+    return fann_create_from_file(Config::NETWORK_SAVE_NAME);
 
 }
 
@@ -269,7 +268,7 @@ struct fann **load_trained_swarm()
 	return for_the_swarm;
 }
 
-void test_network()
+void test_network(struct fann * trained_network, fann_type *fann_input)
 {
     printf("Running trained network ... \n ");
     
@@ -286,11 +285,10 @@ void test_network()
 	unsigned int hashed = Config::current_hash_function(output_binary);
 
 	printf("Output: ... meh, Which hashes back to: %x\n\n", hashed);
-	fann_destroy(trained_network);
 	
 }
 
-unsigned int test_network_with_value(unsigned int hash_value)
+unsigned int test_network_with_value(struct fann * trained_network, unsigned int hash_value)
 {
 	fann_type auto_fann_input[Config::HASH_WIDTH_IN_BITS];
 	
@@ -308,9 +306,7 @@ unsigned int test_network_with_value(unsigned int hash_value)
 	calc_out = fann_run(trained_network, auto_fann_input);
 
 	unsigned int output_binary = convert_fann_out_to_binary(calc_out, Config::HASH_WIDTH_IN_BITS);
-	
-	fann_destroy(trained_network);
-	
+		
 	return output_binary;
 }
 
@@ -323,13 +319,13 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 	unsigned int result;
 	int failed = false;
 	int num_failed = 0;
-	load_trained_network();
+	struct fann * trained_network = load_trained_network();
 	
 	for (unsigned int i = 0; i < num_of_data_sets_to_test; i ++)
 	{
 		random_pre_image_value = start + (unsigned int)(((end - start) * rand()) / (RAND_MAX + 1.0));
 		hashed_value = Config::current_hash_function(random_pre_image_value);
-		result = test_network_with_value(hashed_value); 
+		result = test_network_with_value(trained_network, hashed_value); 
 		
 		if (result != random_pre_image_value)
 		{
@@ -347,8 +343,6 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 		std::cout << "All tested hashes were reversed successfully... \n";
 	}
 	std::cout << "Number of failed tests: " << num_failed << "\n";
-	fann_destroy(trained_network);
-	
 }
 
 unsigned int test_swarm_with_value(struct fann **swarm, int hash_value)
@@ -394,16 +388,16 @@ void auto_test_swarm(struct fann **swarm, unsigned int num_of_data_sets_to_test)
 		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
 
 		random_pre_image_value = random();
-		hashed_value = kennys_hash_16(random_pre_image_value);
+		hashed_value = Config::current_hash_function(random_pre_image_value);
 		result = test_swarm_with_value(swarm, hashed_value);
 
-		unsigned int result_hash = (unsigned int)kennys_hash_16(result);
+		unsigned int result_hash = (unsigned int)Config::current_hash_function(result);
 		if (result_hash != hashed_value)
 		{
 			failed = true;
 			cout << "Error:\n";
 			cout << "   Hash:             " << hashed_value << "\n";
-			cout << "   Result:           " << result << " (which hashes to " << (int)kennys_hash_16(result) << ")\n";
+			cout << "   Result:           " << result << " (which hashes to " << (unsigned int)Config::current_hash_function(result) << ")\n";
 			cout << "   Should Have been: " << random_pre_image_value << "\n\n";
 			num_fail += 1;
 		}
