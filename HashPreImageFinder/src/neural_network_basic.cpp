@@ -155,15 +155,15 @@ struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_o
 	return data;
 }
 
-void load_trained_network()
+struct fann * load_trained_network()
 {
-    trained_network = fann_create_from_file(Config::NETWORK_SAVE_NAME);
+    return fann_create_from_file(Config::NETWORK_SAVE_NAME);
 
 }
 
 
 
-void test_network()
+void test_network(struct fann * trained_network, fann_type *fann_input)
 {
     printf("Running trained network ... \n ");
     
@@ -180,11 +180,10 @@ void test_network()
 	unsigned int hashed = Config::current_hash_function(output_binary);
 
 	printf("Output: ... meh, Which hashes back to: %x\n\n", hashed);
-	fann_destroy(trained_network);
 	
 }
 
-unsigned int test_network_with_value(unsigned int hash_value)
+unsigned int test_network_with_value(struct fann * trained_network, unsigned int hash_value)
 {
 	fann_type auto_fann_input[Config::HASH_WIDTH_IN_BITS];
 	
@@ -202,9 +201,7 @@ unsigned int test_network_with_value(unsigned int hash_value)
 	calc_out = fann_run(trained_network, auto_fann_input);
 
 	unsigned int output_binary = convert_fann_out_to_binary(calc_out, Config::HASH_WIDTH_IN_BITS);
-	
-	fann_destroy(trained_network);
-	
+		
 	return output_binary;
 }
 
@@ -217,13 +214,13 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 	unsigned int result;
 	int failed = false;
 	int num_failed = 0;
-	load_trained_network();
+	struct fann * trained_network = load_trained_network();
 	
 	for (unsigned int i = 0; i < num_of_data_sets_to_test; i ++)
 	{
 		random_pre_image_value = start + (unsigned int)(((end - start) * rand()) / (RAND_MAX + 1.0));
 		hashed_value = Config::current_hash_function(random_pre_image_value);
-		result = test_network_with_value(hashed_value); 
+		result = test_network_with_value(trained_network, hashed_value); 
 		
 		if (result != random_pre_image_value)
 		{
@@ -241,6 +238,4 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 		std::cout << "All tested hashes were reversed successfully... \n";
 	}
 	std::cout << "Number of failed tests: " << num_failed << "\n";
-	fann_destroy(trained_network);
-	
 }
