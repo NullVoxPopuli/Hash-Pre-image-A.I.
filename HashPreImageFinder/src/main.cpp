@@ -36,6 +36,8 @@ void split(const string& s, char c,
 
 int main (int argc, const char * argv[])
 {
+	fann_type *fann_input;
+	
     // handle arguments
     if (argc < 2)
 	{
@@ -230,8 +232,9 @@ int main (int argc, const char * argv[])
 	    }
 	    if (Config::NEED_TO_TEST)
 		{
-			load_trained_network();
-			test_network();     
+			struct fann * trained_network = load_trained_network();
+			test_network(trained_network, fann_input);
+			fann_destroy(trained_network); 
 		}
 		
 	}
