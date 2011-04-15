@@ -1,9 +1,12 @@
 #include "Config.h"
+#include "hashes.h"
+#include "hashes/Murmur.h"
 
 int Config::OUTPUT_TO_FILE = false;
 int Config::NEED_TO_TRAIN = false;
 int Config::NO_FILE_TRAIN = false;
 int Config::NEED_TO_TEST = false;
+int Config::NEED_TO_AUTOTEST = false;
 int Config::BYPASS_EVERYTHING = false;
 int Config::GENERATE_TRAIN_DATA = false;
 int Config::USE_SWARM = false;
@@ -30,3 +33,4 @@ double Config::DESIRED_ERROR = 0.00001;
 const char* Config::NETWORK_SAVE_NAME = "network_state.fannnet";
 const char* Config::DATA_FILE_NAME = "hash_training_data.fanndata";
 
+unsigned int (*Config::current_hash_function)(unsigned int) = kennys_hash_16;

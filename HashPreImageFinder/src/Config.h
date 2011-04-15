@@ -8,6 +8,7 @@ public:
 	static int NEED_TO_TRAIN;
 	static int NO_FILE_TRAIN;
 	static int NEED_TO_TEST;
+	static int NEED_TO_AUTOTEST;
 	static int BYPASS_EVERYTHING;
 	static int GENERATE_TRAIN_DATA;
 	static int USE_SWARM;
@@ -32,4 +33,5 @@ public:
 	static const char* NETWORK_SAVE_NAME;
 	static const char* DATA_FILE_NAME;
 	
+	unsigned static int (*current_hash_function)(unsigned int);
 };
