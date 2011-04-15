@@ -50,6 +50,7 @@ int main (int argc, const char * argv[])
 			if (argv[i][0] != '-') 
 			{
 				// bad argument
+				cout << "Unidentified Parameter: " << argv[i] << "\n\n";
 				display_help();
 				exit(1);
 			}
