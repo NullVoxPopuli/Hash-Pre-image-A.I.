@@ -93,6 +93,18 @@ string convert_FANN_array_to_binary(string fann_array)
     return result;
 }
 
+
+string convert_array_to_string(fann_type *arr, int width)
+{
+	ostringstream result;
+	for (int i = 0; i < width; i++)
+	{
+		result << arr[i];
+	}
+	return result.str();
+}
+
+
 string pad_word(string word_to_pad, int width)
 {
     ostringstream result;
