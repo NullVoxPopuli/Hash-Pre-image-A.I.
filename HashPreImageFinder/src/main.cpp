@@ -162,7 +162,7 @@ struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_o
 		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
 
 		boost::dynamic_bitset<> value( Config::HASH_WIDTH_IN_BITS, random());
-		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, kennys_hash(value.to_ulong()));
+		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, kennys_hash_16(value.to_ulong()));
 
 		data->input[i] = data_input;
 		data_input += num_input;
@@ -208,7 +208,7 @@ struct fann_train_data *generate_swarm_data(unsigned int num_input, unsigned int
 		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
 
 		boost::dynamic_bitset<> value( Config::HASH_WIDTH_IN_BITS, random());
-		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, kennys_hash(value.to_ulong()));
+		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, kennys_hash_16(value.to_ulong()));
 //		cout << value << " hashes to " << hash << "\n";
 
 		data->input[i] = data_input;
@@ -319,7 +319,7 @@ void test_network()
 	
 	unsigned int output_binary = convert_fann_out_to_binary(calc_out, Config::HASH_WIDTH_IN_BITS);
 
-	unsigned int hashed = kennys_hash(output_binary);
+	unsigned int hashed = kennys_hash_16(output_binary);
 
 	printf("Output: ... meh, Which hashes back to: %x\n\n", hashed);
 	
@@ -384,7 +384,7 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 	for (unsigned int i = 0; i < num_of_data_sets_to_test; i ++)
 	{
 		random_pre_image_value = start + (unsigned int)(((end - start) * rand()) / (RAND_MAX + 1.0));
-		hashed_value = kennys_hash(random_pre_image_value);
+		hashed_value = kennys_hash_16(random_pre_image_value);
 		result = test_network_with_value(hashed_value); 
 		
 		if (result != random_pre_image_value)
@@ -422,16 +422,16 @@ void auto_test_swarm(struct fann **swarm, unsigned int num_of_data_sets_to_test)
 		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
 
 		random_pre_image_value = random();
-		hashed_value = kennys_hash(random_pre_image_value);
+		hashed_value = kennys_hash_16(random_pre_image_value);
 		result = test_swarm_with_value(swarm, hashed_value);
 
-		unsigned int result_hash = (unsigned int)kennys_hash(result);
+		unsigned int result_hash = (unsigned int)kennys_hash_16(result);
 		if (result_hash != hashed_value)
 		{
 			failed = true;
 			cout << "Error:\n";
 			cout << "   Hash:             " << hashed_value << "\n";
-			cout << "   Result:           " << result << " (which hashes to " << (int)kennys_hash(result) << ")\n";
+			cout << "   Result:           " << result << " (which hashes to " << (int)kennys_hash_16(result) << ")\n";
 			cout << "   Should Have been: " << random_pre_image_value << "\n\n";
 			num_fail += 1;
 		}
@@ -655,7 +655,7 @@ int main (int argc, const char * argv[])
 			else
 			{
 				load_trained_network();
-				test_network();     
+				test_network();
 				fann_destroy(trained_network);
 			}
 		}
