@@ -11,7 +11,7 @@
 
 #include "hashes/Murmur.h"
 #include "hashes.h"
-
+#include "cloud/chat_server.h"
 
 #include "neural_network_basic.h"
 

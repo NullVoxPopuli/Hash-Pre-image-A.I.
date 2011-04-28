@@ -198,6 +198,15 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-server") == 0)
 			{
 				// -server port#
+				if(start_server(atoi(argv[i + 1])))
+				{
+					i++;
+				}
+				else
+				{
+					cout << "Server failed to start";
+					exit(1);
+				}
 				
 			}
 			else
