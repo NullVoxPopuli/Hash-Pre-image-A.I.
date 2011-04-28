@@ -1,3 +1,23 @@
+####################################################################################
+# PATHS and system dependent logic
+####################################################################################
+#mac boost is in opt/local/lib because of macports
+MAC_BOOST_PATH = -L/opt/local/lib/
+LINUX_BOOST_PATH = -L/usr/lib/
+DEFAULT_PATH = -L/usr/local/lib/
+BOOST_PATH = $(DEFAULT_PATH)
+
+UNAME=$(shell uname)
+ifeq ($(UNAME), Darwin)
+BOOST_PATH = $(MAC_BOOST_PATH)
+endif
+ifeq ($(UNAME), Linux)
+BOOST_PATH = $(LINUX_BOOST_PATH)
+endif
+
+####################################################################################
+# objects
+####################################################################################
 main_objects = src/main.o src/fann_utils.o src/Config.o
 
 network_objects = src/neural_network_basic.o
@@ -6,16 +26,28 @@ cloud_objects = src/cloud/client.o src/cloud/server.o
 
 all_objects = $(main_objects) $(hash_objects) $(network_objects) $(cloud_objects)
 
+####################################################################################
+# libraries
+####################################################################################
+FANN = -lfann
+BOOST_NETWORKING = -lboost_system -lboost_thread-mt
+
+####################################################################################
+# compile the actual code
+####################################################################################
+
 all: hPif clean
+	@echo compiling for $(UNAME)
+	
 
 hPif : $(all_objects)
-	g++ -o hPif $(all_objects) -lfann -L/usr/local/lib 
+	g++ -o hPif $(all_objects) $(FANN) $(BOOST_NETWORKING) $(DEFAULT_PATH) $(BOOST_PATH)
 
 src/cloud/client.o : src/cloud/chat_client.cpp src/cloud/chat_message.hpp
-	g++ -c src/cloud/chat_client.cpp -o $@
+	g++ -c src/cloud/chat_client.cpp -o $@  $(BOOST_PATH)
 
 src/cloud/server.o : src/cloud/chat_server.cpp src/cloud/chat_message.hpp src/cloud/chat_server.h
-	g++ -c src/cloud/chat_server.cpp -o $@
+	g++ -c src/cloud/chat_server.cpp -o $@  $(BOOST_PATH)
 
 neural_network_basic.o : src/neural_network_basic.cpp src/neural_network_basic.h
 	g++ -c src/neural_network_basic.cpp
