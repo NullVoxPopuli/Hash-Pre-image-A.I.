@@ -37,13 +37,12 @@ BOOST_NETWORKING = -lboost_system -lboost_thread-mt
 ####################################################################################
 
 all: hPif clean
-	@echo compiling for $(UNAME)
-	
+
 
 hPif : $(all_objects)
 	g++ -o hPif $(all_objects) $(FANN) $(BOOST_NETWORKING) $(DEFAULT_PATH) $(BOOST_PATH)
 
-src/cloud/client.o : src/cloud/chat_client.cpp src/cloud/chat_message.hpp
+src/cloud/client.o : src/cloud/chat_client.cpp src/cloud/chat_message.hpp src/cloud/chat_client.h
 	g++ -c src/cloud/chat_client.cpp -o $@  $(BOOST_PATH)
 
 src/cloud/server.o : src/cloud/chat_server.cpp src/cloud/chat_message.hpp src/cloud/chat_server.h
@@ -66,6 +65,7 @@ fann_utils.o: src/fann_utils.cpp fann_utils.h
 
 main.o: src/main.cpp src/main.h 
 	g++ -c src/main.cpp
+	@echo compiling for $(UNAME)
 
 clean: 
 	rm -rf src/cloud/*.o

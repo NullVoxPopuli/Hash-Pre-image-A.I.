@@ -194,6 +194,15 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-client") == 0)
 			{
 				// -client host_address port
+				if(start_client(argv[i + 1], argv[i + 2]))
+				{
+					i += 2;
+				}
+				else
+				{
+					cout << "Client failed to start";
+					exit(1);
+				}
 			}
 			else if (strcmp(argv[i], "-server") == 0)
 			{
@@ -304,6 +313,11 @@ void display_help()
 	cout << "\t -epochs 10000 \t\t[" << Config::MAX_EPOCHS << "] Number of training iterations (epochs)\n";
 	cout << "\t -reports 500 \t\t[" << Config::REPORT_EVERY << "]After how many epochs should should the training report each time?\n";
 	
+	cout << "\n\nCloud Configuration:\n";
+	cout << "\t -client host port \t runs an instance of this program to do tasks by a dedicated server.\n";
+	cout << "\t -server port \t runs the server that will distribute processsing and data sets to clients.\n";
+	
+		
 	cout << "\n\nDeveloper Options: \n";
 	cout << "\t -bypass \tUsed for skipping all normal functionality and for testing specific functions\n";
 	
