@@ -29,6 +29,7 @@ public:
 
 	static double LEARNING_RATE;
 	static double DESIRED_ERROR;
+	static double LEARNING_MOMENTUM;
 
 	static const char* NETWORK_SAVE_NAME;
 	static const char* DATA_FILE_NAME;

@@ -29,6 +29,7 @@ int Config::REPORT_EVERY = 1000;
 
 double Config::LEARNING_RATE = 0.7;
 double Config::DESIRED_ERROR = 0.00001;
+double Config::LEARNING_MOMENTUM = 1.5;
 
 const char* Config::NETWORK_SAVE_NAME = "network_state.fannnet";
 const char* Config::DATA_FILE_NAME = "hash_training_data.fanndata";

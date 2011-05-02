@@ -188,13 +188,14 @@ struct fann_train_data *generate_swarm_data(unsigned int num_input, unsigned int
 
 		for(j = 0; j != num_input; j++)
 		{
-			data->input[i][j] = hash[j];
+			data->input[i][j] = (hash[j] == 0 ? -1 : 1);
 		}
 
 		data->output[i] = data_output;
 		data_output += 1;
 
-		data->output[i][0] = value[output_position];
+		data->output[i][0] = (value[output_position] == 0 ? -1 : 1);
+		
 //		cout << "this network should map to " << value[output_position] << "\n";
 	}
 	return data;
@@ -210,8 +211,9 @@ struct fann **allocate_swarm()
 	{
 		for_the_swarm[i] = fann_create_network(Config::NUMBER_OF_LAYERS, Config::LAYERS);
 		fann_set_learning_rate(for_the_swarm[i], Config::LEARNING_RATE);
-	    fann_set_activation_function_hidden(for_the_swarm[i], FANN_SIN_SYMMETRIC);
-	    fann_set_activation_function_output(for_the_swarm[i], FANN_COS_SYMMETRIC);
+		fann_set_learning_momentum(for_the_swarm[i], Config::LEARNING_MOMENTUM);
+	    fann_set_activation_function_hidden(for_the_swarm[i], FANN_SIGMOID_SYMMETRIC);
+	    fann_set_activation_function_output(for_the_swarm[i], FANN_SIGMOID_SYMMETRIC);
 	    fann_set_training_algorithm(for_the_swarm[i], FANN_TRAIN_BATCH);
 	}
 
@@ -353,7 +355,7 @@ unsigned int test_swarm_with_value(struct fann **swarm, int hash_value)
 
 	for(int j=0; j < Config::HASH_WIDTH_IN_BITS; j++)
 	{
-		auto_fann_input[j] = (float)(buffer[j]);
+		auto_fann_input[j] = (float)(buffer[j] == 0 ? -1 : 1);
 	}
 	
 	for(int i=0; i < Config::HASH_WIDTH_IN_BITS; i++)
@@ -362,10 +364,14 @@ unsigned int test_swarm_with_value(struct fann **swarm, int hash_value)
 		calc_out = fann_run(swarm[i], auto_fann_input);
 //		unsigned int output_binary = convert_fann_out_to_binary(calc_out, 1);
 //		cout << output_binary << "\n";
-		if (calc_out[0] > 0.5)
+		if (calc_out[0] > 0)
+		{
 			output[i] = 1;
+		}
 		else
+		{
 			output[i] = 0;
+		}
 	}
 //	cout << output << "\n";
 	return output.to_ulong();
