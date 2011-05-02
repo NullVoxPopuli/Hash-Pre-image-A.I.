@@ -78,7 +78,7 @@ void train_network_no_file()
 		for(epoch = 0; epoch <= Config::MAX_EPOCHS; epoch++)
 		{
 			struct fann_train_data *data = generate_data( Config::NUMBER_OF_INPUT_NEURONS, 
-														 Config::NUMBER_OF_OUTPUT_NEURONS, 30000);
+														 Config::NUMBER_OF_OUTPUT_NEURONS, Config::MAX_NUMBER_OF_TRAINING_DATA);
 			error = fann_train_epoch(ann, data);
 			fann_destroy_train(data);
 			desired_error_reached = fann_desired_error_reached(ann, Config::DESIRED_ERROR);

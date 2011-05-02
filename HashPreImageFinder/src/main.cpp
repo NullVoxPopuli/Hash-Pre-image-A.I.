@@ -185,6 +185,11 @@ int main (int argc, const char * argv[])
 				Config::current_hash_function = &kennys_hash;
 				Config::HASH_WIDTH_IN_BITS = 8;
 			}
+			else if (strcmp(argv[i], "-prestons_hash_8") == 0)
+			{
+				Config::current_hash_function = &prestons_hash_8;
+				Config::HASH_WIDTH_IN_BITS = 8;
+			}
 			else if (strcmp(argv[i], "-murmur") == 0)
 			{
 				// need to figure out the syntax for this since the hash is in a class
@@ -270,6 +275,7 @@ void display_help()
 	cout << "\n\nSelecting Hashes: \n";
 	cout << "\t -kennys_hash_16\t [default] simple 16 bit hash\n";
 	cout << "\t -kennys_hash_8\t\t simple 8 bit hash\n";
+	cout << "\t -prestons_hash_8\t\t 8 bit hash based off murmur\n";
 	cout << "\t -murmur\t\t 32 bit hash\n";
 	
 	cout << "\n\nTraining Modes: \n";
