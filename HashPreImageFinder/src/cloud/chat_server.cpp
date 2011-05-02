@@ -34,6 +34,16 @@ class chat_participant
 public:
   virtual ~chat_participant() {}
   virtual void deliver(const chat_message& msg) = 0;
+
+	int get_client_id(){
+		return client_id;
+	}
+	
+	void set_client_id(int id){
+		client_id = id;
+	}
+private:
+	int client_id; // -1 means not assigned yet
 };
 
 typedef boost::shared_ptr<chat_participant> chat_participant_ptr;
@@ -201,7 +211,11 @@ public:
             boost::asio::placeholders::error));
     }
   }
-
+	
+	chat_room get_room()
+	{
+		return room_;
+	}
 private:
   boost::asio::io_service& io_service_;
   tcp::acceptor acceptor_;
@@ -213,38 +227,6 @@ typedef std::list<chat_server_ptr> chat_server_list;
 
 //----------------------------------------------------------------------
 
-// int main(int argc, char* argv[])
-// {
-//   try
-//   {
-//     if (argc < 2)
-//     {
-//       std::cerr << "Usage: chat_server <port> [<port> ...]\n";
-//       return 1;
-//     }
-// 
-//     boost::asio::io_service io_service;
-// 
-//     chat_server_list servers;
-//     for (int i = 1; i < argc; ++i)
-//     {
-//       using namespace std; // For atoi.
-//       tcp::endpoint endpoint(tcp::v4(), atoi(argv[i]));
-//       chat_server_ptr server(new chat_server(io_service, endpoint));
-//       servers.push_back(server);
-//     }
-// 
-//     io_service.run();
-//   }
-//   catch (std::exception& e)
-//   {
-//     std::cerr << "Exception: " << e.what() << "\n";
-//   }
-// 
-//   return 0;
-// }
-// returns true if the server successfully started
-// false otherwise
 int start_server(int port)
 {
 	try
@@ -260,6 +242,20 @@ int start_server(int port)
 		servers.push_back(server);
 
 		io_service.run();
+		
+		chat_room cr = server->get_room();
+		// the server will now act as a terminal / command line
+		char line[chat_message::max_body_length + 1];
+	    while (std::cin.getline(line, chat_message::max_body_length + 1))
+	    {
+	      using namespace std; // For strlen and memcpy.
+	      chat_message msg;
+	      msg.body_length(strlen(line));
+	      memcpy(msg.body(), line, msg.body_length());
+	      msg.encode_header();
+		  cr.deliver(msg);
+	    }
+		
 		return true;
 	 }
 	 catch (std::exception& e)
