@@ -63,7 +63,7 @@ unsigned int prestons_hash_8(unsigned int pre_image)
 		// will be useful later, when we have inputs of any length
 		h += *(unsigned char *)data;
 		h *= m;
-		h ^= h >> num_to_shift_by;
+		// h ^= h >> num_to_shift_by;
 		
 		data += step_size;
 		len -= step_size;

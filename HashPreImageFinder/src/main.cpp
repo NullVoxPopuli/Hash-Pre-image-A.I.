@@ -152,7 +152,7 @@ int main (int argc, const char * argv[])
 				}
 				else
 				{
-					Config::DESIRED_ERROR = atoi(argv[i + 1]);
+					Config::DESIRED_ERROR = atof(argv[i + 1]);
 				}
 				i++;
 			}
@@ -210,6 +210,24 @@ int main (int argc, const char * argv[])
 				// need to figure out the syntax for this since the hash is in a class
 				Config::current_hash_function = Murmur::hash;
 				Config::HASH_WIDTH_IN_BITS = 32;
+			}
+			else if (strcmp(argv[i], "-add_one") == 0)
+			{
+				Config::current_hash_function = &add_one_hash;
+				Config::HASH_WIDTH_IN_BITS = 32;
+				
+			}
+			else if (strcmp(argv[i], "-multiply_halves") == 0)
+			{
+				Config::current_hash_function = &mult_hash;
+				Config::HASH_WIDTH_IN_BITS = 32;
+				
+			}
+			else if (strcmp(argv[i], "-testing_ground") == 0)
+			{
+				Config::current_hash_function = &testing_ground_hash;
+				Config::HASH_WIDTH_IN_BITS = 32;
+				
 			}
 			else
 			{

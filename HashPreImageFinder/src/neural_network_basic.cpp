@@ -301,10 +301,10 @@ unsigned int test_network_with_value(struct fann * trained_network, unsigned int
 	to_string(bit_value, buffer);
 	
 	// // convert to fann format
-	// for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
-	// {
-	// 	auto_fann_input[j] = (float)(buffer[j]);
-	// }
+	 // for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
+	 // {
+	 // 	auto_fann_input[j] = (float)(buffer[j]);
+	 // }
 	for(int j=0; j < Config::HASH_WIDTH_IN_BITS; j++)
 	{
 		auto_fann_input[j] = (float)(buffer[j] == 0 ? -1 : 1);
@@ -318,9 +318,9 @@ unsigned int test_network_with_value(struct fann * trained_network, unsigned int
 	{
 		if (calc_out[j] > 0) output[j] = 1;
 		else output[j] = 0;
-		// cout << output[j];
+		cout << output[j];
 	}
-	// cout << "\n";
+	 cout << "\n";
 		
 	return output.to_ulong();
 }
