@@ -214,6 +214,7 @@ struct fann **allocate_swarm()
 		fann_set_learning_momentum(for_the_swarm[i], Config::LEARNING_MOMENTUM);
 	    fann_set_activation_function_hidden(for_the_swarm[i], FANN_SIGMOID_SYMMETRIC);
 	    fann_set_activation_function_output(for_the_swarm[i], FANN_SIGMOID_SYMMETRIC);
+		//fann_set_training_algorithm(for_the_swarm[i], FANN_TRAIN_INCREMENTAL);
 	    fann_set_training_algorithm(for_the_swarm[i], FANN_TRAIN_BATCH);
 	}
 
@@ -401,7 +402,7 @@ void auto_test_swarm(struct fann **swarm, unsigned int num_of_data_sets_to_test)
 		if (result_hash != hashed_value)
 		{
 			failed = true;
-			cout << "Error:\n";
+			cout << "Error on test " << i << "\n";
 			cout << "   Hash:             " << hashed_value << "\n";
 			cout << "   Result:           " << result << " (which hashes to " << (unsigned int)Config::current_hash_function(result) << ")\n";
 			cout << "   Should Have been: " << random_pre_image_value << "\n\n";
