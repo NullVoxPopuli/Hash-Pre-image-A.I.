@@ -295,22 +295,34 @@ unsigned int test_network_with_value(struct fann * trained_network, unsigned int
 {
 	fann_type auto_fann_input[Config::HASH_WIDTH_IN_BITS];
 	
+	boost::dynamic_bitset<> output (Config::NUMBER_OF_OUTPUT_NEURONS);
 	boost::dynamic_bitset<> bit_value(Config::HASH_WIDTH_IN_BITS, hash_value);
 	string buffer;
 	to_string(bit_value, buffer);
 	
-	// convert to fann format
-	for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
+	// // convert to fann format
+	// for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
+	// {
+	// 	auto_fann_input[j] = (float)(buffer[j]);
+	// }
+	for(int j=0; j < Config::HASH_WIDTH_IN_BITS; j++)
 	{
-		auto_fann_input[j] = (float)(buffer[j]);
+		auto_fann_input[j] = (float)(buffer[j] == 0 ? -1 : 1);
 	}
+	
 	
 	fann_type *calc_out;
 	calc_out = fann_run(trained_network, auto_fann_input);
 
-	unsigned int output_binary = convert_fann_out_to_binary(calc_out, Config::HASH_WIDTH_IN_BITS);
+	for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
+	{
+		if (calc_out[j] > 0) output[j] = 1;
+		else output[j] = 0;
+		// cout << output[j];
+	}
+	// cout << "\n";
 		
-	return output_binary;
+	return output.to_ulong();
 }
 
 void auto_test_network_with_random_data(unsigned int start, unsigned int end, unsigned int num_of_data_sets_to_test)

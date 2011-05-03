@@ -53,7 +53,7 @@ unsigned int prestons_hash_8(unsigned int pre_image)
 	int len = 8;
 	
 	const unsigned int m = 0xab; // constant
-	const int num_to_shift_by = 4;
+	const int num_to_shift_by = 2;
 	
 	unsigned char h = 0x89; // initialize the hash output
 	
@@ -61,7 +61,7 @@ unsigned int prestons_hash_8(unsigned int pre_image)
 	{
 		// cast data back to int
 		// will be useful later, when we have inputs of any length
-		h += *(unsigned int *)data;
+		h += *(unsigned char *)data;
 		h *= m;
 		h ^= h >> num_to_shift_by;
 		
@@ -73,7 +73,7 @@ unsigned int prestons_hash_8(unsigned int pre_image)
 	switch (len)
 	{
 		case 2:
-			h += data[1] << step_size;
+		h += data[1];
 		case 1:
 			h += data[0];
 			h *= m;

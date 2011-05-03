@@ -72,10 +72,10 @@ int main (int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-autoTest") == 0)
 			{
-				if (strcmp(argv[++i], "file") == 0)
+				if (strcmp(argv[i + 1], "file") == 0)
 				{
 					auto_test_network_with_random_data(atoi(argv[i + 1]), atoi(argv[i + 2]), atoi(argv[i + 3]));
-					i += 3;
+					i += 4;
 				} else
 				{
 					Config::NEED_TO_AUTOTEST = true;
