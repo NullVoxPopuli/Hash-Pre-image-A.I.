@@ -55,7 +55,7 @@ unsigned int prestons_hash_8(unsigned int pre_image)
 	const unsigned int m = 0xab; // constant
 	const int num_to_shift_by = 4;
 	
-	unsigned int h = 0x89; // initialize the hash output
+	unsigned char h = 0x89; // initialize the hash output
 	
 	while (len >= step_size)
 	{
@@ -73,17 +73,11 @@ unsigned int prestons_hash_8(unsigned int pre_image)
 	switch (len)
 	{
 		case 2:
-			h += data[1] << 2 * step_size;
+			h += data[1] << step_size;
 		case 1:
-		h += data[0];
-		h *= m;
-		h ^= h >> num_to_shift_by;
+			h += data[0];
+			h *= m;
 	}
-	
-	h *= m;
-	h ^= h >> 5;
-	h *= m;
-	h ^= h >> 7;
 	
 	return h;
 	
@@ -91,5 +85,49 @@ unsigned int prestons_hash_8(unsigned int pre_image)
 
 unsigned int prestons_8bit_sha(unsigned int pre_image)
 {
+}
 	
+unsigned int add_one_hash(unsigned int out)
+{
+	return out + 1;
+}
+
+unsigned int mult_hash(unsigned int out)
+{
+	short first_half = out >> 8;
+	short second_half = out & 0x00ffu;
+	
+	return first_half * second_half;
+}
+
+unsigned int testing_ground_hash(unsigned int out)
+{
+	bool zero = ((out & 0x80) > 0) && ((out & 0x40) > 0) && ((out & 0x20) > 0) && ((out & 0x10) > 0) && ((out & 0x08) > 0) && ((out & 0x04) > 0) && ((out & 0x04) > 0) && ((out & 0x02) > 0) && ((out & 0x01) > 0);
+	bool one = ((out & 0x80) > 0) || ((out & 0x40) > 0) || ((out & 0x20) > 0) || ((out & 0x10) > 0) || ((out & 0x08) > 0) || ((out & 0x04) > 0) || ((out & 0x04) > 0) || ((out & 0x02) > 0) || ((out & 0x01) > 0);
+	bool two = !zero;
+	bool three = !one;
+	bool four = zero;
+	bool five = one;
+	bool six = two;
+	bool seven = three;
+
+	int result = 0;
+	if (zero)
+		result |= 0x80;
+	if (one)
+		result |= 0x40;
+	if (two)
+		result |= 0x20;
+	if (three)
+		result |= 0x10;
+	if (four)
+		result |= 0x08;
+	if (five)
+		result |= 0x04;
+	if (six)
+		result |= 0x02;
+	if (seven)
+		result |= 0x01;
+
+	return result;
 }

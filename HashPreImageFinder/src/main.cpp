@@ -1,8 +1,6 @@
-
 #include "main.h"
 
 using namespace std;
-
 
 //http://stackoverflow.com/questions/5354194/how-do-i-change-the-default-local-time-format-in-c
 string get_current_time()
@@ -58,6 +56,7 @@ int main (int argc, const char * argv[])
 			if (strcmp(argv[i], "-test") == 0)
 			{
 				Config::NEED_TO_TEST = true;
+				Config::NUM_TEST_POINTS = atoi(argv[i+1]);
 				// next var is going to be the input
 
 				char temp_array[Config::HASH_WIDTH_IN_BITS];
@@ -73,8 +72,17 @@ int main (int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-autoTest") == 0)
 			{
-				auto_test_network_with_random_data(atoi(argv[i + 1]), atoi(argv[i + 2]), atoi(argv[i + 3]));
-				i += 3;
+				if (strcmp(argv[++i], "file") == 0)
+				{
+					auto_test_network_with_random_data(atoi(argv[i + 1]), atoi(argv[i + 2]), atoi(argv[i + 3]));
+					i += 3;
+				} else
+				{
+					Config::NEED_TO_AUTOTEST = true;
+					Config::NUM_TEST_POINTS = atoi(argv[++i]);
+				}
+
+
 			}
 			else if (strcmp(argv[i], "-genTrain") == 0)
 			{
@@ -93,6 +101,10 @@ int main (int argc, const char * argv[])
 				{
 					cout << "Training on generated data.... \n";
 					Config::NO_FILE_TRAIN = true;
+					i++;
+				}
+				else if (strcmp(argv[i+1], "swarm") == 0)
+				{
 					i++;
 				}
 				else
@@ -146,7 +158,12 @@ int main (int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-lrate") == 0) // learning rate
 			{
-				Config::LEARNING_RATE = atoi(argv[i + 1]);
+				Config::LEARNING_RATE = atof(argv[i + 1]);
+				i++;
+			}
+			else if (strcmp(argv[i], "-lmomentum") == 0)
+			{
+				Config::LEARNING_MOMENTUM = atof(argv[i + 1]);
 				i++;
 			}
 			else if (strcmp(argv[i], "-epochs") == 0) // max epochs
@@ -163,18 +180,15 @@ int main (int argc, const char * argv[])
 			{
 				display_help();
 			}
-//=======
-//			else if (strcmp(argv[i], "-noFile") == 0)
-//			{
-//				Config::NEED_TO_TRAIN = true;
-//				Config::NO_FILE_TRAIN = true;
-//			}
 			else if (strcmp(argv[i], "-mTrnData") == 0)
 			{
 				Config::MAX_NUMBER_OF_TRAINING_DATA = atoi(argv[i + 1]);
 				i++;
 			}
-//			else if (atoi(argv[i]) > 0)
+			else if (strcmp(argv[i], "-useSwarm") == 0)
+			{
+				Config::USE_SWARM = true;
+			}
 			else if (strcmp(argv[i], "-kennys_hash_16") == 0)
 			{
 				Config::current_hash_function = &kennys_hash_16;
@@ -189,6 +203,7 @@ int main (int argc, const char * argv[])
 			{
 				Config::current_hash_function = &prestons_hash_8;
 				Config::HASH_WIDTH_IN_BITS = 8;
+				
 			}
 			else if (strcmp(argv[i], "-murmur") == 0)
 			{
@@ -213,7 +228,7 @@ int main (int argc, const char * argv[])
 
 
 	    char *filename = (char*)fname.c_str();
-
+		struct fann **swarm;
 
 	    FILE  *fs;
 	    if (Config::OUTPUT_TO_FILE)
@@ -232,17 +247,42 @@ int main (int argc, const char * argv[])
 	    {
 	    	if (Config::NO_FILE_TRAIN) {
 	    		train_network_no_file();
+			} else if (Config::USE_SWARM) {
+				swarm = allocate_swarm();
+				train_the_swarm(swarm);
 	    	} else {
 	    		train_network();
 	    	}
 	    }
 	    if (Config::NEED_TO_TEST)
 		{
-			struct fann * trained_network = load_trained_network();
-			test_network(trained_network, fann_input);
-			fann_destroy(trained_network); 
+			if (Config::USE_SWARM)
+			{
+				cout << "Normal testing not yet implemented for swarms";
+			}
+			else
+			{
+				struct fann * trained_network = load_trained_network();
+				test_network(trained_network, fann_input);
+				fann_destroy(trained_network); 
+			}
 		}
-		
+		if (Config::NEED_TO_AUTOTEST)
+		{
+			if (Config::USE_SWARM)
+			{
+				swarm = load_trained_swarm();
+				auto_test_swarm(swarm, Config::NUM_TEST_POINTS);
+			}
+			else
+			{
+				cout << "Le needs to be implemented or something....\n";
+			}
+		}
+	    if (Config::USE_SWARM)
+	    {
+	    	free_the_swarm(swarm);
+	    }
 	}
 	else
 	{
