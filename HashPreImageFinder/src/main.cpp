@@ -72,10 +72,17 @@ int main (int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-autoTest") == 0)
 			{
-				Config::NEED_TO_AUTOTEST = true;
-				Config::NUM_TEST_POINTS = atoi(argv[++i]);
-//				auto_test_network_with_random_data(atoi(argv[i + 1]), atoi(argv[i + 2]), atoi(argv[i + 3]));
-//				i += 3;
+				if (strcmp(argv[++i], "file") == 0)
+				{
+					auto_test_network_with_random_data(atoi(argv[i + 1]), atoi(argv[i + 2]), atoi(argv[i + 3]));
+					i += 3;
+				} else
+				{
+					Config::NEED_TO_AUTOTEST = true;
+					Config::NUM_TEST_POINTS = atoi(argv[++i]);
+				}
+
+
 			}
 			else if (strcmp(argv[i], "-genTrain") == 0)
 			{
@@ -151,7 +158,12 @@ int main (int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-lrate") == 0) // learning rate
 			{
-				Config::LEARNING_RATE = atoi(argv[i + 1]);
+				Config::LEARNING_RATE = atof(argv[i + 1]);
+				i++;
+			}
+			else if (strcmp(argv[i], "-lmomentum") == 0)
+			{
+				Config::LEARNING_MOMENTUM = atof(argv[i + 1]);
 				i++;
 			}
 			else if (strcmp(argv[i], "-epochs") == 0) // max epochs
@@ -186,6 +198,12 @@ int main (int argc, const char * argv[])
 			{
 				Config::current_hash_function = &kennys_hash;
 				Config::HASH_WIDTH_IN_BITS = 8;
+			}
+			else if (strcmp(argv[i], "-prestons_hash_8") == 0)
+			{
+				Config::current_hash_function = &prestons_hash_8;
+				Config::HASH_WIDTH_IN_BITS = 8;
+				
 			}
 			else if (strcmp(argv[i], "-murmur") == 0)
 			{
@@ -258,7 +276,7 @@ int main (int argc, const char * argv[])
 			}
 			else
 			{
-				cout << "Do it yourself";
+				cout << "Le needs to be implemented or something....\n";
 			}
 		}
 	    if (Config::USE_SWARM)
@@ -297,6 +315,7 @@ void display_help()
 	cout << "\n\nSelecting Hashes: \n";
 	cout << "\t -kennys_hash_16\t [default] simple 16 bit hash\n";
 	cout << "\t -kennys_hash_8\t\t simple 8 bit hash\n";
+	cout << "\t -prestons_hash_8\t\t 8 bit hash based off murmur\n";
 	cout << "\t -murmur\t\t 32 bit hash\n";
 	
 	cout << "\n\nTraining Modes: \n";

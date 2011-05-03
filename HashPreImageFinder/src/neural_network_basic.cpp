@@ -20,10 +20,11 @@ void print_config()
 
 	
 	std::cout << "     Training: \n";
-	std::cout << "\t Max Epochs: " << Config::MAX_EPOCHS << "\n";
-	std::cout << "\t Reports every: " << Config::REPORT_EVERY << "\n";
-	std::cout << "\t Desired error: " << Config::DESIRED_ERROR << "\n";
-	std::cout << "\t Learning Rate: " << Config::LEARNING_RATE << "\n";
+	std::cout << "\t Max Epochs:        " << Config::MAX_EPOCHS << "\n";
+	std::cout << "\t Reports every:     " << Config::REPORT_EVERY << "\n";
+	std::cout << "\t Desired error:     " << Config::DESIRED_ERROR << "\n";
+	std::cout << "\t Learning Rate:     " << Config::LEARNING_RATE << "\n";
+	std::cout << "\t Learning Momentum: " << Config::LEARNING_MOMENTUM << "\n";
 	std::cout << "\n";
 }
 void train_network()
@@ -77,7 +78,7 @@ void train_network_no_file()
 		for(epoch = 0; epoch <= Config::MAX_EPOCHS; epoch++)
 		{
 			struct fann_train_data *data = generate_data( Config::NUMBER_OF_INPUT_NEURONS, 
-														 Config::NUMBER_OF_OUTPUT_NEURONS, 30000);
+														 Config::NUMBER_OF_OUTPUT_NEURONS, Config::MAX_NUMBER_OF_TRAINING_DATA);
 			error = fann_train_epoch(ann, data);
 			fann_destroy_train(data);
 			desired_error_reached = fann_desired_error_reached(ann, Config::DESIRED_ERROR);
@@ -322,11 +323,12 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 	unsigned int result;
 	int failed = false;
 	int num_failed = 0;
+	int range = end - start;
 	struct fann * trained_network = load_trained_network();
 	
 	for (unsigned int i = 0; i < num_of_data_sets_to_test; i ++)
 	{
-		random_pre_image_value = start + (unsigned int)(((end - start) * rand()) / (RAND_MAX + 1.0));
+		random_pre_image_value = start + (unsigned int)(rand() % range); // (RAND_MAX + 1.0));
 		hashed_value = Config::current_hash_function(random_pre_image_value);
 		result = test_network_with_value(trained_network, hashed_value); 
 		
