@@ -74,12 +74,17 @@ int main (int argc, const char * argv[])
 			{
 				if (strcmp(argv[i + 1], "file") == 0)
 				{
-					auto_test_network_with_random_data(atoi(argv[i + 1]), atoi(argv[i + 2]), atoi(argv[i + 3]));
-					i += 4;
+					i++; // for file
+					Config::NUM_TEST_POINTS = atoi(argv[++i]);
+					Config::TEST_MIN = atoi(argv[++i]);
+					Config::TEST_MAX = atoi(argv[++i]);
+					auto_test_network_with_random_data();
 				} else
 				{
 					Config::NEED_TO_AUTOTEST = true;
 					Config::NUM_TEST_POINTS = atoi(argv[++i]);
+					Config::TEST_MIN = atoi(argv[++i]);
+					Config::TEST_MAX = atoi(argv[++i]);
 				}
 
 
@@ -229,6 +234,11 @@ int main (int argc, const char * argv[])
 				Config::HASH_WIDTH_IN_BITS = 32;
 				
 			}
+			else if (strcmp(argv[i], "-x_squared") == 0)
+			{
+				Config::current_hash_function = &x_squared;
+				Config::HASH_WIDTH_IN_BITS = 8;
+			}
 			else
 			{
 				display_help();
@@ -333,8 +343,9 @@ void display_help()
 	cout << "\n\nSelecting Hashes: \n";
 	cout << "\t -kennys_hash_16\t [default] simple 16 bit hash\n";
 	cout << "\t -kennys_hash_8\t\t simple 8 bit hash\n";
-	cout << "\t -prestons_hash_8\t\t 8 bit hash based off murmur\n";
+	cout << "\t -prestons_hash_8\t 8 bit hash based off murmur\n";
 	cout << "\t -murmur\t\t 32 bit hash\n";
+		
 	
 	cout << "\n\nTraining Modes: \n";
 	cout << "\t block\t\tTrains the network using dynamically generated, random data\n";

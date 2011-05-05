@@ -1,6 +1,7 @@
 #include "Config.h"
 #include "hashes.h"
 #include "hashes/Murmur.h"
+#include <limits.h>
 
 int Config::OUTPUT_TO_FILE = false;
 int Config::NEED_TO_TRAIN = false;
@@ -12,6 +13,8 @@ int Config::GENERATE_TRAIN_DATA = false;
 int Config::USE_SWARM = false;
 
 int Config::NUM_TEST_POINTS = 1000;
+int Config::TEST_MIN = 0;
+int Config::TEST_MAX = UINT_MAX;
 int Config::MAX_NUMBER_OF_TRAINING_DATA = 50000;
 
 int Config::HASH_WIDTH_IN_BITS = 16;

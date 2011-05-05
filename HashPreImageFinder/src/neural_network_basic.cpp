@@ -257,9 +257,9 @@ struct fann * load_trained_network()
 struct fann **load_trained_swarm()
 {
     struct fann **for_the_swarm;
-	for_the_swarm = (fann**) malloc(sizeof(fann*) * Config::NUMBER_OF_OUTPUT_NEURONS);
+	for_the_swarm = (fann**) malloc(sizeof(fann*) * (Config::HASH_WIDTH_IN_BITS));
 	
-	for(int i=0; i<Config::NUMBER_OF_OUTPUT_NEURONS; i++)
+	for(int i=0; i<Config::HASH_WIDTH_IN_BITS; i++)
 	{
 		char *load_name = new char[100];
 		strcpy(load_name, Config::NETWORK_SAVE_NAME);
@@ -306,10 +306,11 @@ unsigned int test_network_with_value(struct fann * trained_network, unsigned int
 	 // 	auto_fann_input[j] = (float)(buffer[j]);
 	 // }
 	for(int j=0; j < Config::HASH_WIDTH_IN_BITS; j++)
-	{
-		auto_fann_input[j] = (float)(buffer[j] == 0 ? -1 : 1);
-	}
-	
+		{
+			auto_fann_input[j] = (float)(buffer[j] == 0 ? -1 : 1);
+			cout << auto_fann_input[j];
+		}
+		
 	
 	fann_type *calc_out;
 	calc_out = fann_run(trained_network, auto_fann_input);
@@ -318,14 +319,13 @@ unsigned int test_network_with_value(struct fann * trained_network, unsigned int
 	{
 		if (calc_out[j] > 0) output[j] = 1;
 		else output[j] = 0;
-		cout << output[j];
 	}
 	 cout << "\n";
 		
 	return output.to_ulong();
 }
 
-void auto_test_network_with_random_data(unsigned int start, unsigned int end, unsigned int num_of_data_sets_to_test)
+void auto_test_network_with_random_data()
 {
 	// init randomness 
 	srand((unsigned)time(0));
@@ -334,12 +334,19 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 	unsigned int result;
 	int failed = false;
 	int num_failed = 0;
-	int range = end - start;
+	int range = Config::TEST_MAX - Config::TEST_MIN;
 	struct fann * trained_network = load_trained_network();
 	
-	for (unsigned int i = 0; i < num_of_data_sets_to_test; i ++)
+	time_t T = time(0);
+	boost::mt19937 gen(T);
+	
+	for (unsigned int i = 0; i < range; i ++)
 	{
-		random_pre_image_value = start + (unsigned int)(rand() % range); // (RAND_MAX + 1.0));
+		boost::uniform_real<> dist(0, pow(2,  Config::HASH_WIDTH_IN_BITS));
+		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
+
+		
+		random_pre_image_value = Config::TEST_MIN + ((int)random() % range);		
 		hashed_value = Config::current_hash_function(random_pre_image_value);
 		result = test_network_with_value(trained_network, hashed_value); 
 		
@@ -363,8 +370,8 @@ void auto_test_network_with_random_data(unsigned int start, unsigned int end, un
 
 unsigned int test_swarm_with_value(struct fann **swarm, int hash_value)
 {
-	boost::dynamic_bitset<> output (Config::NUMBER_OF_OUTPUT_NEURONS);
-	boost::dynamic_bitset<> buffer( Config::HASH_WIDTH_IN_BITS, hash_value);
+	boost::dynamic_bitset<> output (Config::HASH_WIDTH_IN_BITS);
+	boost::dynamic_bitset<> buffer (Config::HASH_WIDTH_IN_BITS, hash_value);
 	fann_type auto_fann_input[Config::HASH_WIDTH_IN_BITS];
 
 	for(int j=0; j < Config::HASH_WIDTH_IN_BITS; j++)
@@ -401,13 +408,15 @@ void auto_test_swarm(struct fann **swarm, unsigned int num_of_data_sets_to_test)
 	int num_fail = 0;
 	time_t T = time(0);
 	boost::mt19937 gen(T);
+	unsigned int range = Config::TEST_MAX - Config::TEST_MIN;
 	
 	for (unsigned int i=0; i<num_of_data_sets_to_test; i++)
 	{
 		boost::uniform_real<> dist(0, pow(2,  Config::HASH_WIDTH_IN_BITS));
 		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
 
-		random_pre_image_value = random();
+		
+		random_pre_image_value = Config::TEST_MIN + ((int)random() % range);
 		hashed_value = Config::current_hash_function(random_pre_image_value);
 		result = test_swarm_with_value(swarm, hashed_value);
 

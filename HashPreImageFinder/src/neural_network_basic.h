@@ -34,7 +34,7 @@ struct fann * load_trained_network();
 
 void test_network(struct fann * trained_network, fann_type *fann_input);
 unsigned int test_network_with_value(struct fann * trained_network, unsigned int hash_value);
-void auto_test_network_with_random_data(unsigned int start, unsigned int end, unsigned int num_of_data_sets_to_test);
+void auto_test_network_with_random_data();
 
 unsigned int test_swarm_with_value(struct fann **swarm, int hash_value);
 void auto_test_swarm(struct fann **swarm, unsigned int num_of_data_sets_to_test);

@@ -100,6 +100,11 @@ unsigned int mult_hash(unsigned int out)
 	return first_half * second_half;
 }
 
+unsigned int x_squared(unsigned int pre_image)
+{
+	return pre_image * pre_image;
+}
+
 unsigned int testing_ground_hash(unsigned int out)
 {
 	bool zero = ((out & 0x80) > 0) && ((out & 0x40) > 0) && ((out & 0x20) > 0) && ((out & 0x10) > 0) && ((out & 0x08) > 0) && ((out & 0x04) > 0) && ((out & 0x04) > 0) && ((out & 0x02) > 0) && ((out & 0x01) > 0);
