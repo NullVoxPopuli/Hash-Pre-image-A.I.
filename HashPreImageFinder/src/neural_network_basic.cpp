@@ -42,8 +42,13 @@ void train_network()
 	// struct fann *ann = fann_create_shortcut(3, 8, 16, 8);
 
 	fann_set_learning_rate(ann, Config::LEARNING_RATE);
-    fann_set_activation_function_hidden(ann, FANN_LINEAR);
-    fann_set_activation_function_output(ann, FANN_GAUSSIAN_SYMMETRIC);
+	fann_set_learning_momentum(ann, Config::LEARNING_MOMENTUM);
+	
+    fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
+    fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
+
+	fann_set_training_algorithm(ann, FANN_TRAIN_BATCH);
+	
     fann_train_on_file(ann, 
 						Config::DATA_FILE_NAME, 
 						Config::MAX_EPOCHS, 

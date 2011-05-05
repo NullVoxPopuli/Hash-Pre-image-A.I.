@@ -8,3 +8,4 @@ unsigned int add_one_hash(unsigned int out);
 unsigned int mult_hash(unsigned int out);
 unsigned int testing_ground_hash(unsigned int out);
 unsigned int x_squared(unsigned int pre_image);
+unsigned int lookup_table(unsigned int pre_image);

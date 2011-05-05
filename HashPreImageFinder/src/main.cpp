@@ -239,6 +239,11 @@ int main (int argc, const char * argv[])
 				Config::current_hash_function = &x_squared;
 				Config::HASH_WIDTH_IN_BITS = 8;
 			}
+			else if (strcmp(argv[i], "-lookup_table") == 0)
+			{
+				Config::current_hash_function = &lookup_table;
+				Config::HASH_WIDTH_IN_BITS = 16;
+			}
 			else
 			{
 				display_help();
