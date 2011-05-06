@@ -13,7 +13,9 @@
 #include "hashes.h"
 
 
-#include "neural_network_basic.h"
+#include "neural_networks/basic.h"
+#include "neural_networks/swarm.h"
+#include "neural_networks/shared.h"
 
 
 int main (int argc, const char * argv[]);
