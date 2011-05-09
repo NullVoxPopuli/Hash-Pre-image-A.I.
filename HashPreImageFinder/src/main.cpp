@@ -246,6 +246,7 @@ int main (int argc, const char * argv[])
 			}
 			else
 			{
+				std::cout << "Unidentified Parameter: " << argv[i] << "\n";
 				display_help();
 			}
 			
