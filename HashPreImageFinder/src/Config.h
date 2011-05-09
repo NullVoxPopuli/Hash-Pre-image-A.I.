@@ -34,6 +34,7 @@ public:
 	static double LEARNING_MOMENTUM;
 
 	static const char* NETWORK_SAVE_NAME;
+	static const char* CONFIG_FOLDER_NAME;
 	static const char* DATA_FILE_NAME;
 	
 	unsigned static int (*current_hash_function)(unsigned int);

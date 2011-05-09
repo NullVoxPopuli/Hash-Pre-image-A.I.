@@ -1,6 +1,5 @@
 #include "swarm.h"
 #include "basic.h"
-#include <dirent.h>
 
 
 struct fann_train_data *generate_swarm_data(unsigned int num_input, unsigned int num_pairs, unsigned int output_position)
@@ -82,13 +81,14 @@ void train_the_swarm(struct fann **swarm)
 
 void free_the_swarm(struct fann **swarm)
 {
+
 	for(int i=0; i<Config::NUMBER_OF_OUTPUT_NEURONS; i++)
 	{
 		//First, forever freeze the swarm
 		char *save_name = new char[100];
 		strcpy(save_name, Config::NETWORK_SAVE_NAME);
 		strcat(save_name, boost::lexical_cast<std::string>(i).c_str());
-	    fann_save(swarm[i], save_name);
+	    save_to_folder(swarm[i], save_name);
 		fann_destroy(swarm[i]);
 		free(save_name);
 	}
@@ -101,10 +101,11 @@ struct fann **load_trained_swarm()
     struct fann **for_the_swarm;
 	for_the_swarm = (fann**) malloc(sizeof(fann*) * (Config::HASH_WIDTH_IN_BITS));
 	
+	boost::filesystem::path config_folder(Config::CONFIG_FOLDER_NAME);
 	
-	if ((dir = opendir("SwarmConfig")) == NULL)
+	if( !(boost::filesystem::exists(config_folder)))
 	{
-		std::cout << "Swarm Directory not found\n";
+		std::cout << "Network Config Directory not found...\n";
 		exit(1);
 	}
 	else 
@@ -112,7 +113,7 @@ struct fann **load_trained_swarm()
 		for(int i=0; i<Config::HASH_WIDTH_IN_BITS; i++)
 		{
 			char *load_name = new char[100];
-			strcpy(load_name, Config::NETWORK_SAVE_NAME);
+			strcpy(load_name, (boost::format("%s/%s") % config_folder % Config::NETWORK_SAVE_NAME).str().c_str());
 			strcat(load_name, boost::lexical_cast<std::string>(i).c_str());
 			for_the_swarm[i] = fann_create_from_file(load_name);
 			free(load_name);

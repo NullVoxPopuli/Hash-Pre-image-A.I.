@@ -34,7 +34,7 @@ void train_network()
 						Config::REPORT_EVERY, 
 						Config::DESIRED_ERROR);
 	// fann_cascadetrain_on_file(ann, data_file_name, 200, 1, DESIRED_ERROR);
-    fann_save(ann, Config::NETWORK_SAVE_NAME);
+	save_to_folder(ann, Config::NETWORK_SAVE_NAME);
     fann_destroy(ann);
 }
 
@@ -89,8 +89,8 @@ void train_network_no_file()
 			acceptable = true;
 		}
     }
-
-    fann_save(ann, Config::NETWORK_SAVE_NAME);
+	
+	save_to_folder(ann, Config::NETWORK_SAVE_NAME);
     fann_destroy(ann);
 }
 

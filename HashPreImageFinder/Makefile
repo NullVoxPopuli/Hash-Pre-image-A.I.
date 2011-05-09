@@ -1,20 +1,58 @@
-network_objects = src/neural_networks/basic.o src/neural_networks/shared.o src/neural_networks/swarm.o
+####################################################################################
+# PATHS and system dependent logic
+####################################################################################
+#mac boost is in opt/local/lib because of macports
+MAC_BOOST_PATH = -L/opt/local/lib/
+LINUX_BOOST_PATH = -L/usr/lib/
+DEFAULT_PATH = -L/usr/local/lib/
+BOOST_PATH = $(DEFAULT_PATH)
+
+UNAME=$(shell uname)
+ifeq ($(UNAME), Darwin)
+BOOST_PATH = $(MAC_BOOST_PATH)
+endif
+ifeq ($(UNAME), Linux)
+BOOST_PATH = $(LINUX_BOOST_PATH)
+endif
+
+####################################################################################
+# objects
+####################################################################################
 main_objects = src/main.o src/fann_utils.o src/Config.o
+
+network_objects = src/neural_networks/basic.o src/neural_networks/shared.o src/neural_networks/swarm.o
 hash_objects = src/hashes.o src/hashes/Murmur.o 
+
+all_objects = $(main_objects) $(hash_objects) $(network_objects) 
+
+####################################################################################
+# libraries
+####################################################################################
+FANN = -lfann
+BOOST_NETWORKING = -lboost_thread-mt
+BOOST_FILESYSTEM = -lboost_filesystem
+BOOST_CORE = -lboost_system
+
+BOOST_FILE_IO = $(BOOST_CORE) $(BOOST_FILESYSTEM)
+
+####################################################################################
+# compile the actual code
+####################################################################################
 
 all: hPif clean
 
-hPif : $(main_objects) $(hash_objects) $(network_objects) 
-	g++ -o hPif $(main_objects) $(hash_objects) $(network_objects) -lfann -L/usr/local/lib 
+
+hPif : $(all_objects)
+	g++ -o hPif $(all_objects) $(FANN) $(BOOST_FILE_IO) $(DEFAULT_PATH) $(BOOST_PATH)
 
 shared.o : src/neural_networks/shared.cpp src/neural_network/shared.h
-	g++ -c src/neural_networks/shared.cpp
+	g++ -c src/neural_networks/shared.cpp $(BOOST_FILE_IO)
 
-swarm.o : src/neural_networks/swarm.cpp src/neural_network/swarm.h
-	g++ -c src/neural_networks/swarm.cpp
+swarm.o : src/neural_networks/swarm.cpp src/neural_network/swarm.h src/neural_network/shared.h
+	g++ -c src/neural_networks/swarm.cpp $(BOOST_FILE_IO)
 
-basic.o : src/neural_networks/basic.cpp src/neural_network/basic.h
-	g++ -c src/neural_networks/basic.cpp
+basic.o : src/neural_networks/basic.cpp src/neural_network/basic.h src/neural_network/shared.h
+	g++ -c src/neural_networks/basic.cpp $(BOOST_FILE_IO)
 
 Murmur.o : src/hashes/Murmur.cpp src/hashes/Murmur.h
 	g++ -c src/hashes/Murmur.cpp

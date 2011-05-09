@@ -22,3 +22,21 @@ void print_config()
 	std::cout << "\t Learning Momentum: " << Config::LEARNING_MOMENTUM << "\n";
 	std::cout << "\n";
 }
+
+void save_to_folder(struct fann * network, const char * save_name)
+{
+	boost::filesystem::path config_folder(Config::CONFIG_FOLDER_NAME);
+
+	if( !(boost::filesystem::exists(config_folder)))
+	{
+		std::cout << "Network Config Directory not found...\n";
+		std::cout << "Creating folder called " << Config::CONFIG_FOLDER_NAME << "\n";
+		boost::filesystem::create_directory(config_folder);
+	}
+
+	
+	fann_save(network, (boost::format("%s/%s") % config_folder % save_name).str().c_str());
+	
+	
+	
+}
