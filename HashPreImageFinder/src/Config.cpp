@@ -11,6 +11,7 @@ int Config::NEED_TO_AUTOTEST = false;
 int Config::BYPASS_EVERYTHING = false;
 int Config::GENERATE_TRAIN_DATA = false;
 int Config::USE_SWARM = false;
+int Config::USE_SEQUENTIAL_TESTING = false;
 
 int Config::NUM_TEST_POINTS = 1000;
 int Config::TEST_MIN = 0;

@@ -89,6 +89,10 @@ int main (int argc, const char * argv[])
 
 
 			}
+			else if (strcmp(argv[i], "-sequential") == 0)
+			{
+				Config::USE_SEQUENTIAL_TESTING = true;
+			}
 			else if (strcmp(argv[i], "-genTrain") == 0)
 			{
 				Config::GENERATE_TRAIN_DATA = true;
@@ -225,7 +229,7 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-multiply_halves") == 0)
 			{
 				Config::current_hash_function = &mult_hash;
-				Config::HASH_WIDTH_IN_BITS = 32;
+				Config::HASH_WIDTH_IN_BITS = 16;
 				
 			}
 			else if (strcmp(argv[i], "-testing_ground") == 0)

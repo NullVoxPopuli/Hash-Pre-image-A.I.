@@ -15,6 +15,7 @@ public:
 	static int NUM_TEST_POINTS;
 	static int TEST_MIN;
 	static int TEST_MAX;
+	static int USE_SEQUENTIAL_TESTING;
 
 	static int MAX_NUMBER_OF_TRAINING_DATA;
 

@@ -27,6 +27,12 @@ struct fann_train_data *generate_swarm_data(unsigned int num_input, unsigned int
 		boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(gen, dist);
 
 		boost::dynamic_bitset<> value( Config::HASH_WIDTH_IN_BITS, random());
+		
+		if (Config::USE_SEQUENTIAL_TESTING)
+		{
+			boost::dynamic_bitset<> value( Config::HASH_WIDTH_IN_BITS, i);
+		}
+
 		boost::dynamic_bitset<> hash( Config::HASH_WIDTH_IN_BITS, Config::current_hash_function(value.to_ulong()));
 //		cout << value << " hashes to " << hash << "\n";
 
