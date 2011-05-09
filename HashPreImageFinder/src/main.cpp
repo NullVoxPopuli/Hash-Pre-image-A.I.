@@ -351,6 +351,11 @@ void display_help()
 	cout << "\t -kennys_hash_8\t\t simple 8 bit hash\n";
 	cout << "\t -prestons_hash_8\t 8 bit hash based off murmur\n";
 	cout << "\t -murmur\t\t 32 bit hash\n";
+	cout << "\n";
+	cout << "\t -add_one\t\t test to see if network can undo addition\n";
+	cout << "\t -x_squared\t\t test to see if nework can undo squaring\n";
+	cout << "\t -lookup_table\t\t test to see if network con learn a lookup table\n";
+	cout << "\t -multiply_halves\t slightly more complicated than simple multiplication";
 		
 	
 	cout << "\n\nTraining Modes: \n";
