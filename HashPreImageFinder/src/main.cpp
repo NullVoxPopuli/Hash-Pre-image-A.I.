@@ -248,6 +248,11 @@ int main (int argc, const char * argv[])
 				Config::current_hash_function = &lookup_table;
 				Config::HASH_WIDTH_IN_BITS = 16;
 			}
+			else if (strcmp(argv[i], "-mod_constant") == 0)
+			{
+				Config::current_hash_function = &mod_constant;
+				Config::HASH_WIDTH_IN_BITS = 16;
+			}
 			else
 			{
 				std::cout << "Unidentified Parameter: " << argv[i] << "\n";

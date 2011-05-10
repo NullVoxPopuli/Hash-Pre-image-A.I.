@@ -105,6 +105,11 @@ unsigned int x_squared(unsigned int pre_image)
 	return pre_image * pre_image;
 }
 
+unsigned int mod_constant(unsigned int pre_image)
+{
+	return pre_image % 32;
+}
+
 unsigned int lookup_table(unsigned int pre_image)
 {
 	int lookup_table[] = {
