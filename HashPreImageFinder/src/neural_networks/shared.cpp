@@ -4,9 +4,9 @@
 void print_config()
 {
 	if (Config::USE_SWARM) std::cout << "\nUSING SWARM\n\n";
+	std::cout << "Configuration: \n";
 	std::cout << "     Current Function: \n";
 	std::cout << "\t " << Config::fmap[Config::current_hash_function] << "\n";
-	std::cout << "Configuration: \n";
 	std::cout << "     Network: \n";
 	std::cout << "\t # layers: " << Config::NUMBER_OF_LAYERS << "\n";
 	std::cout << "\t Network save name: " << Config::NETWORK_SAVE_NAME << "\n";
