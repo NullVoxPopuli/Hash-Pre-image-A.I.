@@ -6,7 +6,6 @@
 
 #include <boost/dynamic_bitset.hpp>
 
-
 #include "fann.h"
 #include "floatfann.h"
 

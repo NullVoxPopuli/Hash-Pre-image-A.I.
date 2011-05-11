@@ -107,7 +107,7 @@ unsigned int x_squared(unsigned int pre_image)
 
 unsigned int mod_constant(unsigned int pre_image)
 {
-	return pre_image % 32;
+	return pre_image % 13;
 }
 
 unsigned int lookup_table(unsigned int pre_image)

@@ -3,6 +3,12 @@
 #include "hashes/Murmur.h"
 #include <limits.h>
 
+#include <boost/preprocessor/stringize.hpp>
+#include <map>
+#include <iostream>
+#include <string>
+#include "hashes.h"
+
 int Config::OUTPUT_TO_FILE = false;
 int Config::NEED_TO_TRAIN = false;
 int Config::NO_FILE_TRAIN = false;
@@ -40,3 +46,20 @@ const char* Config::CONFIG_FOLDER_NAME = "NetworkConfig";
 const char* Config::DATA_FILE_NAME = "hash_training_data.fanndata";
 
 unsigned int (*Config::current_hash_function)(unsigned int) = kennys_hash_16;
+
+function_name_map_type Config::fmap;
+
+
+void register_hash_names()
+{
+	Config::fmap[kennys_hash_16] = BOOST_PP_STRINGIZE(kennys_hash_16);
+	Config::fmap[kennys_hash] = BOOST_PP_STRINGIZE(kennys_hash);
+	Config::fmap[prestons_hash_8] = BOOST_PP_STRINGIZE(prestons_hash_8);
+	Config::fmap[Murmur::hash] = BOOST_PP_STRINGIZE(Murmur::hash);
+	Config::fmap[add_one_hash] = BOOST_PP_STRINGIZE(add_one_hash);
+	Config::fmap[mult_hash] = BOOST_PP_STRINGIZE(mult_hash);
+	Config::fmap[testing_ground_hash] = BOOST_PP_STRINGIZE(testing_ground_hash);
+	Config::fmap[x_squared] = BOOST_PP_STRINGIZE(x_squared);
+	Config::fmap[lookup_table] = BOOST_PP_STRINGIZE(lookup_table);
+	Config::fmap[mod_constant] = BOOST_PP_STRINGIZE(mod_constant);
+}

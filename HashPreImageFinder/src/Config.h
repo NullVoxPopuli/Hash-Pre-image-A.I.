@@ -1,5 +1,16 @@
 #pragma once
 
+
+#include <map>
+#include <boost/preprocessor/stringize.hpp>
+
+typedef unsigned int (*fptr_t)(unsigned int);
+typedef std::map<fptr_t, std::string> function_name_map_type;
+
+void register_hash_names();
+
+
+
 class Config
 {
 public:
@@ -39,4 +50,10 @@ public:
 	static const char* DATA_FILE_NAME;
 	
 	unsigned static int (*current_hash_function)(unsigned int);
+	
+	static function_name_map_type fmap;
+
+	
+
+	
 };

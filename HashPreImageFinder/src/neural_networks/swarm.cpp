@@ -21,6 +21,8 @@ struct fann_train_data *generate_swarm_data(unsigned int num_input, unsigned int
 	data_input = (fann_type *) calloc(num_input * num_pairs, sizeof(fann_type));
 	data_output = (fann_type *) calloc(num_pairs, sizeof(fann_type));
 
+
+
 	for(i = 0; i != num_pairs; i++)
 	{
 		boost::uniform_real<> dist(0, pow(2,  Config::HASH_WIDTH_IN_BITS));
@@ -75,6 +77,8 @@ struct fann **allocate_swarm()
 
 void train_the_swarm(struct fann **swarm)
 {
+	print_config();
+	
 	for(int i=0; i<Config::NUMBER_OF_OUTPUT_NEURONS; i++)
 	{
 		cout << "Training ANN " << i+1 << " of " << Config::NUMBER_OF_OUTPUT_NEURONS << "\n";

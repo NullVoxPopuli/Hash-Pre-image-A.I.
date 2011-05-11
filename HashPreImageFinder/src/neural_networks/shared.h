@@ -16,5 +16,7 @@
 
 #include "../Config.h"
 
+
+
 void print_config();
 void save_to_folder(struct fann * network, const char * save_name);

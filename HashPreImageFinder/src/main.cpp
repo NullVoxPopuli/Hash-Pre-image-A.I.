@@ -34,6 +34,7 @@ void split(const string& s, char c,
 
 int main (int argc, const char * argv[])
 {
+	register_hash_names();
 	fann_type *fann_input;
 	
     // handle arguments
@@ -251,7 +252,7 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-mod_constant") == 0)
 			{
 				Config::current_hash_function = &mod_constant;
-				Config::HASH_WIDTH_IN_BITS = 16;
+				Config::HASH_WIDTH_IN_BITS = 8;
 			}
 			else
 			{

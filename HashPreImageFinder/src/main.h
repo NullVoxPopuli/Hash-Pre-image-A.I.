@@ -9,6 +9,8 @@
 #include <vector>
 #include <functional>
 
+
+
 #include "hashes/Murmur.h"
 #include "hashes.h"
 
@@ -18,6 +20,8 @@
 #include "neural_networks/shared.h"
 
 
+
 int main (int argc, const char * argv[]);
+
 
 void display_help();
