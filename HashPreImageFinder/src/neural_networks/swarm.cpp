@@ -112,7 +112,8 @@ struct fann **load_trained_swarm()
 	for_the_swarm = (fann**) malloc(sizeof(fann*) * (Config::HASH_WIDTH_IN_BITS));
 	
 	boost::filesystem::path config_folder(Config::CONFIG_FOLDER_NAME);
-	
+	boost::filesystem::path hash_folder (config_folder / Config::fmap[Config::current_hash_function]);
+		
 	if( !(boost::filesystem::exists(config_folder)))
 	{
 		std::cout << "Network Config Directory not found...\n";
@@ -123,7 +124,7 @@ struct fann **load_trained_swarm()
 		for(int i=0; i<Config::HASH_WIDTH_IN_BITS; i++)
 		{
 			char *load_name = new char[100];
-			strcpy(load_name, (boost::format("%s/%s") % config_folder % Config::NETWORK_SAVE_NAME).str().c_str());
+			strcpy(load_name, (boost::format("%s/%s") % hash_folder % Config::NETWORK_SAVE_NAME).str().c_str());
 			strcat(load_name, boost::lexical_cast<std::string>(i).c_str());
 			for_the_swarm[i] = fann_create_from_file(load_name);
 			free(load_name);
