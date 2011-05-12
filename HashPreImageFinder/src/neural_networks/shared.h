@@ -19,4 +19,4 @@
 
 
 void print_config();
-void save_to_folder(struct fann * network, const char * save_name);
+void save_network_to_folder(struct fann * network, const char * save_name);

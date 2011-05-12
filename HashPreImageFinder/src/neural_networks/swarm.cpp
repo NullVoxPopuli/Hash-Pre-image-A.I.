@@ -98,7 +98,7 @@ void free_the_swarm(struct fann **swarm)
 		char *save_name = new char[100];
 		strcpy(save_name, Config::NETWORK_SAVE_NAME);
 		strcat(save_name, boost::lexical_cast<std::string>(i).c_str());
-	    save_to_folder(swarm[i], save_name);
+	    save_network_to_folder(swarm[i], save_name);
 		fann_destroy(swarm[i]);
 		free(save_name);
 	}

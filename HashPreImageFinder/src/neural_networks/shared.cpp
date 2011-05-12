@@ -27,9 +27,10 @@ void print_config()
 	std::cout << "\n";
 }
 
-void save_to_folder(struct fann * network, const char * save_name)
+void save_network_to_folder(struct fann * network, const char * save_name)
 {
 	boost::filesystem::path config_folder(Config::CONFIG_FOLDER_NAME);
+	boost::filesystem::path hash_folder (config_folder / Config::fmap[Config::current_hash_function]);
 
 	if( !(boost::filesystem::exists(config_folder)))
 	{
@@ -37,9 +38,16 @@ void save_to_folder(struct fann * network, const char * save_name)
 		std::cout << "Creating folder called " << Config::CONFIG_FOLDER_NAME << "\n";
 		boost::filesystem::create_directory(config_folder);
 	}
+	
+	if( !(boost::filesystem::exists(hash_folder)));
+	{
+		std::cout << "This hash has not been configured before...\n";
+		std::cout << "Creating folder called " << Config::fmap[Config::current_hash_function] << "\n";
+		boost::filesystem::create_directory(hash_folder);
+	}
 
 	
-	fann_save(network, (boost::format("%s/%s") % config_folder % save_name).str().c_str());
+	fann_save(network, (boost::format("%s/%s/%s") % config_folder % Config::fmap[Config::current_hash_function] % save_name).str().c_str());
 	
 	
 	
