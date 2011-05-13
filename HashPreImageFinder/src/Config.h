@@ -3,9 +3,12 @@
 
 #include <map>
 #include <boost/preprocessor/stringize.hpp>
+#include <string>
+
+using namespace std;
 
 typedef unsigned int (*fptr_t)(unsigned int);
-typedef std::map<fptr_t, std::string> function_name_map_type;
+typedef std::map<fptr_t, string> function_name_map_type;
 
 void register_hash_names();
 
