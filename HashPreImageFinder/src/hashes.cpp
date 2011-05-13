@@ -95,7 +95,7 @@ unsigned int add_one_hash(unsigned int out)
 unsigned int mult_hash(unsigned int out)
 {
 	short first_half = out >> 8;
-	short second_half = out & 0x00ffu;
+	short second_half = out & 0x00ff;
 	
 	return first_half * second_half;
 }

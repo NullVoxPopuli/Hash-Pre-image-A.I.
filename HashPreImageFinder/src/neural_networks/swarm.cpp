@@ -84,6 +84,7 @@ void train_the_swarm(struct fann **swarm)
 		cout << "Training ANN " << i+1 << " of " << Config::NUMBER_OF_OUTPUT_NEURONS << "\n";
 		struct fann_train_data *data = generate_swarm_data(Config::NUMBER_OF_INPUT_NEURONS, Config::MAX_NUMBER_OF_TRAINING_DATA, i);
 		fann_train_on_data(swarm[i], data, Config::MAX_EPOCHS, Config::REPORT_EVERY, Config::DESIRED_ERROR);
+		//fann_cascadetrain_on_data(swarm[i], data, Config::MAX_EPOCHS, Config::REPORT_EVERY, Config::DESIRED_ERROR);
 		fann_destroy_train(data);
 		cout << "\n";
 	}

@@ -22,6 +22,7 @@
 
 
 int main (int argc, const char * argv[]);
+void init_blank_network_config();
 
 
 void display_help();

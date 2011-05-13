@@ -35,6 +35,7 @@ void split(const string& s, char c,
 int main (int argc, const char * argv[])
 {
 	register_hash_names();
+	init_blank_network_config();
 	fann_type *fann_input;
 	
     // handle arguments
@@ -334,6 +335,12 @@ int main (int argc, const char * argv[])
 	}
 	
 
+}
+
+void init_blank_network_config()
+{
+	// Config::LAYERS[0] = Config::HASH_WIDTH_IN_BITS;
+	// Config::LAYERS[1] = Config::HASH_WIDTH_IN_BITS;
 }
 
 void display_help()
