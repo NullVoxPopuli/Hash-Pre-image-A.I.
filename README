@@ -1,3 +1,9 @@
 To-Do:
-• Implement random hash tester
--- When we train a network, testing to see if the network has been successfully trained takes a while to do by hand. So if we implement a function, that will generate random hashes, and check the pre-image for accuracy. 
+• Implement Parallel processing  
+-- All Swarm agents will write to shared memory
+-- That shared memory will be polled every so often for epoch updates, and outputted to the console
+• Re-organize main so that all the arguments can be in any order, and the execution of the program won't change  
+• 
+
+Long Term:
+• Create hash-free version, and release to the public is a tool to easily use fann with?
