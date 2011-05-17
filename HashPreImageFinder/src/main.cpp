@@ -37,6 +37,20 @@ int main (int argc, const char * argv[])
 	register_hash_names();
 	init_blank_network_config();
 	fann_type *fann_input;
+
+	// swarm specfic booleans
+	// Ø
+	
+	// non-swarm stuff
+	int need_to_train = false;
+	int need_to_train_on_file = false;
+	int need_to_generate_training_data_file = false;
+	int auto_test_with_data_file = false;
+	
+	// for either
+	int bypass_normal_functionality = false;
+	int does_single_test_need_to_happen = false;
+	int does_auto_test_need_to_happen = false;
 	
     // handle arguments
     if (argc < 2)
@@ -57,36 +71,27 @@ int main (int argc, const char * argv[])
 			
 			if (strcmp(argv[i], "-test") == 0)
 			{
-				Config::NEED_TO_TEST = true;
-				Config::NUM_TEST_POINTS = atoi(argv[i+1]);
-				// next var is going to be the input
-
-				char temp_array[Config::HASH_WIDTH_IN_BITS];
-				strcpy(temp_array, argv[i + 1]);
-				i++;
-				
-				// this should actually call the method
-				
-				// for(int j = 0; j < Config::HASH_WIDTH_IN_BITS; j++)
-				// 			{
-				// 				fann_input[j] = (float)(temp_array[j] - '0');
-				// 			}
+				does_single_test_need_to_happen = true;
 			}
 			else if (strcmp(argv[i], "-autoTest") == 0)
 			{
+				does_auto_test_need_to_happen = true;
+				
 				if (strcmp(argv[i + 1], "file") == 0)
 				{
-					i++; // for file
+					auto_test_with_data_file = true;
+					
+					i++; // for "file"
 					Config::NUM_TEST_POINTS = atoi(argv[++i]);
-					Config::TEST_MIN = atoi(argv[++i]);
-					Config::TEST_MAX = atoi(argv[++i]);
-					auto_test_network_with_random_data();
-				} else
+					Config::TEST_MIN = atoi( argv[ ++i ] );
+					Config::TEST_MAX = atoi( argv[ ++i ] );
+				} 
+				else
 				{
-					Config::NEED_TO_AUTOTEST = true;
+					auto_test_with_data_file = false;
 					Config::NUM_TEST_POINTS = atoi(argv[++i]);
-					Config::TEST_MIN = atoi(argv[++i]);
-					Config::TEST_MAX = atoi(argv[++i]);
+					Config::TEST_MIN = atoi( argv[ ++i ] );
+					Config::TEST_MAX = atoi( argv[ ++i ] );
 				}
 
 
@@ -97,21 +102,21 @@ int main (int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-genTrain") == 0)
 			{
-				Config::GENERATE_TRAIN_DATA = true;
+				need_to_generate_training_data_file = true;
 			}
 			else if (strcmp(argv[i], "-train") == 0)
 			{
-				Config::NEED_TO_TRAIN = true;
+				need_to_train = true;
 				if (strcmp(argv[i+1], "file") == 0)
 				{
 					cout << "Training on file data... \n";
-					Config::NO_FILE_TRAIN = false;
+					need_to_train_on_file = true;
 					i++;
 				}
 				else if (strcmp(argv[i+1], "block") == 0)
 				{
 					cout << "Training on generated data.... \n";
-					Config::NO_FILE_TRAIN = true;
+					need_to_train_on_file = false;
 					i++;
 				}
 				else if (strcmp(argv[i+1], "swarm") == 0)
@@ -120,7 +125,7 @@ int main (int argc, const char * argv[])
 				}
 				else
 				{
-					cout << "need to specify train mode ('file' or 'block')\n";
+					cout << "need to specify train mode ('file', 'block' or 'swarm')\n";
 					exit(1);
 				}
 			}
@@ -131,7 +136,7 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-bypass") == 0)
 			{
 				// bypasses all functions, used for testing single functions
-				Config::BYPASS_EVERYTHING = true;
+				bypass_normal_functionality = true;
 			}
 			else if (strcmp(argv[i], "-nnil") == 0) // number of neurons in each layer
 			{
@@ -190,6 +195,7 @@ int main (int argc, const char * argv[])
 			else if (strcmp(argv[i], "-help") == 0)
 			{
 				display_help();
+				exit(0);
 			}
 			else if (strcmp(argv[i], "-mTrnData") == 0)
 			{
@@ -259,13 +265,14 @@ int main (int argc, const char * argv[])
 			{
 				std::cout << "Unidentified Parameter: " << argv[i] << "\n";
 				display_help();
+				exit(0);
 			}
 			
 		}
 		
 	}
 	
-	if (!Config::BYPASS_EVERYTHING)
+	if (!bypass_normal_functionality)
 	{
 		// actually begin executing
 	    string fname = get_current_time();
@@ -287,47 +294,72 @@ int main (int argc, const char * argv[])
 
 		}
 		
-		if (Config::GENERATE_TRAIN_DATA) generate_train_file();
-	    if (Config::NEED_TO_TRAIN)
-	    {
-	    	if (Config::NO_FILE_TRAIN) {
-	    		train_network_no_file();
-			} else if (Config::USE_SWARM) {
-				swarm = allocate_swarm();
-				train_the_swarm(swarm);
-	    	} else {
-	    		train_network();
-	    	}
-	    }
-	    if (Config::NEED_TO_TEST)
+		if ( Config::USE_SWARM )
 		{
-			if (Config::USE_SWARM)
+			if ( need_to_generate_training_data_file )
 			{
-				cout << "Normal testing not yet implemented for swarms";
+				cout << "The Swarm does not support generating training data files...\n";
 			}
-			else
+			
+			if ( need_to_train )
+			{
+				if ( need_to_train_on_file )
+				{
+					cout << "The Swarm does not support training on a file...\n";
+				}
+				
+				swarm = allocate_swarm();
+				train_the_swarm( swarm );	
+			}
+			
+			if ( does_single_test_need_to_happen )
+			{
+				cout << "Single test not yet implemented for Swarm...\n";
+			}
+			
+			if ( does_auto_test_need_to_happen )
+			{
+				if ( auto_test_with_data_file )
+				{
+					cout << "The Swarm does not support files...\n";
+				}
+
+				swarm = load_trained_swarm();
+				auto_test_swarm( swarm, Config::NUM_TEST_POINTS );
+			
+			}
+			
+			free_the_swarm( swarm );
+
+		}
+		else // traditional Neural Network
+		{
+			if ( need_to_generate_training_data_file ) generate_train_file();
+			
+			if ( need_to_train )
+			{
+				if ( need_to_train_on_file ) 
+				{
+					train_network();
+				}
+				else 
+				{
+					train_network_no_file();
+				}
+			}
+			
+			if ( does_single_test_need_to_happen )
 			{
 				struct fann * trained_network = load_trained_network();
 				test_network(trained_network, fann_input);
 				fann_destroy(trained_network); 
 			}
-		}
-		if (Config::NEED_TO_AUTOTEST)
-		{
-			if (Config::USE_SWARM)
+			
+			if ( does_auto_test_need_to_happen )
 			{
-				swarm = load_trained_swarm();
-				auto_test_swarm(swarm, Config::NUM_TEST_POINTS);
-			}
-			else
-			{
-				cout << "Le needs to be implemented or something....\n";
+				auto_test_network_with_random_data();
 			}
 		}
-	    if (Config::USE_SWARM)
-	    {
-	    	free_the_swarm(swarm);
-	    }
 	}
 	else
 	{
@@ -340,7 +372,7 @@ int main (int argc, const char * argv[])
 void init_blank_network_config()
 {
 	// Config::LAYERS[0] = Config::HASH_WIDTH_IN_BITS;
-	// Config::LAYERS[1] = Config::HASH_WIDTH_IN_BITS;
+	// Config::LAYERS[1] = Config::HASH_WIDTH_IN_BITS; 
 }
 
 void display_help()

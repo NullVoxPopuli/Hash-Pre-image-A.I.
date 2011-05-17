@@ -39,7 +39,7 @@ void save_network_to_folder(struct fann * network, const char * save_name)
 		boost::filesystem::create_directory(config_folder);
 	}
 	
-	if( !(boost::filesystem::exists(hash_folder)));
+	if( !(boost::filesystem::exists(config_folder / Config::fmap[Config::current_hash_function])));
 	{
 		std::cout << "This hash has not been configured before...\n";
 		std::cout << "Creating folder called " << Config::fmap[Config::current_hash_function] << "\n";
