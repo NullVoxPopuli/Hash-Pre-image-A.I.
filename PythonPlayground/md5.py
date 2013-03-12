@@ -43,8 +43,7 @@ def left_rotate(x, amount):
     return ((x<<amount) | (x>>(32-amount))) & 0xFFFFFFFF
 
 def right_rotate(x, amount):
-    unrotated = ((x>>amount) | (x<<(32-amount)))
-    return bring_from_dead(unrotated)
+    return ((x>>amount) | (x<<(32-amount))) & 0xFFFFFFFF
  
 def md5(message):
  
@@ -84,28 +83,39 @@ def md5(message):
             a, b, c, d = d, new_b, b, c
         for i in range(48, 64):
             #print('Before:\t', a, '\t', b, '\t', c,'\t', d)
+            
             f = c ^ (b | ~d)
             g = ( 7*i )%16
             
-            #print('message piece:\t\t', int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
-            to_rotate = a + f + constants[i] + int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
-            #print('part to rotate: ', to_rotate)
+            part_of_message = int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
+            
+            #<<< PainPoint >>>
+            to_rotate = a + f + constants[i] + part_of_message
             rotated = left_rotate(to_rotate, rotate_amounts[i])
             
             new_b = (b + rotated) & 0xFFFFFFFF
-            
-            old_b = new_b - rotated
-            if (old_b < 0):
-                old_b += 0x100000000
-            
-            unrotated = right_rotate(rotated, rotate_amounts[i])
 
-            if (not rotated == unrotated):
-                print('rot: ', rotated, 'un: ', unrotated)
-                numberWrong += 1
+                
 
             a, b, c, d = d, new_b, b, c
-                #print('After:\t', a, '\t', b, '\t', c,'\t', d)
+            #print('After:\t', a, '\t', b, '\t', c,'\t', d)
+
+            ###
+            # We have a limited set of values we can work with to reverse the function
+            # Known values: d, new_b, b, c, i
+            #
+            # Using those we can derive a couple of things to definite values
+            # Derivable values: f, g, rotated
+            #
+            # From there, we're kind of screwed...
+            #
+            # to_rotate: can possibly be narrowed down to a possible set of values since we know the left_rotate function, the rotate amount, and the result that needs to occur
+            # ... from there we have to use the PainPoint equation. That'll let us guess at a, but it's not a very good guess. Using every possibility of to_rotate, we can define the relationship between a and part_of_message. But that's like saying we can relate x and y in the equation z = x + y, when z can be anything in a set of a hundred different values. I think if we get the guess wrong, some other equation will end up being invalid (like guessing x = 4 for 5x = 15). But I'm not really sure since I haven't seen it yet.
+
+            #old_b = new_b - rotated
+            #if (old_b < 0):
+                #old_b += 0x100000000
+
         for i, val in enumerate([a, b, c, d]):
             hash_pieces[i] += val
             hash_pieces[i] &= 0xFFFFFFFF
@@ -119,6 +129,8 @@ def md5_to_hex(digest):
     return '{:032x}'.format(int.from_bytes(raw, byteorder='big'))
  
 if __name__=='__main__':
+    print(left_rotate(5583349951, 7))
+    print(right_rotate(left_rotate(5583349951, 7), 7))
     demo = [b"",
             b"a",
             b"abc",
