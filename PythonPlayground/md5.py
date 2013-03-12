@@ -29,21 +29,13 @@ constants = [0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
  
 init_values = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476]
 
-def bring_from_dead(val):
-    print(val)
-    if (val < 0):
-        return val + 0x100000000
-    elif (val > 0xFFFFFFFF):
-        return bring_from_dead(val - 0x100000000)
-    else:
-        return val
-
 def left_rotate(x, amount):
     x &= 0xFFFFFFFF
     return ((x<<amount) | (x>>(32-amount))) & 0xFFFFFFFF
 
 def right_rotate(x, amount):
-    return ((x>>amount) | (x<<(32-amount))) & 0xFFFFFFFF
+    x &= 0xFFFFFFFF
+    return ((x<<(32-amount) | x>>amount)) & 0xFFFFFFFF
  
 def md5(message):
  
@@ -67,6 +59,7 @@ def md5(message):
             to_rotate = a + f + constants[i] + int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
             new_b = (b + left_rotate(to_rotate, rotate_amounts[i])) & 0xFFFFFFFF
             a, b, c, d = d, new_b, b, c
+        
         for i in range(16, 32):
             f = (d & b) | (~d & c)
             g = ( 5*i + 1 )%16
@@ -74,6 +67,7 @@ def md5(message):
             to_rotate = a + f + constants[i] + int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
             new_b = (b + left_rotate(to_rotate, rotate_amounts[i])) & 0xFFFFFFFF
             a, b, c, d = d, new_b, b, c
+
         for i in range(32, 48):
             f = b ^ c ^ d
             g = ( 3*i + 5 )%16
@@ -81,9 +75,9 @@ def md5(message):
             to_rotate = a + f + constants[i] + int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
             new_b = (b + left_rotate(to_rotate, rotate_amounts[i])) & 0xFFFFFFFF
             a, b, c, d = d, new_b, b, c
+
         for i in range(48, 64):
             #print('Before:\t', a, '\t', b, '\t', c,'\t', d)
-            
             f = c ^ (b | ~d)
             g = ( 7*i )%16
             
@@ -91,7 +85,10 @@ def md5(message):
             
             #<<< PainPoint >>>
             to_rotate = a + f + constants[i] + part_of_message
-            rotated = left_rotate(to_rotate, rotate_amounts[i])
+            
+            rotateAmount = rotate_amounts[i]
+            to_rotate &= 0xFFFFFFFF
+            rotated = ((to_rotate<<rotateAmount) | (to_rotate>>(32-rotateAmount))) & 0xFFFFFFFF
             
             new_b = (b + rotated) & 0xFFFFFFFF
 
@@ -105,22 +102,23 @@ def md5(message):
             # Known values: d, new_b, b, c, i
             #
             # Using those we can derive a couple of things to definite values
-            # Derivable values: f, g, rotated
+            # Derivable values: f, g, rotated, to_rotate
             #
-            # From there, we're kind of screwed...
-            #
-            # to_rotate: can possibly be narrowed down to a possible set of values since we know the left_rotate function, the rotate amount, and the result that needs to occur
-            # ... from there we have to use the PainPoint equation. That'll let us guess at a, but it's not a very good guess. Using every possibility of to_rotate, we can define the relationship between a and part_of_message. But that's like saying we can relate x and y in the equation z = x + y, when z can be anything in a set of a hundred different values. I think if we get the guess wrong, some other equation will end up being invalid (like guessing x = 4 for 5x = 15). But I'm not really sure since I haven't seen it yet.
+            # From there we have to use the PainPoint equation. We're missing two values in that equation. We can define the relationship between a and part_of_message, but that's like saying we can relate x and y in the equation 4 = x + y. If we get the guess wrong I don't think we'll know it until we've completeted all 64 rounds of the algorithm, and each of those rounds have their own guesses (except the first 3 (?) steps of the algorithm).
 
             #old_b = new_b - rotated
             #if (old_b < 0):
                 #old_b += 0x100000000
+        
+            unrotated = right_rotate(rotated, rotateAmount)
+            if (not unrotated == to_rotate):
+                numberWrong += 1
 
         for i, val in enumerate([a, b, c, d]):
             hash_pieces[i] += val
             hash_pieces[i] &= 0xFFFFFFFF
 
-    print('WRONG: ', numberWrong)
+#print('WRONG: ', numberWrong)
  
     return sum(x<<(32*i) for i, x in enumerate(hash_pieces))
  
@@ -129,8 +127,6 @@ def md5_to_hex(digest):
     return '{:032x}'.format(int.from_bytes(raw, byteorder='big'))
  
 if __name__=='__main__':
-    print(left_rotate(5583349951, 7))
-    print(right_rotate(left_rotate(5583349951, 7), 7))
     demo = [b"",
             b"a",
             b"abc",
