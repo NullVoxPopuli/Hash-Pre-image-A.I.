@@ -1,50 +1,89 @@
 import math
 
-class MeshLayer:
+class MeshNode:
 
-    def __init__(self, number):
-        self.data = [False, False, False, False, False, False, False, False,
-                     False, False, False, False, False, False, False, False,
-                     False, False, False, False, False, False, False, False,
-                     False, False, False, False, False, False, False, False]
+    def __init__(self, val):
+        self.value = val
     
+    def getValue(self):
+        return self.value
+    
+    def setValue(self, val):
+        self.value = val
+
+class MeshLayer:
+    
+    def __init__(self):
+        self.nodes = [MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False)]
+    
+    def layerForNumber(number):
+        resultLayer = MeshLayer()
         index = 0
     
         while number > 0:
+            newNode = MeshNode(False)
             if number & 1 == 1:
-                self.data[index] = True
+                newNode.setValue(True)
             else:
-                self.data[index] = False
+                newNode.setValue(False)
+            resultLayer.nodes[index] = newNode
         
             number >>= 1
             index += 1
+
+        return resultLayer
 
     def meshToNumber(self):
         step = 1
         index = 1
         result = 0
         
-        for bit in self.data:
-            if bit:
+        for node in self.nodes:
+            if node.getValue():
                 result += step
             step <<= 1
         
         return result;
 
-    def getVal(self, i):
-        return self.data[i]
-
-    def setVal(self, i, val):
-        self.data[i] = val
+class AndMeshNode(MeshNode):
+    
+    def __init__(self, a, b):
+        self.A = a
+        self.B = b
+    
+    def getValue(self):
+        return (self.A.getValue() and self.B.getValue())
+    
+    def setValue(self, val):
+        self.value = val
 
 class AndMesh:
     
     def andResult(meshA, meshB):
-        resultMesh = MeshLayer(0)
+        resultMesh = MeshLayer()
 
         i = 0
         while i < 32:
-            resultMesh.data[i] = meshA.data[i] and meshB.data[i]
+            andNode = AndMeshNode(meshA.nodes[i], meshB.nodes[i])
+            resultMesh.nodes[i] = andNode
             i += 1
 
         return resultMesh
@@ -102,10 +141,15 @@ def md5(message):
         chunk = message[chunk_ofst:chunk_ofst+64]
         numberWrong = 0
         for i in range(0,16):
-            bMesh = MeshLayer(b)
-            cMesh = MeshLayer(c)
+            bMesh = MeshLayer.layerForNumber(b)
+            cMesh = MeshLayer.layerForNumber(c)
+            notBMesh = MeshLayer.layerForNumber(-b - 1)
+            dMesh = MeshLayer.layerForNumber(d)
             
-            f = (AndMesh.andResult(bMesh, cMesh).meshToNumber()) | ((-b - 1) & d)
+            bcMesh = AndMesh.andResult(bMesh, cMesh)
+            notbdMesh = AndMesh.andResult(dMesh, notBMesh)
+            
+            f = (bcMesh.meshToNumber()) | ((-b - 1) & dMesh.meshToNumber())
             g = i
             
             to_rotate = a + f + constants[i] + int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
@@ -207,3 +251,6 @@ if __name__=='__main__':
         i += 1
 
     print('Tests passed: ', testsPassed)
+
+    mesh1 = MeshLayer.layerForNumber(30)
+    print(mesh1.meshToNumber())
