@@ -63,6 +63,28 @@ class MeshLayer:
         
         return result;
 
+class NotMeshNode(MeshNode):
+
+    def __init__(self, a):
+        self.A = a
+
+    def getValue(self):
+        return (not self.A.getValue())
+
+class NotMesh:
+    
+    def __init__(self, layer):
+        self.input_layer = layer
+    
+    def result(self):
+        resultLayer = MeshLayer()
+        i = 0
+        while i < 32:
+            notNode = NotMeshNode(self.input_layer.nodes[i])
+            resultLayer.nodes[i] = notNode
+            i += 1
+        return resultLayer
+
 class AndMeshNode(MeshNode):
     
     def __init__(self, a, b):
@@ -87,7 +109,25 @@ class AndMesh:
             i += 1
 
         return resultMesh
- 
+
+class OrMeshNode(MeshNode):
+
+    def __init__(self, a, b):
+        self.A = a
+        self.B = b
+
+    def getValue(self):
+        return (self.A.getValue() or self.B.getValue())
+
+class OrMesh(MeshLayer):
+
+    def __init__(self, meshA, meshB):
+        super(OrMesh, self).__init__()
+        i = 0
+        while i < 32:
+            self.nodes[i] = OrMeshNode(meshA.nodes[i], meshB.nodes[i])
+            i += 1
+
 rotate_amounts = [7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
                   5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20,
                   4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
@@ -143,13 +183,12 @@ def md5(message):
         for i in range(0,16):
             bMesh = MeshLayer.layerForNumber(b)
             cMesh = MeshLayer.layerForNumber(c)
-            notBMesh = MeshLayer.layerForNumber(-b - 1)
             dMesh = MeshLayer.layerForNumber(d)
             
             bcMesh = AndMesh.andResult(bMesh, cMesh)
-            notbdMesh = AndMesh.andResult(dMesh, notBMesh)
+            notbdMesh = AndMesh.andResult(dMesh, NotMesh(bMesh).result())
             
-            f = (bcMesh.meshToNumber()) | ((-b - 1) & dMesh.meshToNumber())
+            f = OrMesh(bcMesh, notbdMesh).meshToNumber()
             g = i
             
             to_rotate = a + f + constants[i] + int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
