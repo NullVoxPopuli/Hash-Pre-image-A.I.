@@ -179,6 +179,23 @@ class LeftRotateMesh(MeshLayer):
             index += 1
             i += 1
 
+class XorMeshNode(MeshNode):
+    def __init__(self, a, b):
+        self.A = a
+        self.B = b
+        
+    def getValue(self):
+        return (self.A.getValue() ^ self.B.getValue())
+
+class XorMesh(MeshLayer):
+    
+    def __init__(self, meshA, meshB):
+        super(XorMesh, self).__init__()
+        i = 0
+        while i < 32:
+            self.nodes[i] = XorMeshNode(meshA.nodes[i], meshB.nodes[i])
+            i += 1
+
 rotate_amounts = [7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
                   5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20,
                   4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
@@ -238,73 +255,50 @@ def md5(message):
         dMesh = MeshLayer.layerForNumber(d)
         for i in range(0,16):
             fMesh = OrMesh(AndMesh(bMesh, cMesh), AndMesh(dMesh, NotMesh(bMesh)))
-            
             g = i
             
             constantMesh = MeshLayer.layerForNumber(constants[i])
             messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
             
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messagePartMesh)
-            rotationMesh = LeftRotateMesh(toRotateMesh, rotate_amounts[i])
             
-            newBMesh = AddMesh(bMesh, rotationMesh)
+            newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
         
-        a, b, c, d = aMesh.meshToNumber(), bMesh.meshToNumber(), cMesh.meshToNumber(), dMesh.meshToNumber()
         for i in range(16, 32):
-            f = (d & b) | ((-d - 1) & c)
+            fMesh = OrMesh(AndMesh(dMesh, bMesh), AndMesh(cMesh, NotMesh(dMesh)))
             g = ( 5*i + 1 )%16
-            
-            to_rotate = a + f + constants[i] + int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
-            new_b = (b + left_rotate(to_rotate, rotate_amounts[i])) & 0xFFFFFFFF
-            a, b, c, d = d, new_b, b, c
+
+            constantMesh = MeshLayer.layerForNumber(constants[i])
+            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
+
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messagePartMesh)
+            newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
+            aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
         for i in range(32, 48):
-            f = b ^ c ^ d
+            fMesh = XorMesh(XorMesh(bMesh, cMesh), dMesh)
             g = ( 3*i + 5 )%16
             
-            to_rotate = a + f + constants[i] + int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
-            new_b = (b + left_rotate(to_rotate, rotate_amounts[i])) & 0xFFFFFFFF
-            a, b, c, d = d, new_b, b, c
+            constantMesh = MeshLayer.layerForNumber(constants[i])
+            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
+            
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh ,fMesh), constantMesh), messagePartMesh)
+            newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
+            aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
         for i in range(48, 64):
-            #print('Before:\t', a, '\t', b, '\t', c,'\t', d)
-            f = c ^ (b | (-d - 1))
+            fMesh = XorMesh(cMesh, OrMesh(bMesh, NotMesh(dMesh)))
             g = ( 7*i )%16
             
-            part_of_message = int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
+            constantMesh = MeshLayer.layerForNumber(constants[i])
+            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
             
-            #<<< PainPoint >>>
-            to_rotate = a + f + constants[i] + part_of_message
-            
-            rotateAmount = rotate_amounts[i]
-            to_rotate &= 0xFFFFFFFF
-            rotated = ((to_rotate<<rotateAmount) | (to_rotate>>(32-rotateAmount))) & 0xFFFFFFFF
-            
-            new_b = (b + rotated) & 0xFFFFFFFF
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messagePartMesh)
+            newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
+            aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
-                
-
-            a, b, c, d = d, new_b, b, c
-            #print('After:\t', a, '\t', b, '\t', c,'\t', d)
-
-            ###
-            # We have a limited set of values we can work with to reverse the function
-            # Known values: d, new_b, b, c, i
-            #
-            # Using those we can derive a couple of things to definite values
-            # Derivable values: f, g, rotated, to_rotate
-            #
-            # From there we have to use the PainPoint equation. We're missing two values in that equation. We can define the relationship between a and part_of_message, but that's like saying we can relate x and y in the equation 4 = x + y. If we get the guess wrong I don't think we'll know it until we've completeted all 64 rounds of the algorithm, and each of those rounds have their own guesses (except the first 3(?) steps of the algorithm).
-
-            #old_b = new_b - rotated
-            #if (old_b < 0):
-                #old_b += 0x100000000
-        
-            unrotated = right_rotate(rotated, rotateAmount)
-            if (not unrotated == to_rotate):
-                numberWrong += 1
-
+        a, b, c, d = aMesh.meshToNumber(), bMesh.meshToNumber(), cMesh.meshToNumber(), dMesh.meshToNumber()
         for i, val in enumerate([a, b, c, d]):
             hash_pieces[i] += val
             hash_pieces[i] &= 0xFFFFFFFF
