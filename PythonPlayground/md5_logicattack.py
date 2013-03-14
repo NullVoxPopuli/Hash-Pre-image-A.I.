@@ -71,19 +71,14 @@ class NotMeshNode(MeshNode):
     def getValue(self):
         return (not self.A.getValue())
 
-class NotMesh:
+class NotMesh(MeshLayer):
     
-    def __init__(self, layer):
-        self.input_layer = layer
-    
-    def result(self):
-        resultLayer = MeshLayer()
+    def __init__(self, input_mesh):
+        super(NotMesh, self).__init__()
         i = 0
         while i < 32:
-            notNode = NotMeshNode(self.input_layer.nodes[i])
-            resultLayer.nodes[i] = notNode
+            self.nodes[i] = NotMeshNode(input_mesh.nodes[i])
             i += 1
-        return resultLayer
 
 class AndMeshNode(MeshNode):
     
@@ -97,18 +92,14 @@ class AndMeshNode(MeshNode):
     def setValue(self, val):
         self.value = val
 
-class AndMesh:
+class AndMesh(MeshLayer):
     
-    def andResult(meshA, meshB):
-        resultMesh = MeshLayer()
-
+    def __init__(self, meshA, meshB):
+        super(AndMesh, self).__init__()
         i = 0
         while i < 32:
-            andNode = AndMeshNode(meshA.nodes[i], meshB.nodes[i])
-            resultMesh.nodes[i] = andNode
+            self.nodes[i] = AndMeshNode(meshA.nodes[i], meshB.nodes[i])
             i += 1
-
-        return resultMesh
 
 class OrMeshNode(MeshNode):
 
@@ -126,6 +117,66 @@ class OrMesh(MeshLayer):
         i = 0
         while i < 32:
             self.nodes[i] = OrMeshNode(meshA.nodes[i], meshB.nodes[i])
+            i += 1
+
+class AddMeshNode(MeshNode):
+
+    def __init__(self, a, b, cb):
+        self.A = a
+        self.B = b
+        self.carry = False
+        self.CB = cb
+        self.value = -1
+
+    def getValue(self):
+        if self.value == -1:
+            val = 0
+            self.carry = False
+
+            if self.A.getValue():
+                val += 1
+            if self.B.getValue():
+                val += 1
+    
+            if self.CB is not None:
+                if self.CB.value == -1:
+                    self.CB.getValue()
+                if self.CB.carry:
+                    val += 1
+    
+            if val > 1:
+                self.carry = True
+
+            if val == 1 or val == 3:
+                self.value = 1
+            else:
+                self.value = 0
+
+        return self.value == 1
+
+class AddMesh(MeshLayer):
+
+    def __init__(self, meshA, meshB):
+        super(AddMesh, self).__init__()
+        i = 0
+        previousNode = None
+        while i < 32:
+            self.nodes[i] = AddMeshNode(meshA.nodes[i], meshB.nodes[i], previousNode)
+            previousNode = self.nodes[i]
+            i += 1
+
+class LeftRotateMesh(MeshLayer):
+
+    def __init__(self, input_mesh, amount):
+        super(LeftRotateMesh, self).__init__()
+        i = 0
+        index = 32 - amount
+        while i < 32:
+            if index == 32:
+                index = 0
+            
+            self.nodes[i] = input_mesh.nodes[index]
+            index += 1
             i += 1
 
 rotate_amounts = [7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
@@ -180,21 +231,26 @@ def md5(message):
         a, b, c, d = hash_pieces
         chunk = message[chunk_ofst:chunk_ofst+64]
         numberWrong = 0
+            
+        aMesh = MeshLayer.layerForNumber(a)
+        bMesh = MeshLayer.layerForNumber(b)
+        cMesh = MeshLayer.layerForNumber(c)
+        dMesh = MeshLayer.layerForNumber(d)
         for i in range(0,16):
-            bMesh = MeshLayer.layerForNumber(b)
-            cMesh = MeshLayer.layerForNumber(c)
-            dMesh = MeshLayer.layerForNumber(d)
+            fMesh = OrMesh(AndMesh(bMesh, cMesh), AndMesh(dMesh, NotMesh(bMesh)))
             
-            bcMesh = AndMesh.andResult(bMesh, cMesh)
-            notbdMesh = AndMesh.andResult(dMesh, NotMesh(bMesh).result())
-            
-            f = OrMesh(bcMesh, notbdMesh).meshToNumber()
             g = i
             
-            to_rotate = a + f + constants[i] + int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
-            new_b = (b + left_rotate(to_rotate, rotate_amounts[i])) & 0xFFFFFFFF
-            a, b, c, d = d, new_b, b, c
+            constantMesh = MeshLayer.layerForNumber(constants[i])
+            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
+            
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messagePartMesh)
+            rotationMesh = LeftRotateMesh(toRotateMesh, rotate_amounts[i])
+            
+            newBMesh = AddMesh(bMesh, rotationMesh)
+            aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
         
+        a, b, c, d = aMesh.meshToNumber(), bMesh.meshToNumber(), cMesh.meshToNumber(), dMesh.meshToNumber()
         for i in range(16, 32):
             f = (d & b) | ((-d - 1) & c)
             g = ( 5*i + 1 )%16
@@ -253,14 +309,14 @@ def md5(message):
             hash_pieces[i] += val
             hash_pieces[i] &= 0xFFFFFFFF
 
-#print('WRONG: ', numberWrong)
+                #print('WRONG: ', numberWrong)
  
     return sum(x<<(32*i) for i, x in enumerate(hash_pieces))
  
 def md5_to_hex(digest):
     raw = digest.to_bytes(16, byteorder='little')
     return '{:032x}'.format(int.from_bytes(raw, byteorder='big'))
- 
+
 if __name__=='__main__':
     demo = [b"",
             b"a",
@@ -290,6 +346,3 @@ if __name__=='__main__':
         i += 1
 
     print('Tests passed: ', testsPassed)
-
-    mesh1 = MeshLayer.layerForNumber(30)
-    print(mesh1.meshToNumber())
