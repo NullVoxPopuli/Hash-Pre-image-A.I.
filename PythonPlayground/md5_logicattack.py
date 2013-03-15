@@ -1,9 +1,15 @@
 import math
 
+state_mutable = 777
+state_fixed = 778
+state_changed = 779
+
 class MeshNode:
 
-    def __init__(self, val):
+    def __init__(self, val, mesh):
         self.value = val
+        self.Mesh = mesh
+        self.changeListeners = []
     
     def getValue(self):
         return self.value
@@ -14,32 +20,33 @@ class MeshNode:
 class MeshLayer:
     
     def __init__(self):
-        self.nodes = [MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+        self.nodes = [MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
                       
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
                       
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
                       
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False)]
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self)]
+        self.state = state_mutable
     
     def layerForNumber(number):
         resultLayer = MeshLayer()
         index = 0
     
         while number > 0:
-            newNode = MeshNode(False)
+            newNode = MeshNode(False, resultLayer)
             if number & 1 == 1:
                 newNode.setValue(True)
             else:
@@ -121,12 +128,19 @@ class OrMesh(MeshLayer):
 
 class AddMeshNode(MeshNode):
 
-    def __init__(self, a, b, cb):
+    def __init__(self, a, b, cb, mesh):
+        super(AddMeshNode, self).__init__(-1, mesh)
+
         self.A = a
+        self.A.changeListeners.append(self)
+        
         self.B = b
+        self.B.changeListeners.append(self)
+        
         self.carry = False
         self.CB = cb
         self.value = -1
+        self.Mesh = mesh
 
     def getValue(self):
         if self.value == -1:
@@ -205,16 +219,22 @@ class AddMeshNode(MeshNode):
                 # no carry and 0
                 self.A.setValue(True)
                 self.B.setValue(True)
-    
+
+    def adjust(self, cause):
+        self.resolve()
 
     def setValue(self, val):
         if not (val ^ (self.value == 1) ):
             print('anomaly 11340315')
             return
         
-        self.value = val
-        
-        if not val:
+        self.value = 1 if val else 0
+        self.resolve()
+        for node in self.changeListeners:
+            node.resolve()
+
+    def resolve(self):
+        if not self.value:
             #need to give 0, were giving a 1
             if self.carry:
                 #we were giving a carry and need to keep doing that
@@ -270,7 +290,7 @@ class AddMesh(MeshLayer):
         i = 0
         previousNode = EmptyCB()
         while i < 32:
-            self.nodes[i] = AddMeshNode(meshA.nodes[i], meshB.nodes[i], previousNode)
+            self.nodes[i] = AddMeshNode(meshA.nodes[i], meshB.nodes[i], previousNode, self)
             previousNode = self.nodes[i]
             i += 1
 
@@ -444,22 +464,25 @@ if __name__=='__main__':
     
     testsPassed = True
     i = 0
-    for message in demo:
-        testsPassed = md5_to_hex(md5(message)) == output[i]
-        if (not testsPassed):
-            break
-        i += 1
+    ##for message in demo:
+        ##testsPassed = md5_to_hex(md5(message)) == output[i]
+        ##if (not testsPassed):
+            ##break
+        ##i += 1
 
-    print('Tests passed: ', testsPassed)
+    ##print('Tests passed: ', testsPassed)
 
 
     one = MeshLayer.layerForNumber(7)
-    two = MeshLayer.layerForNumber(53)
+    two = MeshLayer.layerForNumber(9)
 
-    result = AddMesh(one, two)
+    a = AddMesh(two, one)
 
-    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
+    result = AddMesh(a, two)
+    result.state = state_fixed
 
-    result.nodes[23].setValue(not result.nodes[23].getValue())
+    print(one.toNumber(), '+', two.toNumber(), '+', two.toNumber(), '=', result.toNumber())
 
-    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
+    result.nodes[3].setValue(not result.nodes[3].getValue())
+
+    print(one.toNumber(), '+', two.toNumber(), '+', two.toNumber(), '=', result.toNumber())
