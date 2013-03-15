@@ -15,7 +15,13 @@ class MeshNode:
         return self.value
     
     def setValue(self, val):
+        self.setValueR(val, None)
+    
+    def setValueR(self, val, resolvingParent):
         self.value = val
+        for node in self.changeListeners:
+            if not node == resolvingParent:
+                node.resolve()
 
 class MeshLayer:
     
@@ -231,6 +237,7 @@ class AddMeshNode(MeshNode):
         self.value = 1 if val else 0
         self.resolve()
         for node in self.changeListeners:
+            print('resolving')
             node.resolve()
 
     def resolve(self):
@@ -239,16 +246,16 @@ class AddMeshNode(MeshNode):
             if self.carry:
                 #we were giving a carry and need to keep doing that
                 #only possible state A:1 B:1 C:1
-                self.A.setValue(False)
+                self.A.setValueR(False, self)
             else:
                 #were not giving a carry
                 if not self.CB.carry:
                     #not receiving a carry
                     #one of them was one and it needs to be zero
                     if self.A.getValue():
-                        self.A.setValue(False)
+                        self.A.setValueR(False, self)
                     elif self.B.getValue():
-                        self.B.setValue(False)
+                        self.B.setValueR(False, self)
                     else:
                         print('anomaly 10070315')
                 else:
@@ -264,9 +271,9 @@ class AddMeshNode(MeshNode):
                 if self.CB.carry:
                     #A or B was 1 and we need them both to be
                     if not self.A.getValue():
-                        self.A.setValue(True)
+                        self.A.setValueR(True, self)
                     elif not self.B.getValue():
-                        self.B.setValue(True)
+                        self.B.setValueR(True, self)
                     else:
                         print('anomaly 10580315')
                 else:
@@ -275,7 +282,7 @@ class AddMeshNode(MeshNode):
                     self.CB.setShouldGiveCarry(True)
             else:
                 #weren't giving a carry, both A and B were 0
-                self.A.setValue(True)
+                self.A.setValueR(True, self)
 
 class EmptyCB(MeshNode):
     
@@ -473,8 +480,8 @@ if __name__=='__main__':
     ##print('Tests passed: ', testsPassed)
 
 
-    one = MeshLayer.layerForNumber(7)
-    two = MeshLayer.layerForNumber(9)
+    one = MeshLayer.layerForNumber(1)
+    two = MeshLayer.layerForNumber(0)
 
     a = AddMesh(two, one)
 
