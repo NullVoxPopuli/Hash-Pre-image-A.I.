@@ -9,56 +9,62 @@ state_mutated = 402
 
 class MeshNode:
 
-    def __init__(self, val):
+    def __init__(self, val, s):
         self.value = val
+        self.state = s
     
     def getValue(self):
         return self.value
     
     def setValue(self, val):
         self.value = val
+    
+    def getState(self):
+        return self.state
+
+    def isMutable(self):
+        return self.state
 
 class MeshLayer:
     
-    def __init__(self):
-        self.nodes = [MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+    def __init__(self, state):
+        self.nodes = [MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
                       
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
                       
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
                       
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False),
-                      MeshNode(False), MeshNode(False), MeshNode(False), MeshNode(False)]
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state)]
     
-    def layerForNumber(number):
-        resultLayer = MeshLayer()
+    def layerForNumber(number, state):
+        resultLayer = MeshLayer(state)
         index = 0
     
         while number > 0:
-            newNode = MeshNode(False)
+            newNode = resultLayer.nodes[index]
             if number & 1 == 1:
                 newNode.setValue(True)
             else:
                 newNode.setValue(False)
-            resultLayer.nodes[index] = newNode
         
             number >>= 1
             index += 1
 
         return resultLayer
 
-    def meshToNumber(self):
+    def toNumber(self):
         step = 1
         index = 1
         result = 0
@@ -81,7 +87,7 @@ class NotMeshNode(MeshNode):
 class NotMesh(MeshLayer):
     
     def __init__(self, input_mesh):
-        super(NotMesh, self).__init__()
+        super(NotMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
             self.nodes[i] = NotMeshNode(input_mesh.nodes[i])
@@ -102,7 +108,7 @@ class AndMeshNode(MeshNode):
 class AndMesh(MeshLayer):
     
     def __init__(self, meshA, meshB):
-        super(AndMesh, self).__init__()
+        super(AndMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
             self.nodes[i] = AndMeshNode(meshA.nodes[i], meshB.nodes[i])
@@ -120,7 +126,7 @@ class OrMeshNode(MeshNode):
 class OrMesh(MeshLayer):
 
     def __init__(self, meshA, meshB):
-        super(OrMesh, self).__init__()
+        super(OrMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
             self.nodes[i] = OrMeshNode(meshA.nodes[i], meshB.nodes[i])
@@ -128,11 +134,12 @@ class OrMesh(MeshLayer):
 
 class AddMeshNode(MeshNode):
 
-    def __init__(self, a, b, cb):
+    def __init__(self, a, b, previous, next):
         self.A = a
         self.B = b
         self.carry = False
-        self.CB = cb
+        self.Prev = previous
+        self.Next = next
         self.value = -1
 
     def getValue(self):
@@ -145,10 +152,10 @@ class AddMeshNode(MeshNode):
             if self.B.getValue():
                 val += 1
     
-            if self.CB is not None:
-                if self.CB.value == -1:
-                    self.CB.getValue()
-                if self.CB.carry:
+            if self.Prev is not None:
+                if self.Prev.value == -1:
+                    self.Prev.getValue()
+                if self.Prev.carry:
                     val += 1
     
             if val > 1:
@@ -161,17 +168,142 @@ class AddMeshNode(MeshNode):
 
         return self.value == 1
 
-class EmptyCarry(MeshNode):
+    def setShouldTakeCarry(self, takeCarry):
     
-    def getValue(self):
-        return False
+    def setShouldGiveCarry(self, giveCarry):
+        if not (giveCarry ^ self.carry):
+            print('anomaly 11380315')
+
+        if self.carry:
+            #need to stop giving a carry
+            self.carry = False
+            if self.value == 1:
+                #giving a carry and a 1
+                if self.Prev.carry:
+                    self.A.setValue(False)
+                    self.B.setValue(False)
+                else:
+                    print('anomaly 11490315')
+            else:
+                #giving a carry and a 0
+                if self.Prev.carry:
+                    ###need to set whichever's 1 to 0 and stop the carry that we're getting
+                    if self.A.getValue():
+                        self.A.setValue(False)
+                    elif self.B.getValue():
+                        self.B.setValue(False)
+                    else:
+                        print('anomaly 12060315')
+                    self.Prev.setShouldGiveCarry(False)
+                else:
+                    #both are 1
+                    self.A.setValue(False)
+                    self.B.setValue(False)
+                        
+        else:
+            #need to give a carry
+            self.carry = True
+            if self.value == 1:
+                #not giving a carry, but giving a 1
+                if self.Prev.carry:
+                    self.A.setValue(True)
+                    self.B.setValue(True)
+                else:
+                    ###need to set whichever's 0 to 1 and get a carry
+                    if not self.A.getValue():
+                        self.A.setValue(True)
+                    elif not self.B.getValue():
+                        self.B.setValue(True)
+                    else:
+                        print('anomaly 12070315')
+                    self.Prev.setShouldGiveCarry(True)
+            else:
+                # no carry and 0
+                self.A.setValue(True)
+                self.B.setValue(True)
+    
+
+    def setValue(self, val):
+        if not (val ^ (self.value == 1) ):
+            print('anomaly 11340315')
+            return False
+        
+        if self.state == state_constant or self.state == state_mutated:
+            return False
+    
+        self.value = 1 if val else 0
+        
+        if not val:
+            if self.Prev.carry:
+                if self.A.getValue() and self.B.getValue():
+                    return self.A.setValue(False) or self.B.setValue(False)
+                elif not self.A.getValue() and not self.B.getValue():
+                    setSuccessful = self.A.setValue(True) or self.A.setValue(True)
+                    if setSuccessful:
+                        self.Next.setShouldTakeCarry(True)
+                    return setSuccessful
+                else:
+                    print('anomaly 01200318')
+            else:
+                if self.A.getValue():
+                    if not self.A.setValue(False):
+                        setSuccessful = self.B.setValue(True)
+                        if setSuccessful:
+                            self.Next.setShouldTakeCarry(True)
+                        return setSuccessful
+                    return True
+                elif self.B.getValue():
+                    if not self.B.setValue(False):
+                        setSuccessful = self.A.setValue(True)
+                        if setSuccessful:
+                            self.Next.setShouldTakeCarry(True)
+                        return setSuccessful
+                    return True
+                else:
+                    print('anomaly 01220318')
+
+        else:
+            if self.Prev.carry:
+                if self.A.getValue():
+                    if not self.B.setValue(True):
+                        setSuccessful = self.A.setValue(False)
+                        if setSuccessful:
+                            self.Next.setShouldTakeCarry(False)
+                        return setSuccessful
+                    return True
+                elif self.B.getValue():
+                    if not self.A.setValue(True):
+                        setSuccessful = self.B.setValue(False)
+                        if setSuccessful:
+                            self.Next.setShouldTakeCarry(False)
+                        return setSuccessful
+                    return True
+                else:
+                    print('anomaly 01225318')
+            else:
+                if self.A.getValue() and self.B.getValue():
+                    setSuccessful = self.A.setValue(False) or self.B.setValue(False)
+                    if setSuccessful:
+                        self.Next.setShouldTakeCarry(False)
+                    return setSuccessful
+                elif not self.A.getValue() and not self.B.getValue():
+                    return self.A.setValue(True) or self.A.setValue(True)
+                else:
+                    print('anomaly 01300318')
+
+class EmptyCB(MeshNode):
+    
+    def __init__(self):
+        super(EmptyCB, self).__init__(state_constant)
+        self.carry = False
+        self.value = 0
 
 class AddMesh(MeshLayer):
 
     def __init__(self, meshA, meshB):
-        super(AddMesh, self).__init__()
+        super(AddMesh, self).__init__(state_mutable)
         i = 0
-        previousNode = None
+        previousNode = EmptyCB()
         while i < 32:
             self.nodes[i] = AddMeshNode(meshA.nodes[i], meshB.nodes[i], previousNode)
             previousNode = self.nodes[i]
@@ -180,7 +312,7 @@ class AddMesh(MeshLayer):
 class LeftRotateMesh(MeshLayer):
 
     def __init__(self, input_mesh, amount):
-        super(LeftRotateMesh, self).__init__()
+        super(LeftRotateMesh, self).__init__(state_mutable)
         i = 0
         index = 32 - amount
         while i < 32:
@@ -195,14 +327,14 @@ class XorMeshNode(MeshNode):
     def __init__(self, a, b):
         self.A = a
         self.B = b
-        
+    
     def getValue(self):
         return (self.A.getValue() ^ self.B.getValue())
 
 class XorMesh(MeshLayer):
     
     def __init__(self, meshA, meshB):
-        super(XorMesh, self).__init__()
+        super(XorMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
             self.nodes[i] = XorMeshNode(meshA.nodes[i], meshB.nodes[i])
@@ -261,20 +393,23 @@ def md5(message):
         chunk = message[chunk_ofst:chunk_ofst+64]
         numberWrong = 0
             
-        aMesh = MeshLayer.layerForNumber(a)
-        bMesh = MeshLayer.layerForNumber(b)
-        cMesh = MeshLayer.layerForNumber(c)
-        dMesh = MeshLayer.layerForNumber(d)
+        aMesh = MeshLayer.layerForNumber(a, state_constant)
+        bMesh = MeshLayer.layerForNumber(b, state_constant)
+        cMesh = MeshLayer.layerForNumber(c, state_constant)
+        dMesh = MeshLayer.layerForNumber(d, state_constant)
+        
+        messageMeshes = []
+        for i in range(16):
+            messageNumber = int.from_bytes(chunk[4*i:4*i+4], byteorder='little')
+            messageMeshes.append(MeshLayer.layerForNumber(messageNumber, state_mutable))
+        
         for i in range(0,16):
             fMesh = OrMesh(AndMesh(bMesh, cMesh), AndMesh(dMesh, NotMesh(bMesh)))
             g = i
             
-            constantMesh = MeshLayer.layerForNumber(constants[i])
-            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
+            constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
             
-            soVeryFixed = AddMesh(AddMesh(aMesh, fMesh), constantMesh) #fixed, for the first round of 64 at least
-            
-            toRotateMesh = AddMesh(soVeryFixed, messagePartMesh)
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
@@ -283,10 +418,9 @@ def md5(message):
             fMesh = OrMesh(AndMesh(dMesh, bMesh), AndMesh(cMesh, NotMesh(dMesh)))
             g = ( 5*i + 1 )%16
 
-            constantMesh = MeshLayer.layerForNumber(constants[i])
-            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
+            constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
 
-            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messagePartMesh)
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
@@ -294,10 +428,9 @@ def md5(message):
             fMesh = XorMesh(XorMesh(bMesh, cMesh), dMesh)
             g = ( 3*i + 5 )%16
             
-            constantMesh = MeshLayer.layerForNumber(constants[i])
-            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
+            constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
             
-            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh ,fMesh), constantMesh), messagePartMesh)
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh ,fMesh), constantMesh), messageMeshes[g])
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
@@ -305,14 +438,13 @@ def md5(message):
             fMesh = XorMesh(cMesh, OrMesh(bMesh, NotMesh(dMesh)))
             g = ( 7*i )%16
             
-            constantMesh = MeshLayer.layerForNumber(constants[i])
-            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
+            constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
             
-            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messagePartMesh)
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
-        a, b, c, d = aMesh.meshToNumber(), bMesh.meshToNumber(), cMesh.meshToNumber(), dMesh.meshToNumber()
+        a, b, c, d = aMesh.toNumber(), bMesh.toNumber(), cMesh.toNumber(), dMesh.toNumber()
         for i, val in enumerate([a, b, c, d]):
             hash_pieces[i] += val
             hash_pieces[i] &= 0xFFFFFFFF
@@ -354,3 +486,15 @@ if __name__=='__main__':
         i += 1
 
     print('Tests passed: ', testsPassed)
+
+
+    one = MeshLayer.layerForNumber(7, state_mutable)
+    two = MeshLayer.layerForNumber(53, state_mutable)
+
+    result = AddMesh(one, two)
+
+    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
+
+    result.nodes[4].setValue(not result.nodes[4].getValue())
+
+    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
