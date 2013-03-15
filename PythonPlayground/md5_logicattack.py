@@ -51,7 +51,7 @@ class MeshLayer:
 
         return resultLayer
 
-    def meshToNumber(self):
+    def toNumber(self):
         step = 1
         index = 1
         result = 0
@@ -153,13 +153,122 @@ class AddMeshNode(MeshNode):
                 self.value = 0
 
         return self.value == 1
+    
+    def setShouldGiveCarry(self, giveCarry):
+        if not (giveCarry ^ self.carry):
+            print('anomaly 11380315')
+
+        if self.carry:
+            #need to stop giving a carry
+            self.carry = False
+            if self.value == 1:
+                #giving a carry and a 1
+                if self.CB.carry:
+                    self.A.setValue(False)
+                    self.B.setValue(False)
+                else:
+                    print('anomaly 11490315')
+            else:
+                #giving a carry and a 0
+                if self.CB.carry:
+                    ###need to set whichever's 1 to 0 and stop the carry that we're getting
+                    if self.A.getValue():
+                        self.A.setValue(False)
+                    elif self.B.getValue():
+                        self.B.setValue(False)
+                    else:
+                        print('anomaly 12060315')
+                    self.CB.setShouldGiveCarry(False)
+                else:
+                    #both are 1
+                    self.A.setValue(False)
+                    self.B.setValue(False)
+                        
+        else:
+            #need to give a carry
+            self.carry = True
+            if self.value == 1:
+                #not giving a carry, but giving a 1
+                if self.CB.carry:
+                    self.A.setValue(True)
+                    self.B.setValue(True)
+                else:
+                    ###need to set whichever's 0 to 1 and get a carry
+                    if not self.A.getValue():
+                        self.A.setValue(True)
+                    elif not self.B.getValue():
+                        self.B.setValue(True)
+                    else:
+                        print('anomaly 12070315')
+                    self.CB.setShouldGiveCarry(True)
+            else:
+                # no carry and 0
+                self.A.setValue(True)
+                self.B.setValue(True)
+    
+
+    def setValue(self, val):
+        if not (val ^ (self.value == 1) ):
+            print('anomaly 11340315')
+            return
+        
+        self.value = val
+        
+        if not val:
+            #need to give 0, were giving a 1
+            if self.carry:
+                #we were giving a carry and need to keep doing that
+                #only possible state A:1 B:1 C:1
+                self.A.setValue(False)
+            else:
+                #were not giving a carry
+                if not self.CB.carry:
+                    #not receiving a carry
+                    #one of them was one and it needs to be zero
+                    if self.A.getValue():
+                        self.A.setValue(False)
+                    elif self.B.getValue():
+                        self.B.setValue(False)
+                    else:
+                        print('anomaly 10070315')
+                else:
+                    #receiving a carry
+                    #can't give a carry, everything was 0 since we were giving a 1
+                    #need to stop the carry to give a 0
+                    self.CB.setShouldGiveCarry(False)
+
+        else:
+            #need to give 1, were giving a 0
+            if self.carry:
+                #we were giving a carry
+                if self.CB.carry:
+                    #A or B was 1 and we need them both to be
+                    if not self.A.getValue():
+                        self.A.setValue(True)
+                    elif not self.B.getValue():
+                        self.B.setValue(True)
+                    else:
+                        print('anomaly 10580315')
+                else:
+                    #A and B were 1, we need a carry
+                    ###
+                    self.CB.setShouldGiveCarry(True)
+            else:
+                #weren't giving a carry, both A and B were 0
+                self.A.setValue(True)
+
+class EmptyCB(MeshNode):
+    
+    def __init__(self):
+        self.carry = False
+        self.value = 0
 
 class AddMesh(MeshLayer):
 
     def __init__(self, meshA, meshB):
         super(AddMesh, self).__init__()
         i = 0
-        previousNode = None
+        previousNode = EmptyCB()
         while i < 32:
             self.nodes[i] = AddMeshNode(meshA.nodes[i], meshB.nodes[i], previousNode)
             previousNode = self.nodes[i]
@@ -253,14 +362,19 @@ def md5(message):
         bMesh = MeshLayer.layerForNumber(b)
         cMesh = MeshLayer.layerForNumber(c)
         dMesh = MeshLayer.layerForNumber(d)
+        
+        messageMeshes = []
+        for i in range(16):
+            messageNumber = int.from_bytes(chunk[4*i:4*i+4], byteorder='little')
+            messageMeshes.append(MeshLayer.layerForNumber(messageNumber))
+        
         for i in range(0,16):
             fMesh = OrMesh(AndMesh(bMesh, cMesh), AndMesh(dMesh, NotMesh(bMesh)))
             g = i
             
             constantMesh = MeshLayer.layerForNumber(constants[i])
-            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
             
-            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messagePartMesh)
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
@@ -270,9 +384,8 @@ def md5(message):
             g = ( 5*i + 1 )%16
 
             constantMesh = MeshLayer.layerForNumber(constants[i])
-            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
 
-            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messagePartMesh)
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
@@ -281,9 +394,8 @@ def md5(message):
             g = ( 3*i + 5 )%16
             
             constantMesh = MeshLayer.layerForNumber(constants[i])
-            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
             
-            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh ,fMesh), constantMesh), messagePartMesh)
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh ,fMesh), constantMesh), messageMeshes[g])
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
@@ -292,13 +404,12 @@ def md5(message):
             g = ( 7*i )%16
             
             constantMesh = MeshLayer.layerForNumber(constants[i])
-            messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
             
-            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messagePartMesh)
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
-        a, b, c, d = aMesh.meshToNumber(), bMesh.meshToNumber(), cMesh.meshToNumber(), dMesh.meshToNumber()
+        a, b, c, d = aMesh.toNumber(), bMesh.toNumber(), cMesh.toNumber(), dMesh.toNumber()
         for i, val in enumerate([a, b, c, d]):
             hash_pieces[i] += val
             hash_pieces[i] &= 0xFFFFFFFF
@@ -340,3 +451,15 @@ if __name__=='__main__':
         i += 1
 
     print('Tests passed: ', testsPassed)
+
+
+    one = MeshLayer.layerForNumber(7)
+    two = MeshLayer.layerForNumber(53)
+
+    result = AddMesh(one, two)
+
+    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
+
+    result.nodes[23].setValue(not result.nodes[23].getValue())
+
+    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
