@@ -66,10 +66,12 @@ class MeshLayer:
     
         while number > 0:
             newNode = resultLayer.nodes[index]
+            state = newNode.state
             if number & 1 == 1:
                 newNode.setValue(True)
             else:
                 newNode.setValue(False)
+            newNode.state = state
         
             number >>= 1
             index += 1
@@ -251,7 +253,9 @@ class AddMeshNode(MeshNode):
     def setValue(self, val):
         if not (val ^ (self.value == 1) ):
             return True
-    
+        
+            
+        changeisneeded.append(self)
         self.value = 1 if val else 0
         
         if not val:
@@ -339,7 +343,7 @@ class AddMesh(MeshLayer):
             previousNode.Next = self.nodes[i]
             previousNode = self.nodes[i]
             i += 1
-        previousNode = EmptyNode()
+        previousNode.Next = EmptyNode()
 
 class LeftRotateMesh(MeshLayer):
 
@@ -523,13 +527,13 @@ if __name__=='__main__':
 
     one = MeshLayer.layerForNumber(7, state_mutable)
     two = MeshLayer.layerForNumber(25, state_mutable)
-
+    
     result1 = AddMesh(one, two)
-
+    
     result2 = AddMesh(result1, one)
-
+    
     print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result2.toNumber())
-
+    
     result2.nodes[4].setValue(not result2.nodes[4].getValue())
     while len(changeisneeded) > 0:
         nodes = list(changeisneeded)
@@ -537,4 +541,4 @@ if __name__=='__main__':
         for node in nodes:
             node.notifyChangeListeners()
 
-    print(one.toNumber(), '+', two.toNumber(), '=', result2.toNumber())
+    print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result2.toNumber())
