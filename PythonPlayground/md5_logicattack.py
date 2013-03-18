@@ -1,5 +1,12 @@
 import math
 
+state_resolved = 500
+state_needs_resolved = 501
+
+state_constant = 400
+state_mutable = 401
+state_mutated = 402
+
 class MeshNode:
 
     def __init__(self, val):
@@ -154,6 +161,11 @@ class AddMeshNode(MeshNode):
 
         return self.value == 1
 
+class EmptyCarry(MeshNode):
+    
+    def getValue(self):
+        return False
+
 class AddMesh(MeshLayer):
 
     def __init__(self, meshA, meshB):
@@ -260,7 +272,9 @@ def md5(message):
             constantMesh = MeshLayer.layerForNumber(constants[i])
             messagePartMesh = MeshLayer.layerForNumber(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
             
-            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messagePartMesh)
+            soVeryFixed = AddMesh(AddMesh(aMesh, fMesh), constantMesh) #fixed, for the first round of 64 at least
+            
+            toRotateMesh = AddMesh(soVeryFixed, messagePartMesh)
             
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
