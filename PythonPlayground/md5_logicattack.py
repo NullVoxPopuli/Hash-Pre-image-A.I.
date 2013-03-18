@@ -17,13 +17,16 @@ class MeshNode:
         return self.value
     
     def setValue(self, val):
-        self.value = val
+        if self.isMutable():
+            self.value = val
+            return True
+        return False
     
     def getState(self):
         return self.state
 
     def isMutable(self):
-        return self.state
+        return self.state == state_mutable
 
 class MeshLayer:
     
@@ -134,12 +137,12 @@ class OrMesh(MeshLayer):
 
 class AddMeshNode(MeshNode):
 
-    def __init__(self, a, b, previous, next):
+    def __init__(self, a, b, previous):
         self.A = a
         self.B = b
         self.carry = False
         self.Prev = previous
-        self.Next = next
+        self.Next = None
         self.value = -1
 
     def getValue(self):
@@ -169,66 +172,64 @@ class AddMeshNode(MeshNode):
         return self.value == 1
 
     def setShouldTakeCarry(self, takeCarry):
-    
-    def setShouldGiveCarry(self, giveCarry):
-        if not (giveCarry ^ self.carry):
-            print('anomaly 11380315')
-
-        if self.carry:
-            #need to stop giving a carry
-            self.carry = False
-            if self.value == 1:
-                #giving a carry and a 1
-                if self.Prev.carry:
-                    self.A.setValue(False)
-                    self.B.setValue(False)
-                else:
-                    print('anomaly 11490315')
-            else:
-                #giving a carry and a 0
-                if self.Prev.carry:
-                    ###need to set whichever's 1 to 0 and stop the carry that we're getting
-                    if self.A.getValue():
-                        self.A.setValue(False)
-                    elif self.B.getValue():
-                        self.B.setValue(False)
-                    else:
-                        print('anomaly 12060315')
-                    self.Prev.setShouldGiveCarry(False)
-                else:
-                    #both are 1
-                    self.A.setValue(False)
-                    self.B.setValue(False)
-                        
+        if not takeCarry:
+            if self.A.getValue() and self.B.getValue():
+                if self.A.setValue(False):
+                    self.carry = False
+                    self.Next.setShouldTakeCarry(False)
+                    return True
+                elif self.B.setValue(False):
+                    self.carry = False
+                    self.Next.setShouldTakeCarry(False)
+                    return True
+                return False
+            elif not self.A.getValue() and not self.B.getValue():
+                return self.A.setValue(True) or self.B.setValue(True)
+            elif self.A.getValue():
+                if self.B.setValue(True):
+                    return True
+                if self.A.setValue(False):
+                    self.carry = False
+                    self.Next.setShouldTakeCarry(False)
+                    return True
+                return False
+            elif self.B.getValue():
+                if self.A.setValue(True):
+                    return True
+                if self.B.setValue(False):
+                    self.carry = False
+                    self.Next.setShouldTakeCarry(False)
+                    return True
+                return False
         else:
-            #need to give a carry
-            self.carry = True
-            if self.value == 1:
-                #not giving a carry, but giving a 1
-                if self.Prev.carry:
-                    self.A.setValue(True)
-                    self.B.setValue(True)
-                else:
-                    ###need to set whichever's 0 to 1 and get a carry
-                    if not self.A.getValue():
-                        self.A.setValue(True)
-                    elif not self.B.getValue():
-                        self.B.setValue(True)
-                    else:
-                        print('anomaly 12070315')
-                    self.Prev.setShouldGiveCarry(True)
-            else:
-                # no carry and 0
-                self.A.setValue(True)
-                self.B.setValue(True)
-    
+            if self.A.getValue() and self.B.getValue():
+                return self.A.setValue(False) or self.B.setValue(False)
+            elif not self.A.getValue() and not self.B.getValue():
+                setSuccessful = self.A.setValue(True) or self.B.setValue(True)
+                if setSuccessful:
+                    self.carry = True
+                    self.Next.setShouldTakeCarry(True)
+                return setSuccessful
+            elif self.A.getValue():
+                if self.A.setValue(False):
+                    return True
+                setSuccessful = self.B.setValue(True)
+                if setSuccessful:
+                    self.carry = True
+                    self.Next.setShouldTakeCarry(True)
+                return setSuccessful
+            elif self.B.getValue():
+                if self.B.setValue(False):
+                    return True
+                setSuccessful = self.A.setValue(True)
+                if setSuccessful:
+                    self.carry = True
+                    self.Next.setShouldTakeCarry(True)
+                return setSuccessful
 
     def setValue(self, val):
         if not (val ^ (self.value == 1) ):
             print('anomaly 11340315')
-            return False
-        
-        if self.state == state_constant or self.state == state_mutated:
             return False
     
         self.value = 1 if val else 0
@@ -240,6 +241,7 @@ class AddMeshNode(MeshNode):
                 elif not self.A.getValue() and not self.B.getValue():
                     setSuccessful = self.A.setValue(True) or self.A.setValue(True)
                     if setSuccessful:
+                        self.carry = True
                         self.Next.setShouldTakeCarry(True)
                     return setSuccessful
                 else:
@@ -249,6 +251,7 @@ class AddMeshNode(MeshNode):
                     if not self.A.setValue(False):
                         setSuccessful = self.B.setValue(True)
                         if setSuccessful:
+                            self.carry = True
                             self.Next.setShouldTakeCarry(True)
                         return setSuccessful
                     return True
@@ -256,6 +259,7 @@ class AddMeshNode(MeshNode):
                     if not self.B.setValue(False):
                         setSuccessful = self.A.setValue(True)
                         if setSuccessful:
+                            self.carry = True
                             self.Next.setShouldTakeCarry(True)
                         return setSuccessful
                     return True
@@ -268,6 +272,7 @@ class AddMeshNode(MeshNode):
                     if not self.B.setValue(True):
                         setSuccessful = self.A.setValue(False)
                         if setSuccessful:
+                            self.carry = False
                             self.Next.setShouldTakeCarry(False)
                         return setSuccessful
                     return True
@@ -275,6 +280,7 @@ class AddMeshNode(MeshNode):
                     if not self.A.setValue(True):
                         setSuccessful = self.B.setValue(False)
                         if setSuccessful:
+                            self.carry = False
                             self.Next.setShouldTakeCarry(False)
                         return setSuccessful
                     return True
@@ -284,6 +290,7 @@ class AddMeshNode(MeshNode):
                 if self.A.getValue() and self.B.getValue():
                     setSuccessful = self.A.setValue(False) or self.B.setValue(False)
                     if setSuccessful:
+                        self.carry = False
                         self.Next.setShouldTakeCarry(False)
                     return setSuccessful
                 elif not self.A.getValue() and not self.B.getValue():
@@ -291,23 +298,28 @@ class AddMeshNode(MeshNode):
                 else:
                     print('anomaly 01300318')
 
-class EmptyCB(MeshNode):
+class EmptyNode(MeshNode):
     
     def __init__(self):
-        super(EmptyCB, self).__init__(state_constant)
+        super(EmptyNode, self).__init__(self, state_constant)
         self.carry = False
         self.value = 0
+
+    def setShouldTakeCarry(self, takeCarry):
+        return True
 
 class AddMesh(MeshLayer):
 
     def __init__(self, meshA, meshB):
         super(AddMesh, self).__init__(state_mutable)
         i = 0
-        previousNode = EmptyCB()
+        previousNode = EmptyNode()
         while i < 32:
             self.nodes[i] = AddMeshNode(meshA.nodes[i], meshB.nodes[i], previousNode)
+            previousNode.Next = self.nodes[i]
             previousNode = self.nodes[i]
             i += 1
+        previousNode = EmptyNode()
 
 class LeftRotateMesh(MeshLayer):
 
@@ -489,7 +501,7 @@ if __name__=='__main__':
 
 
     one = MeshLayer.layerForNumber(7, state_mutable)
-    two = MeshLayer.layerForNumber(53, state_mutable)
+    two = MeshLayer.layerForNumber(25, state_mutable)
 
     result = AddMesh(one, two)
 
