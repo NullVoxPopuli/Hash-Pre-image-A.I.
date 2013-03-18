@@ -28,3 +28,14 @@ Forced carry		crec	A	B		Ans	Action
 					1		1	set A to 1 and start giving carry  ||  set B to 1
 				1	0		1	set A to 0  ||  set B to 1 and start giving a carry
 					1		0	set A to 0  ||  set B to 0
+
+
+changing	fixed		carry		ans	action
+0 to 1		1		1		
+				0
+		0		1
+				0
+1 to 0		1		1
+				0
+		0		1
+				0

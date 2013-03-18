@@ -7,18 +7,23 @@ state_constant = 400
 state_mutable = 401
 state_mutated = 402
 
+changeisneeded = []
+
 class MeshNode:
 
     def __init__(self, val, s):
         self.value = val
         self.state = s
+        self.changeListeners = []
     
     def getValue(self):
         return self.value
     
     def setValue(self, val):
         if self.isMutable():
+            self.state = state_mutated
             self.value = val
+            changeisneeded.append(self)
             return True
         return False
     
@@ -27,6 +32,10 @@ class MeshNode:
 
     def isMutable(self):
         return self.state == state_mutable
+
+    def notifyChangeListeners(self):
+        for node in self.changeListeners:
+            node.resolve()
 
 class MeshLayer:
     
@@ -83,6 +92,7 @@ class NotMeshNode(MeshNode):
 
     def __init__(self, a):
         self.A = a
+        self.changeListeners = []
 
     def getValue(self):
         return (not self.A.getValue())
@@ -101,6 +111,7 @@ class AndMeshNode(MeshNode):
     def __init__(self, a, b):
         self.A = a
         self.B = b
+        self.changeListeners = []
     
     def getValue(self):
         return (self.A.getValue() and self.B.getValue())
@@ -122,6 +133,7 @@ class OrMeshNode(MeshNode):
     def __init__(self, a, b):
         self.A = a
         self.B = b
+        self.changeListeners = []
 
     def getValue(self):
         return (self.A.getValue() or self.B.getValue())
@@ -138,12 +150,15 @@ class OrMesh(MeshLayer):
 class AddMeshNode(MeshNode):
 
     def __init__(self, a, b, previous):
+        a.changeListeners.append(self)
         self.A = a
+        b.changeListeners.append(self)
         self.B = b
         self.carry = False
         self.Prev = previous
         self.Next = None
         self.value = -1
+        self.changeListeners = []
 
     def getValue(self):
         if self.value == -1:
@@ -227,10 +242,15 @@ class AddMeshNode(MeshNode):
                     self.Next.setShouldTakeCarry(True)
                 return setSuccessful
 
+    def resolve(self):
+        val = self.value
+        self.value = -1
+        self.getValue()
+        self.setValue(val)
+
     def setValue(self, val):
         if not (val ^ (self.value == 1) ):
-            print('anomaly 11340315')
-            return False
+            return True
     
         self.value = 1 if val else 0
         
@@ -339,6 +359,7 @@ class XorMeshNode(MeshNode):
     def __init__(self, a, b):
         self.A = a
         self.B = b
+        self.changeListeners = []
     
     def getValue(self):
         return (self.A.getValue() ^ self.B.getValue())
@@ -503,10 +524,17 @@ if __name__=='__main__':
     one = MeshLayer.layerForNumber(7, state_mutable)
     two = MeshLayer.layerForNumber(25, state_mutable)
 
-    result = AddMesh(one, two)
+    result1 = AddMesh(one, two)
 
-    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
+    result2 = AddMesh(result1, one)
 
-    result.nodes[4].setValue(not result.nodes[4].getValue())
+    print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result2.toNumber())
 
-    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
+    result2.nodes[4].setValue(not result2.nodes[4].getValue())
+    while len(changeisneeded) > 0:
+        nodes = list(changeisneeded)
+        changeisneeded = []
+        for node in nodes:
+            node.notifyChangeListeners()
+
+    print(one.toNumber(), '+', two.toNumber(), '=', result2.toNumber())
