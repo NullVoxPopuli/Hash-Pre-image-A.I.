@@ -11,20 +11,23 @@ changeisneeded = []
 
 class MeshNode:
 
-    def __init__(self, val, s):
+    def __init__(self, val, s, mesh):
         self.value = val
         self.state = s
         self.changeListeners = []
+        self.Mesh = mesh
     
     def getValue(self):
         return self.value
     
     def setValue(self, val):
         if self.isMutable():
+            #print('setting raw number to', val)
             self.state = state_mutated
             self.value = val
             changeisneeded.append(self)
             return True
+                #print('not mutable')
         return False
     
     def getState(self):
@@ -40,25 +43,33 @@ class MeshNode:
 class MeshLayer:
     
     def __init__(self, state):
-        self.nodes = [MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+        self.nodes = [MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
                       
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
                       
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
                       
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state),
-                      MeshNode(False, state), MeshNode(False, state), MeshNode(False, state), MeshNode(False, state)]
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self)]
+    
+    def printLayer(self):
+        str = ''
+        i = 31
+        while i > -1:
+            str += '1' if self.nodes[i].getValue() else '0'
+            i -= 1
+        print(str)
     
     def layerForNumber(number, state):
         resultLayer = MeshLayer(state)
@@ -151,7 +162,7 @@ class OrMesh(MeshLayer):
 
 class AddMeshNode(MeshNode):
 
-    def __init__(self, a, b, previous):
+    def __init__(self, a, b, previous, mesh):
         a.changeListeners.append(self)
         self.A = a
         b.changeListeners.append(self)
@@ -161,6 +172,7 @@ class AddMeshNode(MeshNode):
         self.Next = None
         self.value = -1
         self.changeListeners = []
+        self.Mesh = mesh
 
     def getValue(self):
         if self.value == -1:
@@ -168,19 +180,25 @@ class AddMeshNode(MeshNode):
             self.carry = False
 
             if self.A.getValue():
+                #print('a')
                 val += 1
             if self.B.getValue():
+                #print('b')
                 val += 1
     
             if self.Prev is not None:
                 if self.Prev.value == -1:
                     self.Prev.getValue()
                 if self.Prev.carry:
+                    #print('car')
                     val += 1
     
             if val > 1:
                 self.carry = True
+            else:
+                self.carry = False
 
+#print('val', val)
             if val == 1 or val == 3:
                 self.value = 1
             else:
@@ -189,95 +207,168 @@ class AddMeshNode(MeshNode):
         return self.value == 1
 
     def setShouldTakeCarry(self, takeCarry):
+        print('setting up to change carry to', takeCarry)
         if not takeCarry:
+            print('no carry given')
             if self.A.getValue() and self.B.getValue():
+                print('a and b are 1')
                 if self.A.setValue(False):
                     self.carry = False
                     self.Next.setShouldTakeCarry(False)
+                    self.A.notifyChangeListeners()
                     return True
                 elif self.B.setValue(False):
                     self.carry = False
                     self.Next.setShouldTakeCarry(False)
+                    self.B.notifyChangeListeners()
                     return True
                 return False
             elif not self.A.getValue() and not self.B.getValue():
-                return self.A.setValue(True) or self.B.setValue(True)
+                aSet = self.A.setValue(True)
+                bSet = self.B.setValue(True)
+                if aSet:
+                    self.A.notifyChangeListeners()
+                if bSet:
+                    self.B.notifyChangeListeners()
+                return aSet or bSet
             elif self.A.getValue():
                 if self.B.setValue(True):
+                    self.B.notifyChangeListeners()
                     return True
                 if self.A.setValue(False):
                     self.carry = False
                     self.Next.setShouldTakeCarry(False)
+                    self.A.notifyChangeListeners()
                     return True
                 return False
             elif self.B.getValue():
                 if self.A.setValue(True):
+                    self.A.notifyChangeListeners()
                     return True
                 if self.B.setValue(False):
                     self.carry = False
                     self.Next.setShouldTakeCarry(False)
+                    self.B.notifyChangeListeners()
                     return True
                 return False
         else:
             if self.A.getValue() and self.B.getValue():
-                return self.A.setValue(False) or self.B.setValue(False)
+                aSet = self.A.setValue(False)
+                bSet = self.B.setValue(False)
+                if aSet:
+                    self.A.notifyChangeListeners()
+                if bSet:
+                    self.B.notifyChangeListeners()
+                return aSet or bSet
             elif not self.A.getValue() and not self.B.getValue():
-                setSuccessful = self.A.setValue(True) or self.B.setValue(True)
-                if setSuccessful:
+                aSet = self.A.setValue(True)
+                bSet = self.B.setValue(True)
+                if aSet or bSet:
                     self.carry = True
                     self.Next.setShouldTakeCarry(True)
+                if aSet:
+                    self.A.notifyChangeListeners()
+                if bSet:
+                    self.B.notifyChangeListeners()
                 return setSuccessful
             elif self.A.getValue():
                 if self.A.setValue(False):
+                    self.A.notifyChangeListeners()
                     return True
                 setSuccessful = self.B.setValue(True)
                 if setSuccessful:
                     self.carry = True
                     self.Next.setShouldTakeCarry(True)
+                    self.B.notifyChangeListeners()
                 return setSuccessful
             elif self.B.getValue():
                 if self.B.setValue(False):
+                    self.B.notifyChangeListeners()
                     return True
                 setSuccessful = self.A.setValue(True)
                 if setSuccessful:
                     self.carry = True
                     self.Next.setShouldTakeCarry(True)
+                    self.A.notifyChangeListeners()
                 return setSuccessful
 
     def resolve(self):
+        #print('prev carry1: ', self.Prev.carry)
+        #print('A:', self.A.getValue())
+        #self.A.Mesh.printLayer()
+        #print('B:', self.B.getValue())
+        #self.B.Mesh.printLayer()
+        #print('prev carry2: ', self.Prev.carry)
+        
         val = self.value
+        car = self.carry
         self.value = -1
-        self.getValue()
+        #print('prev carry3: ', self.Prev.carry)
+        #print('res:', self.getValue())
+        #print('prev carry4: ', self.Prev.carry)
+        #self.Mesh.printLayer()
+        #print('prev carry5: ', self.Prev.carry)
+        
         self.setValue(val)
+        #print('prev carry6: ', self.Prev.carry)
+        #print('Ap:')
+        #self.A.Mesh.printLayer()
+        #print('Bp:')
+        #self.B.Mesh.printLayer()
+        #print('resp:')
+        #self.Mesh.printLayer()
+        #print('')
+    
+        if self.value == val and (not self.carry == car):
+            self.Next.setShouldTakeCarry(self.carry)
 
     def setValue(self, val):
         if not (val ^ (self.value == 1) ):
             return True
+        #print('prev carry5.1: ', self.Prev.carry)
         
             
         changeisneeded.append(self)
         self.value = 1 if val else 0
-        
+                
+        #print('prev carry5.2: ', self.Prev.carry)
         if not val:
             if self.Prev.carry:
                 if self.A.getValue() and self.B.getValue():
-                    return self.A.setValue(False) or self.B.setValue(False)
+                    #print('setting a or b to false')
+                    aSet = self.A.setValue(False)
+                    bSet = self.B.setValue(False)
+                    if aSet:
+                        self.A.notifyChangeListeners()
+                    if bSet:
+                        self.B.notifyChangeListeners()
+                    return aSet or bSet
                 elif not self.A.getValue() and not self.B.getValue():
-                    setSuccessful = self.A.setValue(True) or self.A.setValue(True)
-                    if setSuccessful:
+                    #print('setting a or b to true and starting carry')
+                    aSet = self.A.setValue(True)
+                    bSet = self.B.setValue(True)
+                    if aSet or bSet:
                         self.carry = True
                         self.Next.setShouldTakeCarry(True)
-                    return setSuccessful
+                    if aSet:
+                        self.A.notifyChangeListeners()
+                    if bSet:
+                        self.B.notifyChangeListeners()
+                    return aSet or bSet
                 else:
                     print('anomaly 01200318')
             else:
-                if self.A.getValue():
+                if self.A.getValue() and self.B.getValue():
+                    print('anomaly 09010319')
+                elif self.A.getValue():
                     if not self.A.setValue(False):
                         setSuccessful = self.B.setValue(True)
                         if setSuccessful:
                             self.carry = True
                             self.Next.setShouldTakeCarry(True)
+                            self.B.notifyChangeListeners()
                         return setSuccessful
+                    self.A.notifyChangeListeners()
                     return True
                 elif self.B.getValue():
                     if not self.B.setValue(False):
@@ -285,20 +376,26 @@ class AddMeshNode(MeshNode):
                         if setSuccessful:
                             self.carry = True
                             self.Next.setShouldTakeCarry(True)
+                            self.A.notifyChangeListeners()
                         return setSuccessful
+                    self.B.notifyChangeListeners()
                     return True
                 else:
                     print('anomaly 01220318')
 
         else:
             if self.Prev.carry:
-                if self.A.getValue():
+                if self.B.getValue() and self.A.getValue():
+                    print('anomaly 08570319')
+                elif self.A.getValue():
                     if not self.B.setValue(True):
                         setSuccessful = self.A.setValue(False)
                         if setSuccessful:
                             self.carry = False
                             self.Next.setShouldTakeCarry(False)
+                            self.A.notifyChangeListeners()
                         return setSuccessful
+                    self.B.notifyChangeListeners()
                     return True
                 elif self.B.getValue():
                     if not self.A.setValue(True):
@@ -306,26 +403,41 @@ class AddMeshNode(MeshNode):
                         if setSuccessful:
                             self.carry = False
                             self.Next.setShouldTakeCarry(False)
+                            self.B.notifyChangeListeners()
                         return setSuccessful
+                    self.A.notifyChangeListeners()
                     return True
                 else:
                     print('anomaly 01225318')
             else:
                 if self.A.getValue() and self.B.getValue():
-                    setSuccessful = self.A.setValue(False) or self.B.setValue(False)
-                    if setSuccessful:
+                    aSet = self.A.setValue(False)
+                    bSet = self.B.setValue(False)
+                    if aSet or bSet:
                         self.carry = False
                         self.Next.setShouldTakeCarry(False)
-                    return setSuccessful
+                    if aSet:
+                        self.A.notifyChangeListeners()
+                    if bSet:
+                        self.B.notifyChangeListeners()
+                    return aSet or bSet
                 elif not self.A.getValue() and not self.B.getValue():
-                    return self.A.setValue(True) or self.A.setValue(True)
+                    aSet = self.A.setValue(True)
+                    bSet = self.B.setValue(True)
+                    if aSet:
+                        self.A.notifyChangeListeners()
+                    if bSet:
+                        self.B.notifyChangeListeners()
+                    return aSet or bSet
                 else:
                     print('anomaly 01300318')
+                        
+#print('prev carry5.3: ', self.Prev.carry)
 
 class EmptyNode(MeshNode):
     
     def __init__(self):
-        super(EmptyNode, self).__init__(self, state_constant)
+        super(EmptyNode, self).__init__(self, state_constant, None)
         self.carry = False
         self.value = 0
 
@@ -339,7 +451,7 @@ class AddMesh(MeshLayer):
         i = 0
         previousNode = EmptyNode()
         while i < 32:
-            self.nodes[i] = AddMeshNode(meshA.nodes[i], meshB.nodes[i], previousNode)
+            self.nodes[i] = AddMeshNode(meshA.nodes[i], meshB.nodes[i], previousNode, self)
             previousNode.Next = self.nodes[i]
             previousNode = self.nodes[i]
             i += 1
@@ -438,7 +550,7 @@ def md5(message):
         messageMeshes = []
         for i in range(16):
             messageNumber = int.from_bytes(chunk[4*i:4*i+4], byteorder='little')
-            messageMeshes.append(MeshLayer.layerForNumber(messageNumber, state_mutable))
+            messageMeshes.append(MeshLayer.layerForNumber(messageNumber, state_constant))
         
         for i in range(0,16):
             fMesh = OrMesh(AndMesh(bMesh, cMesh), AndMesh(dMesh, NotMesh(bMesh)))
@@ -526,19 +638,41 @@ if __name__=='__main__':
 
 
     one = MeshLayer.layerForNumber(7, state_mutable)
+    print('one')
+    one.printLayer()
     two = MeshLayer.layerForNumber(25, state_mutable)
+    print('two')
+    two.printLayer()
     
     result1 = AddMesh(one, two)
     
     result2 = AddMesh(result1, one)
-    
+
+    print(one.toNumber(), '+', two.toNumber(), '=', result1.toNumber())
+    result1.printLayer()
     print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result2.toNumber())
-    
+    result2.printLayer()
+
     result2.nodes[4].setValue(not result2.nodes[4].getValue())
-    while len(changeisneeded) > 0:
+#print('one')
+#one.printLayer()
+#print('two')
+#two.printLayer()
+#print('res1')
+#result1.printLayer()
+
+    while 0 > 0:
         nodes = list(changeisneeded)
         changeisneeded = []
         for node in nodes:
             node.notifyChangeListeners()
 
+#print('onep')
+#one.printLayer()
+#print('twop')
+#two.printLayer()
+#print('res1')
+#result1.printLayer()
+
+    print(one.toNumber(), '+', two.toNumber(), '=', result1.toNumber())
     print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result2.toNumber())
