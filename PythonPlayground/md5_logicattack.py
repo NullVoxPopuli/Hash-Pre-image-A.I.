@@ -595,7 +595,7 @@ if __name__=='__main__':
     three = MeshLayer.layerForNumber(43, state_constant)
     four = MeshLayer.layerForNumber(15, state_constant)
     
-    result = AddMesh(one, two)
+    result = AddMesh(AddMesh(one, two), one)
 
     print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
 
