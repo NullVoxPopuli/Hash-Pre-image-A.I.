@@ -212,85 +212,44 @@ class AddMeshNode(MeshNode):
             print('no carry given')
             if self.A.getValue() and self.B.getValue():
                 print('a and b are 1')
-                if self.A.setValue(False):
-                    self.carry = False
-                    self.Next.setShouldTakeCarry(False)
-                    self.A.notifyChangeListeners()
+                if self.setNodeToWithChangesCarryTo(self.A, False, True, False):
                     return True
-                elif self.B.setValue(False):
-                    self.carry = False
-                    self.Next.setShouldTakeCarry(False)
-                    self.B.notifyChangeListeners()
+                elif self.setNodeToWithChangesCarryTo(self.B, False, True, False):
                     return True
                 return False
             elif not self.A.getValue() and not self.B.getValue():
-                aSet = self.A.setValue(True)
-                bSet = self.B.setValue(True)
-                if aSet:
-                    self.A.notifyChangeListeners()
-                if bSet:
-                    self.B.notifyChangeListeners()
+                aSet = self.setNodeToWithChangesCarryTo(self.A, True, False, False)
+                bSet = self.setNodeToWithChangesCarryTo(self.B, True, False, False)
                 return aSet or bSet
             elif self.A.getValue():
-                if self.B.setValue(True):
-                    self.B.notifyChangeListeners()
+                if self.setNodeToWithChangesCarryTo(self.B, True, False, False):
                     return True
-                if self.A.setValue(False):
-                    self.carry = False
-                    self.Next.setShouldTakeCarry(False)
-                    self.A.notifyChangeListeners()
+                if self.setNodeToWithChangesCarryTo(self.A, False, True, False):
                     return True
                 return False
             elif self.B.getValue():
-                if self.A.setValue(True):
-                    self.A.notifyChangeListeners()
+                if self.setNodeToWithChangesCarryTo(self.A, True, False, False):
                     return True
-                if self.B.setValue(False):
-                    self.carry = False
-                    self.Next.setShouldTakeCarry(False)
-                    self.B.notifyChangeListeners()
+                if self.setNodeToWithChangesCarryTo(self.B, False, True, False):
                     return True
                 return False
         else:
             if self.A.getValue() and self.B.getValue():
-                aSet = self.A.setValue(False)
-                bSet = self.B.setValue(False)
-                if aSet:
-                    self.A.notifyChangeListeners()
-                if bSet:
-                    self.B.notifyChangeListeners()
-                return aSet or bSet
+                if self.setNodeToWithChangesCarryTo(self.A, False, False, False):
+                    return True
+                return self.setNodeToWithChangesCarryTo(self.B, False, False, False)
             elif not self.A.getValue() and not self.B.getValue():
-                aSet = self.A.setValue(True)
-                bSet = self.B.setValue(True)
-                if aSet or bSet:
-                    self.carry = True
-                    self.Next.setShouldTakeCarry(True)
-                if aSet:
-                    self.A.notifyChangeListeners()
-                if bSet:
-                    self.B.notifyChangeListeners()
-                return setSuccessful
+                if self.setNodeToWithChangesCarryTo(self.A, True, True, True):
+                    return True
+                return self.setNodeToWithChangesCarryTo(self.B, True, True, True)
             elif self.A.getValue():
-                if self.A.setValue(False):
-                    self.A.notifyChangeListeners()
+                if self.setNodeToWithChangesCarryTo(self.A, False, False, False):
                     return True
-                setSuccessful = self.B.setValue(True)
-                if setSuccessful:
-                    self.carry = True
-                    self.Next.setShouldTakeCarry(True)
-                    self.B.notifyChangeListeners()
-                return setSuccessful
+                return self.setNodeToWithChangesCarryTo(self.B, True, True, True)
             elif self.B.getValue():
-                if self.B.setValue(False):
-                    self.B.notifyChangeListeners()
+                if self.setNodeToWithChangesCarryTo(self.B, False, False, False):
                     return True
-                setSuccessful = self.A.setValue(True)
-                if setSuccessful:
-                    self.carry = True
-                    self.Next.setShouldTakeCarry(True)
-                    self.A.notifyChangeListeners()
-                return setSuccessful
+                return self.setNodeToWithChangesCarryTo(self.A, True, True, True)
 
     def resolve(self):
         #print('prev carry1: ', self.Prev.carry)
@@ -336,24 +295,13 @@ class AddMeshNode(MeshNode):
             if self.Prev.carry:
                 if self.A.getValue() and self.B.getValue():
                     #print('setting a or b to false')
-                    aSet = self.A.setValue(False)
-                    bSet = self.B.setValue(False)
-                    if aSet:
-                        self.A.notifyChangeListeners()
-                    if bSet:
-                        self.B.notifyChangeListeners()
+                    aSet = self.setNodeToWithChangesCarryTo(self.A, False, False, False)
+                    bSet = self.setNodeToWithChangesCarryTo(self.B, False, False, False)
                     return aSet or bSet
                 elif not self.A.getValue() and not self.B.getValue():
                     #print('setting a or b to true and starting carry')
-                    aSet = self.A.setValue(True)
-                    bSet = self.B.setValue(True)
-                    if aSet or bSet:
-                        self.carry = True
-                        self.Next.setShouldTakeCarry(True)
-                    if aSet:
-                        self.A.notifyChangeListeners()
-                    if bSet:
-                        self.B.notifyChangeListeners()
+                    aSet = self.setNodeToWithChangesCarryTo(self.A, True, True, True)
+                    bSet = self.setNodeToWithChangesCarryTo(self.B, True, True, True)
                     return aSet or bSet
                 else:
                     print('anomaly 01200318')
@@ -361,24 +309,12 @@ class AddMeshNode(MeshNode):
                 if self.A.getValue() and self.B.getValue():
                     print('anomaly 09010319')
                 elif self.A.getValue():
-                    if not self.A.setValue(False):
-                        setSuccessful = self.B.setValue(True)
-                        if setSuccessful:
-                            self.carry = True
-                            self.Next.setShouldTakeCarry(True)
-                            self.B.notifyChangeListeners()
-                        return setSuccessful
-                    self.A.notifyChangeListeners()
+                    if not self.setNodeToWithChangesCarryTo(self.A, False, False, False):
+                        return self.setNodeToWithChangesCarryTo(self.B, True, True, True)
                     return True
                 elif self.B.getValue():
-                    if not self.B.setValue(False):
-                        setSuccessful = self.A.setValue(True)
-                        if setSuccessful:
-                            self.carry = True
-                            self.Next.setShouldTakeCarry(True)
-                            self.A.notifyChangeListeners()
-                        return setSuccessful
-                    self.B.notifyChangeListeners()
+                    if not self.setNodeToWithChangesCarryTo(self.B, False, False, False):
+                        return self.setNodeToWithChangesCarryTo(self.A, True, True, True)
                     return True
                 else:
                     print('anomaly 01220318')
@@ -388,14 +324,8 @@ class AddMeshNode(MeshNode):
                 if self.B.getValue() and self.A.getValue():
                     print('anomaly 08570319')
                 elif self.A.getValue():
-                    if not self.B.setValue(True):
-                        setSuccessful = self.A.setValue(False)
-                        if setSuccessful:
-                            self.carry = False
-                            self.Next.setShouldTakeCarry(False)
-                            self.A.notifyChangeListeners()
-                        return setSuccessful
-                    self.B.notifyChangeListeners()
+                    if not self.setNodeToWithChangesCarryTo(self.B, True, False, False):
+                        return self.setNodeToWithChangesCarryTo(self.A, False, True, False)
                     return True
                 elif self.B.getValue():
                     if not self.A.setValue(True):
@@ -411,28 +341,24 @@ class AddMeshNode(MeshNode):
                     print('anomaly 01225318')
             else:
                 if self.A.getValue() and self.B.getValue():
-                    aSet = self.A.setValue(False)
-                    bSet = self.B.setValue(False)
-                    if aSet or bSet:
-                        self.carry = False
-                        self.Next.setShouldTakeCarry(False)
-                    if aSet:
-                        self.A.notifyChangeListeners()
-                    if bSet:
-                        self.B.notifyChangeListeners()
+                    aSet = self.setNodeToWithChangesCarryTo(self.A, False, True, False)
+                    bSet = self.setNodeToWithChangesCarryTo(self.B, False, True, False)
                     return aSet or bSet
                 elif not self.A.getValue() and not self.B.getValue():
-                    aSet = self.A.setValue(True)
-                    bSet = self.B.setValue(True)
-                    if aSet:
-                        self.A.notifyChangeListeners()
-                    if bSet:
-                        self.B.notifyChangeListeners()
+                    aSet = self.setNodeToWithChangesCarryTo(self.A, True, False, False)
+                    bSet = self.setNodeToWithChangesCarryTo(self.B, True, False, False)
                     return aSet or bSet
                 else:
                     print('anomaly 01300318')
-                        
-#print('prev carry5.3: ', self.Prev.carry)
+
+    def setNodeToWithChangesCarryTo(self, node, val, changeCarry, changeCarryTo):
+        setSuccessful = node.setValue(val)
+        if setSuccessful and changeCarry:
+            self.carry = changeCarryTo
+            self.Next.setShouldTakeCarry(changeCarryTo)
+        if setSuccessful:
+            node.notifyChangeListeners()
+        return setSuccessful
 
 class EmptyNode(MeshNode):
     
