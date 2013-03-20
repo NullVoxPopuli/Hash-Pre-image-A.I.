@@ -11,8 +11,6 @@ carrychange_none = 500
 carrychange_totrue = 501
 carrychange_tofalse = 502
 
-changeisneeded = []
-
 class MeshNode:
 
     def __init__(self, val, s, mesh):
@@ -29,7 +27,6 @@ class MeshNode:
             #print(id(self), ' set to give', '1' if val else '0')
             self.state = state_mutated
             self.value = val
-            changeisneeded.append(self)
             return True
                 #print('not mutable')
         #print(id(self), 'refused change')
@@ -84,9 +81,9 @@ class MeshLayer:
             newNode = resultLayer.nodes[index]
             state = newNode.state
             if number & 1 == 1:
-                newNode.setValue(True)
+                newNode.value = True
             else:
-                newNode.setValue(False)
+                newNode.value = False
             newNode.state = state
         
             number >>= 1
@@ -306,8 +303,6 @@ class AddMeshNode(MeshNode):
             return True
         #print('prev carry5.1: ', self.Prev.carry)
         
-            
-        changeisneeded.append(self)
         self.value = 1 if val else 0
                 
         #print('prev carry5.2: ', self.Prev.carry)
@@ -593,12 +588,6 @@ if __name__=='__main__':
     print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result2.toNumber())
 
     result2.nodes[4].setValue(not result2.nodes[4].getValue())
-
-    while 0 > 0:
-        nodes = list(changeisneeded)
-        changeisneeded = []
-        for node in nodes:
-            node.notifyChangeListeners()
 
     print(one.toNumber(), '+', two.toNumber(), '=', result1.toNumber())
     print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result2.toNumber())
