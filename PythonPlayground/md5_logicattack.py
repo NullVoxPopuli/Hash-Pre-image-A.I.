@@ -26,12 +26,13 @@ class MeshNode:
     
     def setValue(self, val):
         if self.isMutable():
-            #print('setting raw number to', val)
+            #print(id(self), ' set to give', '1' if val else '0')
             self.state = state_mutated
             self.value = val
             changeisneeded.append(self)
             return True
                 #print('not mutable')
+        #print(id(self), 'refused change')
         return False
     
     def getState(self):
@@ -180,6 +181,7 @@ class AddMeshNode(MeshNode):
 
     def getValue(self):
         if self.value == -1:
+            #print(id(self), 'is evaluating its result')
             val = 0
             self.carry = False
 
@@ -208,55 +210,63 @@ class AddMeshNode(MeshNode):
             else:
                 self.value = 0
 
+    #print(id(self), 'returning value of ', '1' if self.value == 1 else '0')
         return self.value == 1
 
     def setShouldTakeCarry(self, takeCarry):
-        print('')
-        print(id(self), 'is forced to take carry of', '1' if takeCarry else '0')
-        print('A:', '1' if self.A.getValue() else '0', ', B:', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
+        #print('')
+        #print('>>>>', id(self), 'is forced to take carry of', '1' if takeCarry else '0')
+        
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
+        
         if not takeCarry:
-            if self.A.getValue() and self.B.getValue():
-                print('a and b are 1')
+            if self.A.getValue() and self.B.getValue() and self.getValue():
                 if self.setNodeTo(self.A, False, carrychange_tofalse):
                     return True
                 elif self.setNodeTo(self.B, False, carrychange_tofalse):
                     return True
                 return False
-            elif not self.A.getValue() and not self.B.getValue():
+            elif (not self.A.getValue()) and (not self.B.getValue()) and self.getValue():
                 aSet = self.setNodeTo(self.A, True, carrychange_none)
                 bSet = self.setNodeTo(self.B, True, carrychange_none)
                 return aSet or bSet
-            elif self.A.getValue():
+            elif self.A.getValue() and (not self.getValue()):
                 if self.setNodeTo(self.B, True, carrychange_none):
                     return True
                 if self.setNodeTo(self.A, False, carrychange_tofalse):
                     return True
                 return False
-            elif self.B.getValue():
+            elif self.B.getValue() and (not self.getValue()):
                 if self.setNodeTo(self.A, True, carrychange_none):
                     return True
                 if self.setNodeTo(self.B, False, carrychange_tofalse):
                     return True
                 return False
         else:
-            if self.A.getValue() and self.B.getValue():
+            if self.A.getValue() and self.B.getValue() and (not self.getValue()):
                 if self.setNodeTo(self.A, False, carrychange_none):
                     return True
                 return self.setNodeTo(self.B, False, carrychange_none)
-            elif not self.A.getValue() and not self.B.getValue():
+            elif not self.A.getValue() and not self.B.getValue() and (not self.getValue()):
                 if self.setNodeTo(self.A, True, carrychange_totrue):
                     return True
                 return self.setNodeTo(self.B, True, carrychange_totrue)
-            elif self.A.getValue():
+            elif self.A.getValue() and self.getValue():
                 if self.setNodeTo(self.A, False, carrychange_none):
                     return True
                 return self.setNodeTo(self.B, True, carrychange_totrue)
-            elif self.B.getValue():
+            elif self.B.getValue() and self.getValue():
                 if self.setNodeTo(self.B, False, carrychange_none):
                     return True
                 return self.setNodeTo(self.A, True, carrychange_totrue)
 
+                    #print('hopeful for no anomaly')
+        return True
+
     def resolve(self):
+        #print('')
+        #print('===== resolving', id(self), '=====')
+        
         #print('prev carry1: ', self.Prev.carry)
         #print('A:', self.A.getValue())
         #self.A.Mesh.printLayer()
@@ -269,6 +279,7 @@ class AddMeshNode(MeshNode):
         self.value = -1
         #print('prev carry3: ', self.Prev.carry)
         #print('res:', self.getValue())
+        self.getValue()
         #print('prev carry4: ', self.Prev.carry)
         #self.Mesh.printLayer()
         #print('prev carry5: ', self.Prev.carry)
@@ -287,10 +298,11 @@ class AddMeshNode(MeshNode):
             self.Next.setShouldTakeCarry(self.carry)
 
     def setValue(self, val):
-        print('')
-        print(id(self), 'is forced to give answer of', '1' if val else '0')
-        print('A:', '1' if self.A.getValue() else '0', ', B:', '1' if self.B.getValue() else '0', 'taking carry:', self.Prev.carry, 'from', id(self.Prev), 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
+        #print('')
+        #print('>>>>', id(self), 'is forced to give answer of', '1' if val else '0')
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'taking carry:', self.Prev.carry, 'from', id(self.Prev), 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
         if not (val ^ (self.value == 1) ):
+            #print('no change needed')
             return True
         #print('prev carry5.1: ', self.Prev.carry)
         
@@ -343,15 +355,18 @@ class AddMeshNode(MeshNode):
                     print('anomaly 01225318')
             else:
                 if self.A.getValue() and self.B.getValue():
-                    aSet = self.setNodeTo(self.A, False, carrychange_tofalse)
-                    bSet = self.setNodeTo(self.B, False, carrychange_tofalse)
-                    return aSet or bSet
+                    if not self.setNodeTo(self.A, False, carrychange_tofalse):
+                        return self.setNodeTo(self.B, False, carrychange_tofalse)
+                    return True
                 elif not self.A.getValue() and not self.B.getValue():
-                    aSet = self.setNodeTo(self.A, True, carrychange_none)
-                    bSet = self.setNodeTo(self.B, True, carrychange_none)
-                    return aSet or bSet
+                    if not self.setNodeTo(self.A, True, carrychange_none):
+                        return self.setNodeTo(self.B, True, carrychange_none)
+                    return True
                 else:
                     print('anomaly 01300318')
+
+                #print('')
+#print('<<<<', id(self), 'providing forced answer now')
 
     def setNodeTo(self, node, val, carrychange):
         setSuccessful = node.setValue(val)
@@ -568,41 +583,22 @@ if __name__=='__main__':
 
 
     one = MeshLayer.layerForNumber(7, state_mutable)
-    print('one')
-    one.printLayer()
     two = MeshLayer.layerForNumber(25, state_mutable)
-    print('two')
-    two.printLayer()
     
     result1 = AddMesh(one, two)
     
     result2 = AddMesh(result1, one)
 
     print(one.toNumber(), '+', two.toNumber(), '=', result1.toNumber())
-    result1.printLayer()
     print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result2.toNumber())
-    result2.printLayer()
 
     result2.nodes[4].setValue(not result2.nodes[4].getValue())
-#print('one')
-#one.printLayer()
-#print('two')
-#two.printLayer()
-#print('res1')
-#result1.printLayer()
 
     while 0 > 0:
         nodes = list(changeisneeded)
         changeisneeded = []
         for node in nodes:
             node.notifyChangeListeners()
-
-#print('onep')
-#one.printLayer()
-#print('twop')
-#two.printLayer()
-#print('res1')
-#result1.printLayer()
 
     print(one.toNumber(), '+', two.toNumber(), '=', result1.toNumber())
     print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result2.toNumber())
