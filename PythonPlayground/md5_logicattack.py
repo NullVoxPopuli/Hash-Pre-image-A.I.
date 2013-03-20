@@ -595,10 +595,10 @@ if __name__=='__main__':
     three = MeshLayer.layerForNumber(43, state_constant)
     four = MeshLayer.layerForNumber(15, state_constant)
     
-    result = AddMesh(AddMesh(one, two), one)
+    result = AddMesh(one, two)
 
-    print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result.toNumber())
+    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
 
-    result.nodes[4].setValue(not result.nodes[4].getValue())
+    result.nodes[3].setValue(not result.nodes[3].getValue())
 
-    print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result.toNumber())
+    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
