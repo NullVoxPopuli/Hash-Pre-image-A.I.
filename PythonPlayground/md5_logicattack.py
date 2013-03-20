@@ -11,13 +11,38 @@ carrychange_none = 500
 carrychange_totrue = 501
 carrychange_tofalse = 502
 
+class Tracker:
+
+    def __init__(self):
+        self.listOfLists = []
+
+    def getCarryTrackingLevel(self, level):
+        while level > len(self.listOfLists)-1:
+            self.listOfLists.append([])
+        return self.listOfLists[level]
+
+    def activateAll(self):
+        i = 0
+        oldCarryTracking = list(self.listOfLists)
+        self.listOfLists = []
+        oldLen = len(oldCarryTracking)
+        carryTrackingList = []
+        while i < oldLen:
+            wrapperList = oldCarryTracking[i]
+            for nodeWrapper in wrapperList:
+                nodeWrapper.activate()
+            i += 1
+
+carryTracker = Tracker()
+
 class MeshNode:
 
-    def __init__(self, val, s, mesh):
+    def __init__(self, val, s, mesh, level):
         self.value = val
         self.state = s
         self.changeListeners = []
         self.Mesh = mesh
+        self.Level = level
     
     def getValue(self):
         return self.value
@@ -28,7 +53,6 @@ class MeshNode:
             self.state = state_mutated
             self.value = val
             return True
-                #print('not mutable')
         #print(id(self), 'refused change')
         return False
     
@@ -45,25 +69,25 @@ class MeshNode:
 class MeshLayer:
     
     def __init__(self, state):
-        self.nodes = [MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+        self.nodes = [MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
                       
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
                       
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
                       
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self),
-                      MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self), MeshNode(False, state, self)]
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0)]
     
     def printLayer(self):
         str = ''
@@ -105,9 +129,9 @@ class MeshLayer:
 
 class NotMeshNode(MeshNode):
 
-    def __init__(self, a):
+    def __init__(self, a, mesh):
+        super(NotMeshNode, self).__init__(False, state_mutable, mesh, a.Level+1)
         self.A = a
-        self.changeListeners = []
 
     def getValue(self):
         return (not self.A.getValue())
@@ -118,15 +142,16 @@ class NotMesh(MeshLayer):
         super(NotMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
-            self.nodes[i] = NotMeshNode(input_mesh.nodes[i])
+            self.nodes[i] = NotMeshNode(input_mesh.nodes[i], self)
             i += 1
 
 class AndMeshNode(MeshNode):
     
-    def __init__(self, a, b):
+    def __init__(self, a, b, mesh):
+        level = max(a.Level, b.Level)
+        super(AndMeshNode, self).__init__(False, state_mutable, mesh, level+1)
         self.A = a
         self.B = b
-        self.changeListeners = []
     
     def getValue(self):
         return (self.A.getValue() and self.B.getValue())
@@ -140,15 +165,16 @@ class AndMesh(MeshLayer):
         super(AndMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
-            self.nodes[i] = AndMeshNode(meshA.nodes[i], meshB.nodes[i])
+            self.nodes[i] = AndMeshNode(meshA.nodes[i], meshB.nodes[i], self)
             i += 1
 
 class OrMeshNode(MeshNode):
 
-    def __init__(self, a, b):
+    def __init__(self, a, b, mesh):
+        level = max(a.Level, b.Level)
+        super(OrMeshNode, self).__init__(False, state_mutable, mesh, level+1)
         self.A = a
         self.B = b
-        self.changeListeners = []
 
     def getValue(self):
         return (self.A.getValue() or self.B.getValue())
@@ -159,12 +185,23 @@ class OrMesh(MeshLayer):
         super(OrMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
-            self.nodes[i] = OrMeshNode(meshA.nodes[i], meshB.nodes[i])
+            self.nodes[i] = OrMeshNode(meshA.nodes[i], meshB.nodes[i], self)
             i += 1
+
+class AddNodeWrapper():
+
+    def __init__(self, node, shouldTakeCarry):
+        self.Node = node
+        self.ShouldTake = shouldTakeCarry
+
+    def activate(self):
+        self.Node.setShouldTakeCarry(self.ShouldTake)
 
 class AddMeshNode(MeshNode):
 
     def __init__(self, a, b, previous, mesh):
+        level = max(a.Level, b.Level)
+        super(AddMeshNode, self).__init__(False, state_mutable, mesh, level+1)
         a.changeListeners.append(self)
         self.A = a
         b.changeListeners.append(self)
@@ -173,8 +210,6 @@ class AddMeshNode(MeshNode):
         self.Prev = previous
         self.Next = None
         self.value = -1
-        self.changeListeners = []
-        self.Mesh = mesh
 
     def getValue(self):
         if self.value == -1:
@@ -292,7 +327,7 @@ class AddMeshNode(MeshNode):
         #print('')
     
         if self.value == val and (not self.carry == car):
-            self.Next.setShouldTakeCarry(self.carry)
+            carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, self.carry))
 
     def setValue(self, val):
         #print('')
@@ -368,8 +403,7 @@ class AddMeshNode(MeshNode):
         if setSuccessful and not (carrychange == carrychange_none):
             changeCarryTo = carrychange == carrychange_totrue
             self.carry = changeCarryTo
-            if not self.Next.setShouldTakeCarry(changeCarryTo):
-                print('ERROR: fail to take carry')
+            carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, changeCarryTo))
         if setSuccessful:
             node.notifyChangeListeners()
         return setSuccessful
@@ -377,7 +411,7 @@ class AddMeshNode(MeshNode):
 class EmptyNode(MeshNode):
     
     def __init__(self):
-        super(EmptyNode, self).__init__(self, state_constant, None)
+        super(EmptyNode, self).__init__(self, state_constant, None, 0)
         self.carry = False
         self.value = 0
 
@@ -412,10 +446,11 @@ class LeftRotateMesh(MeshLayer):
             i += 1
 
 class XorMeshNode(MeshNode):
-    def __init__(self, a, b):
+    def __init__(self, a, b, mesh):
+        level = max(a.Level, b.Level)
+        super(XorMeshNode, self).__init__(False, state_mutable, mesh, level+1)
         self.A = a
         self.B = b
-        self.changeListeners = []
     
     def getValue(self):
         return (self.A.getValue() ^ self.B.getValue())
@@ -426,7 +461,7 @@ class XorMesh(MeshLayer):
         super(XorMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
-            self.nodes[i] = XorMeshNode(meshA.nodes[i], meshB.nodes[i])
+            self.nodes[i] = XorMeshNode(meshA.nodes[i], meshB.nodes[i], self)
             i += 1
 
 rotate_amounts = [7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
@@ -506,6 +541,8 @@ def md5(message):
             eightOff = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), cTestMesh), messageTestMesh)
             eightOff.nodes[3].setValue(not eightOff.nodes[3].getValue())
             
+            carryTracker.activateAll()
+        
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             
             num = toRotateMesh.toNumber()
@@ -582,7 +619,7 @@ if __name__=='__main__':
     testsPassed = True
     i = 0
     for message in demo:
-        #testsPassed = md5_to_hex(md5(message)) == output[i]
+        testsPassed = md5_to_hex(md5(message)) == output[i]
         if (not testsPassed):
             break
         i += 1
@@ -597,8 +634,9 @@ if __name__=='__main__':
     
     result = AddMesh(AddMesh(one, two), one)
 
-    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
+    print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result.toNumber())
 
     result.nodes[3].setValue(not result.nodes[3].getValue())
+    carryTracker.activateAll()
 
-    print(one.toNumber(), '+', two.toNumber(), '=', result.toNumber())
+    print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result.toNumber())
