@@ -310,14 +310,14 @@ class AddMeshNode(MeshNode):
             if self.Prev.carry:
                 if self.A.getValue() and self.B.getValue():
                     #print('setting a or b to false')
-                    aSet = self.setNodeTo(self.A, False, carrychange_none)
-                    bSet = self.setNodeTo(self.B, False, carrychange_none)
-                    return aSet or bSet
+                    if not self.setNodeTo(self.A, False, carrychange_none):
+                        return self.setNodeTo(self.B, False, carrychange_none)
+                    return True
                 elif not self.A.getValue() and not self.B.getValue():
                     #print('setting a or b to true and starting carry')
-                    aSet = self.setNodeTo(self.A, True, carrychange_totrue)
-                    bSet = self.setNodeTo(self.B, True, carrychange_totrue)
-                    return aSet or bSet
+                    if not self.setNodeTo(self.A, True, carrychange_totrue):
+                        return self.setNodeTo(self.B, True, carrychange_totrue)
+                    return True
                 else:
                     print('anomaly 01200318')
             else:
