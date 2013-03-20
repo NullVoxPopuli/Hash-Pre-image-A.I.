@@ -498,7 +498,20 @@ def md5(message):
             
             constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
             
+            aTestMesh = MeshLayer.layerForNumber(aMesh.toNumber(), state_mutable)
+            fTestMesh = MeshLayer.layerForNumber(fMesh.toNumber(), state_mutable)
+            cTestMesh = MeshLayer.layerForNumber(constants[i], state_constant)
+            messageTestMesh = MeshLayer.layerForNumber(messageMeshes[g].toNumber(), state_mutable)
+            
+            eightOff = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), cTestMesh), messageTestMesh)
+            eightOff.nodes[3].setValue(not eightOff.nodes[3].getValue())
+            
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
+            
+            num = toRotateMesh.toNumber()
+            testNum = eightOff.toNumber()
+            if not (num == testNum + 8 or num == testNum - 8):
+                numberWrong += 1
             
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
@@ -538,7 +551,7 @@ def md5(message):
             hash_pieces[i] += val
             hash_pieces[i] &= 0xFFFFFFFF
 
-                #print('WRONG: ', numberWrong)
+        print('WRONG: ', numberWrong)
  
     return sum(x<<(32*i) for i, x in enumerate(hash_pieces))
  
