@@ -22,16 +22,16 @@ class Tracker:
         return self.listOfLists[level]
 
     def activateAll(self):
-        i = 0
         oldCarryTracking = list(self.listOfLists)
         self.listOfLists = []
         oldLen = len(oldCarryTracking)
+        i = oldLen-1
         carryTrackingList = []
-        while i < oldLen:
+        while i >= 0:
             wrapperList = oldCarryTracking[i]
             for nodeWrapper in wrapperList:
                 nodeWrapper.activate()
-            i += 1
+            i -= 1
         if oldLen > 0:
             self.activateAll()
 
@@ -197,7 +197,8 @@ class AddNodeWrapper():
         self.ShouldTake = shouldTakeCarry
 
     def activate(self):
-#print('cantakecarry: ', self.Node.setShouldTakeCarry(self.ShouldTake))
+        #print('')
+        #print('cantakecarry: ', self.Node.setShouldTakeCarry(self.ShouldTake))
         self.Node.setShouldTakeCarry(self.ShouldTake)
 
 class AddMeshNode(MeshNode):
@@ -256,44 +257,22 @@ class AddMeshNode(MeshNode):
         
         if not takeCarry:
             if self.A.getValue() and self.B.getValue() and self.getValue():
-                if self.setNodeTo(self.A, False, carrychange_tofalse):
-                    return True
-                elif self.setNodeTo(self.B, False, carrychange_tofalse):
-                    return True
-                return False
+                return self.setNodeOrOtherNode(self.A, False, carrychange_tofalse, self.B, False, carrychange_tofalse)
             elif (not self.A.getValue()) and (not self.B.getValue()) and self.getValue():
-                if not self.setNodeTo(self.A, True, carrychange_none):
-                    return self.setNodeTo(self.B, True, carrychange_none)
-                return True
+                return self.setNodeOrOtherNode(self.A, True, carrychange_none, self.B, True, carrychange_none)
             elif self.A.getValue() and (not self.getValue()):
-                if self.setNodeTo(self.B, True, carrychange_none):
-                    return True
-                if self.setNodeTo(self.A, False, carrychange_tofalse):
-                    return True
-                return False
+                return self.setNodeOrOtherNode(self.B, True, carrychange_none, self.A, False, carrychange_tofalse)
             elif self.B.getValue() and (not self.getValue()):
-                if self.setNodeTo(self.A, True, carrychange_none):
-                    return True
-                if self.setNodeTo(self.B, False, carrychange_tofalse):
-                    return True
-                return False
+                return self.setNodeOrOtherNode(self.A, True, carrychange_none, self.B, False, carrychange_tofalse)
         else:
             if self.A.getValue() and self.B.getValue() and (not self.getValue()):
-                if self.setNodeTo(self.A, False, carrychange_none):
-                    return True
-                return self.setNodeTo(self.B, False, carrychange_none)
+                return self.setNodeOrOtherNode(self.A, False, carrychange_none, self.B, False, carrychange_none)
             elif not self.A.getValue() and not self.B.getValue() and (not self.getValue()):
-                if self.setNodeTo(self.A, True, carrychange_totrue):
-                    return True
-                return self.setNodeTo(self.B, True, carrychange_totrue)
+                return self.setNodeOrOtherNode(self.A, True, carrychange_totrue, self.B, True, carrychange_totrue)
             elif self.A.getValue() and self.getValue():
-                if self.setNodeTo(self.A, False, carrychange_none):
-                    return True
-                return self.setNodeTo(self.B, True, carrychange_totrue)
+                return self.setNodeOrOtherNode(self.A, False, carrychange_none, self.B, True, carrychange_totrue)
             elif self.B.getValue() and self.getValue():
-                if self.setNodeTo(self.B, False, carrychange_none):
-                    return True
-                return self.setNodeTo(self.A, True, carrychange_totrue)
+                return self.setNodeOrOtherNode(self.B, False, carrychange_none, self.A, True, carrychange_totrue)
 
                     #print('hopeful for no anomaly')
         return True
@@ -330,27 +309,19 @@ class AddMeshNode(MeshNode):
             if self.Prev.carry:
                 if self.A.getValue() and self.B.getValue():
                     #print('setting a or b to false')
-                    if not self.setNodeTo(self.A, False, carrychange_none):
-                        return self.setNodeTo(self.B, False, carrychange_none)
-                    return True
+                    return self.setNodeOrOtherNode(self.A, False, carrychange_none, self.B, False, carrychange_none)
                 elif not self.A.getValue() and not self.B.getValue():
                     #print('setting a or b to true and starting carry')
-                    if not self.setNodeTo(self.A, True, carrychange_totrue):
-                        return self.setNodeTo(self.B, True, carrychange_totrue)
-                    return True
+                    return self.setNodeOrOtherNode(self.A, True, carrychange_totrue, self.B, True, carrychange_totrue)
                 else:
                     print('anomaly 01200318')
             else:
                 if self.A.getValue() and self.B.getValue():
                     print('anomaly 09010319')
                 elif self.A.getValue():
-                    if not self.setNodeTo(self.A, False, carrychange_none):
-                        return self.setNodeTo(self.B, True, carrychange_totrue)
-                    return True
+                    return self.setNodeOrOtherNode(self.A, False, carrychange_none, self.B, True, carrychange_totrue)
                 elif self.B.getValue():
-                    if not self.setNodeTo(self.B, False, carrychange_none):
-                        return self.setNodeTo(self.A, True, carrychange_totrue)
-                    return True
+                    return self.setNodeOrOtherNode(self.B, False, carrychange_none, self.A, True, carrychange_totrue)
                 else:
                     print('anomaly 01220318')
 
@@ -359,36 +330,44 @@ class AddMeshNode(MeshNode):
                 if self.B.getValue() and self.A.getValue():
                     print('anomaly 08570319')
                 elif self.A.getValue():
-                    if not self.setNodeTo(self.B, True, carrychange_none):
-                        return self.setNodeTo(self.A, False, carrychange_tofalse)
-                    return True
+                    return self.setNodeOrOtherNode(self.B, True, carrychange_none, self.A, False, carrychange_tofalse)
                 elif self.B.getValue():
-                    if not self.setNodeTo(self.A, True, carrychange_none):
-                        return self.setNodeTo(self.B, False, carrychange_tofalse)
-                    return True
+                    return self.setNodeOrOtherNode(self.A, True, carrychange_none, self.B, False, carrychange_tofalse)
                 else:
                     print('anomaly 01225318')
             else:
                 if self.A.getValue() and self.B.getValue():
-                    if not self.setNodeTo(self.A, False, carrychange_tofalse):
-                        return self.setNodeTo(self.B, False, carrychange_tofalse)
-                    return True
+                    return self.setNodeOrOtherNode(self.A, False, carrychange_tofalse, self.B, False, carrychange_tofalse)
                 elif not self.A.getValue() and not self.B.getValue():
-                    if not self.setNodeTo(self.A, True, carrychange_none):
-                        return self.setNodeTo(self.B, True, carrychange_none)
-                    return True
+                    return self.setNodeOrOtherNode(self.A, True, carrychange_none, self.B, True, carrychange_none)
                 else:
                     print('anomaly 01300318')
 
                 #print('')
 #print('<<<<', id(self), 'providing forced answer now')
 
-    def setNodeTo(self, node, val, carrychange):
+    def setNodeOrOtherNode(self, nodeA, valA, carrychangeA, nodeB, valB, carrychangeB):
+        aList = carryTracker.getCarryTrackingLevel(nodeA.Level)
+        if nodeA in aList:
+            if self.setNode(nodeA, valA, carrychangeA):
+                return True
+            else:
+                return self.setNode(nodeB, valB, carrychangeB)
+            
+        bList = carryTracker.getCarryTrackingLevel(nodeB.Level)
+        if nodeB in bList:
+            if self.setNode(nodeB, valB, carrychangeB):
+                return True
+            else:
+                return self.setNode(nodeA, valA, carrychangeA)
+                    
+        return self.setNode(nodeA, valA, carrychangeA) or self.setNode(nodeB, valB, carrychangeB)
+
+    def setNode(self, node, val, carrychange):
         setSuccessful = node.setValue(val)
         if setSuccessful and not (carrychange == carrychange_none):
             changeCarryTo = carrychange == carrychange_totrue
             self.carry = changeCarryTo
-            #print(id(self), 'now giving a carry of', changeCarryTo, 'to', id(self.Next), 'that has a level of', self.Next.Level)
             carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, changeCarryTo))
         if setSuccessful:
             node.notifyChangeListeners()
@@ -535,9 +514,9 @@ def md5(message):
             num = toRotateMesh.toNumber() & 0xffffffff
             testNum = (aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
             if not (num == testNum + 8 or num == testNum - 8):
-                print(aMesh.toNumber(), '+', fMesh.toNumber(), '+', constantMesh.toNumber(), '+', messageMeshes[g].toNumber(), '=', num & 0xffffffff)
-                print(aTestMesh.toNumber(), '+', fTestMesh.toNumber(), '+', cTestMesh.toNumber(), '+', messageTestMesh.toNumber(), '!=', num & 0xffffffff, '+/- 8')
-                print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
+                #print(aMesh.toNumber(), '+', fMesh.toNumber(), '+', constantMesh.toNumber(), '+', messageMeshes[g].toNumber(), '=', num & 0xffffffff)
+                #print(aTestMesh.toNumber(), '+', fTestMesh.toNumber(), '+', cTestMesh.toNumber(), '+', messageTestMesh.toNumber(), '!=', num & 0xffffffff, '+/- 8')
+                #print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
                 numberWrong += 1
             
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
@@ -617,10 +596,10 @@ if __name__=='__main__':
     print('Tests passed: ', testsPassed)
 
 
-    one = MeshLayer.layerForNumber(469894840, state_mutable)
-    two = MeshLayer.layerForNumber(3776483511, state_mutable)
-    three = MeshLayer.layerForNumber(4249261313, state_constant)
-    four = MeshLayer.layerForNumber(1948283493, state_constant)
+    one = MeshLayer.layerForNumber(271733878, state_mutable)
+    two = MeshLayer.layerForNumber(3741047784, state_mutable)
+    three = MeshLayer.layerForNumber(3905402710, state_constant)
+    four = MeshLayer.layerForNumber(1212630597, state_constant)
     
     result = AddMesh(AddMesh(AddMesh(one, two), three), four)
 
