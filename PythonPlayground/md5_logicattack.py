@@ -22,6 +22,11 @@ class Tracker:
         return self.listOfLists[level]
 
     def activateAll(self):
+        #print('')
+        #print('================')
+        #print('\tfixing carries in next column')
+        #print('================')
+        #print('')
         oldCarryTracking = list(self.listOfLists)
         self.listOfLists = []
         oldLen = len(oldCarryTracking)
@@ -51,11 +56,11 @@ class MeshNode:
     
     def setValue(self, val):
         if self.isMutable():
-            print(id(self), ' set to give', '1' if val else '0')
+            #print(id(self), ' set to give', '1' if val else '0')
             self.state = state_mutated
             self.value = val
             return True
-        print(id(self), 'refused change')
+        #print(id(self), 'refused change')
         return False
     
     def getState(self):
@@ -200,8 +205,8 @@ class AddNodeWrapper():
         self.ShouldTake = shouldTakeCarry
 
     def activate(self):
-        print('')
-        print('cantakecarry: ', self.Node.setShouldTakeCarry(self.ShouldTake))
+        #print('')
+        #print('cantakecarry: ', self.Node.setShouldTakeCarry(self.ShouldTake))
         self.Node.setShouldTakeCarry(self.ShouldTake)
 
 class AddMeshNode(MeshNode):
@@ -253,31 +258,31 @@ class AddMeshNode(MeshNode):
         return self.value == 1
 
     def setShouldTakeCarry(self, takeCarry):
-        print('')
-        print('>>>>', id(self), 'is forced to take carry of', '1' if takeCarry else '0')
+        #print('')
+        #print('>>>>', id(self), 'is forced to take carry of', '1' if takeCarry else '0')
         
-        print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
         
         if not takeCarry:
             if self.A.getValue() and self.B.getValue() and self.getValue():
                 return self.setNodeOrOtherNode(self.A, False, carrychange_tofalse, self.B, False, carrychange_tofalse)
             elif (not self.A.getValue()) and (not self.B.getValue()) and self.getValue():
                 return self.setNodeOrOtherNode(self.A, True, carrychange_none, self.B, True, carrychange_none)
-            elif self.A.getValue() and (not self.getValue()):
+            elif self.A.getValue() and (not self.B.getValue()) and (not self.getValue()):
                 return self.setNodeOrOtherNode(self.B, True, carrychange_none, self.A, False, carrychange_tofalse)
-            elif self.B.getValue() and (not self.getValue()):
+            elif self.B.getValue() and (not self.A.getValue()) and (not self.getValue()):
                 return self.setNodeOrOtherNode(self.A, True, carrychange_none, self.B, False, carrychange_tofalse)
         else:
             if self.A.getValue() and self.B.getValue() and (not self.getValue()):
                 return self.setNodeOrOtherNode(self.A, False, carrychange_none, self.B, False, carrychange_none)
             elif not self.A.getValue() and not self.B.getValue() and (not self.getValue()):
                 return self.setNodeOrOtherNode(self.A, True, carrychange_totrue, self.B, True, carrychange_totrue)
-            elif self.A.getValue() and self.getValue():
+            elif self.A.getValue() and (not self.B.getValue()) and self.getValue():
                 return self.setNodeOrOtherNode(self.A, False, carrychange_none, self.B, True, carrychange_totrue)
-            elif self.B.getValue() and self.getValue():
+            elif self.B.getValue() and (not self.A.getValue()) and self.getValue():
                 return self.setNodeOrOtherNode(self.B, False, carrychange_none, self.A, True, carrychange_totrue)
 
-        print('no change needed')
+                    #print('no change needed')
         return True
 
     def refreshCachedAnswer(self):
@@ -289,8 +294,8 @@ class AddMeshNode(MeshNode):
 
     def resolve(self):
         
-        print('')
-        print('====== resolving', id(self), '======')
+        #print('')
+        #print('====== resolving', id(self), '======')
         
         val = self.value
         car = self.carry
@@ -302,11 +307,11 @@ class AddMeshNode(MeshNode):
 
     def setValue(self, val):
         self.refreshCachedAnswer()
-        print('')
-        print('>>>>', id(self), 'is forced to give answer of', '1' if val else '0')
-        print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'taking carry:', self.Prev.carry, 'from', id(self.Prev), 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
+        #print('')
+        #print('>>>>', id(self), 'is forced to give answer of', '1' if val else '0')
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'taking carry:', self.Prev.carry, 'from', id(self.Prev), 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
         if not (val ^ (self.value == 1) ):
-            print('no change needed')
+            #print('no change needed')
             return True
         
         self.value = 1 if val else 0
@@ -599,7 +604,7 @@ if __name__=='__main__':
     testsPassed = True
     i = 0
     for message in demo:
-        #testsPassed = md5_to_hex(md5(message)) == output[i]
+        testsPassed = md5_to_hex(md5(message)) == output[i]
         if (not testsPassed):
             break
         i += 1
