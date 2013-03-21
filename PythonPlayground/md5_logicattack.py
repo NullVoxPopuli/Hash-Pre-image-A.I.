@@ -197,6 +197,7 @@ class AddNodeWrapper():
         self.ShouldTake = shouldTakeCarry
 
     def activate(self):
+#print('cantakecarry: ', self.Node.setShouldTakeCarry(self.ShouldTake))
         self.Node.setShouldTakeCarry(self.ShouldTake)
 
 class AddMeshNode(MeshNode):
@@ -261,9 +262,9 @@ class AddMeshNode(MeshNode):
                     return True
                 return False
             elif (not self.A.getValue()) and (not self.B.getValue()) and self.getValue():
-                aSet = self.setNodeTo(self.A, True, carrychange_none)
-                bSet = self.setNodeTo(self.B, True, carrychange_none)
-                return aSet or bSet
+                if not self.setNodeTo(self.A, True, carrychange_none):
+                    return self.setNodeTo(self.B, True, carrychange_none)
+                return True
             elif self.A.getValue() and (not self.getValue()):
                 if self.setNodeTo(self.B, True, carrychange_none):
                     return True
@@ -616,16 +617,16 @@ if __name__=='__main__':
     print('Tests passed: ', testsPassed)
 
 
-    one = MeshLayer.layerForNumber(2196912166, state_mutable)
-    two = MeshLayer.layerForNumber(2549322821, state_mutable)
-    three = MeshLayer.layerForNumber(4254626195, state_constant)
-    four = MeshLayer.layerForNumber(0, state_constant)
+    one = MeshLayer.layerForNumber(469894840, state_mutable)
+    two = MeshLayer.layerForNumber(3776483511, state_mutable)
+    three = MeshLayer.layerForNumber(4249261313, state_constant)
+    four = MeshLayer.layerForNumber(1948283493, state_constant)
     
     result = AddMesh(AddMesh(AddMesh(one, two), three), four)
 
     print((one.toNumber() + two.toNumber() + three.toNumber() + four.toNumber()) & 0xffffffff, '=', result.toNumber())
 
-    result.nodes[3].setValue(not result.nodes[3].getValue())
+    print('canset', result.nodes[3].setValue(not result.nodes[3].getValue()))
     carryTracker.activateAll()
 
     print((one.toNumber() + two.toNumber() + three.toNumber() + four.toNumber()) & 0xffffffff, '=', result.toNumber())
