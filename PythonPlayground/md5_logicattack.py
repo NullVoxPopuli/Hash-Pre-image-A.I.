@@ -32,6 +32,8 @@ class Tracker:
             for nodeWrapper in wrapperList:
                 nodeWrapper.activate()
             i += 1
+        if oldLen > 0:
+            self.activateAll()
 
 carryTracker = Tracker()
 
@@ -301,6 +303,9 @@ class AddMeshNode(MeshNode):
 
     def resolve(self):
         
+        #print('')
+        #print('====== resolving', id(self), '======')
+        
         val = self.value
         car = self.carry
         
@@ -317,11 +322,9 @@ class AddMeshNode(MeshNode):
         if not (val ^ (self.value == 1) ):
             #print('no change needed')
             return True
-        #print('prev carry5.1: ', self.Prev.carry)
         
         self.value = 1 if val else 0
                 
-        #print('prev carry5.2: ', self.Prev.carry)
         if not val:
             if self.Prev.carry:
                 if self.A.getValue() and self.B.getValue():
@@ -384,6 +387,7 @@ class AddMeshNode(MeshNode):
         if setSuccessful and not (carrychange == carrychange_none):
             changeCarryTo = carrychange == carrychange_totrue
             self.carry = changeCarryTo
+            #print(id(self), 'now giving a carry of', changeCarryTo, 'to', id(self.Next), 'that has a level of', self.Next.Level)
             carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, changeCarryTo))
         if setSuccessful:
             node.notifyChangeListeners()
