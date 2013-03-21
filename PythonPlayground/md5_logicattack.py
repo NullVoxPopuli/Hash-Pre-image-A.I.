@@ -544,7 +544,28 @@ def md5(message):
 
             constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
 
+            aTestMesh = MeshLayer.layerForNumber(aMesh.toNumber(), state_mutable)
+            fTestMesh = MeshLayer.layerForNumber(fMesh.toNumber(), state_mutable)
+            cTestMesh = MeshLayer.layerForNumber(constants[i], state_constant)
+            messageTestMesh = MeshLayer.layerForNumber(messageMeshes[g].toNumber(), state_mutable)
+            
+            eightOff = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), cTestMesh), messageTestMesh)
+            eightOff.toNumber()
+            eightOff.nodes[3].setValue(not eightOff.nodes[3].getValue())
+            
+            carryTracker.activateAll()
+            
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
+            
+            num = toRotateMesh.toNumber() & 0xffffffff
+            testNum = (aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
+            if not (num == testNum + 8 or num == testNum - 8):
+                #print(aMesh.toNumber(), '+', fMesh.toNumber(), '+', constantMesh.toNumber(), '+', messageMeshes[g].toNumber(), '=', num & 0xffffffff)
+                #print(aTestMesh.toNumber(), '+', fTestMesh.toNumber(), '+', cTestMesh.toNumber(), '+', messageTestMesh.toNumber(), '!=', num & 0xffffffff, '+/- 8')
+                #print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
+                numberWrong += 1
+            
+            
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
@@ -554,7 +575,27 @@ def md5(message):
             
             constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
             
-            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh ,fMesh), constantMesh), messageMeshes[g])
+            aTestMesh = MeshLayer.layerForNumber(aMesh.toNumber(), state_mutable)
+            fTestMesh = MeshLayer.layerForNumber(fMesh.toNumber(), state_mutable)
+            cTestMesh = MeshLayer.layerForNumber(constants[i], state_constant)
+            messageTestMesh = MeshLayer.layerForNumber(messageMeshes[g].toNumber(), state_mutable)
+            
+            eightOff = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), cTestMesh), messageTestMesh)
+            eightOff.toNumber()
+            eightOff.nodes[3].setValue(not eightOff.nodes[3].getValue())
+            
+            carryTracker.activateAll()
+            
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
+            
+            num = toRotateMesh.toNumber() & 0xffffffff
+            testNum = (aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
+            if not (num == testNum + 8 or num == testNum - 8):
+                #print(aMesh.toNumber(), '+', fMesh.toNumber(), '+', constantMesh.toNumber(), '+', messageMeshes[g].toNumber(), '=', num & 0xffffffff)
+                #print(aTestMesh.toNumber(), '+', fTestMesh.toNumber(), '+', cTestMesh.toNumber(), '+', messageTestMesh.toNumber(), '!=', num & 0xffffffff, '+/- 8')
+                #print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
+                numberWrong += 1
+            
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
@@ -564,7 +605,27 @@ def md5(message):
             
             constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
             
+            aTestMesh = MeshLayer.layerForNumber(aMesh.toNumber(), state_mutable)
+            fTestMesh = MeshLayer.layerForNumber(fMesh.toNumber(), state_mutable)
+            cTestMesh = MeshLayer.layerForNumber(constants[i], state_constant)
+            messageTestMesh = MeshLayer.layerForNumber(messageMeshes[g].toNumber(), state_mutable)
+            
+            eightOff = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), cTestMesh), messageTestMesh)
+            eightOff.toNumber()
+            eightOff.nodes[3].setValue(not eightOff.nodes[3].getValue())
+            
+            carryTracker.activateAll()
+            
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
+            
+            num = toRotateMesh.toNumber() & 0xffffffff
+            testNum = (aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
+            if not (num == testNum + 8 or num == testNum - 8):
+                #print(aMesh.toNumber(), '+', fMesh.toNumber(), '+', constantMesh.toNumber(), '+', messageMeshes[g].toNumber(), '=', num & 0xffffffff)
+                #print(aTestMesh.toNumber(), '+', fTestMesh.toNumber(), '+', cTestMesh.toNumber(), '+', messageTestMesh.toNumber(), '!=', num & 0xffffffff, '+/- 8')
+                #print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
+                numberWrong += 1
+            
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
