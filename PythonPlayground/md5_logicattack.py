@@ -546,7 +546,7 @@ def md5(message):
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             
             num = toRotateMesh.toNumber()
-            testNum = eightOff.toNumber()
+            testNum = aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()
             if not (num == testNum + 8 or num == testNum - 8):
                 numberWrong += 1
             
