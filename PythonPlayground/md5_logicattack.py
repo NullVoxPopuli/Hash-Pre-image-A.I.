@@ -295,41 +295,22 @@ class AddMeshNode(MeshNode):
                     #print('hopeful for no anomaly')
         return True
 
+    def refreshCachedAnswer(self):
+        self.value = -1
+        self.getValue()
+
     def resolve(self):
-        #print('')
-        #print('===== resolving', id(self), '=====')
-        
-        #print('prev carry1: ', self.Prev.carry)
-        #print('A:', self.A.getValue())
-        #self.A.Mesh.printLayer()
-        #print('B:', self.B.getValue())
-        #self.B.Mesh.printLayer()
-        #print('prev carry2: ', self.Prev.carry)
         
         val = self.value
         car = self.carry
-        self.value = -1
-        #print('prev carry3: ', self.Prev.carry)
-        #print('res:', self.getValue())
-        self.getValue()
-        #print('prev carry4: ', self.Prev.carry)
-        #self.Mesh.printLayer()
-        #print('prev carry5: ', self.Prev.carry)
         
         self.setValue(val)
-        #print('prev carry6: ', self.Prev.carry)
-        #print('Ap:')
-        #self.A.Mesh.printLayer()
-        #print('Bp:')
-        #self.B.Mesh.printLayer()
-        #print('resp:')
-        #self.Mesh.printLayer()
-        #print('')
     
         if self.value == val and (not self.carry == car):
             carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, self.carry))
 
     def setValue(self, val):
+        self.refreshCachedAnswer()
         #print('')
         #print('>>>>', id(self), 'is forced to give answer of', '1' if val else '0')
         #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'taking carry:', self.Prev.carry, 'from', id(self.Prev), 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
@@ -545,9 +526,10 @@ def md5(message):
         
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             
-            num = toRotateMesh.toNumber()
-            testNum = aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()
+            num = toRotateMesh.toNumber() & 0xffffffff
+            testNum = (aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
             if not (num == testNum + 8 or num == testNum - 8):
+                print('my ans:', testNum, 'actual:', num)
                 numberWrong += 1
             
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
@@ -632,11 +614,11 @@ if __name__=='__main__':
     three = MeshLayer.layerForNumber(43, state_constant)
     four = MeshLayer.layerForNumber(15, state_constant)
     
-    result = AddMesh(AddMesh(one, two), one)
+    result = AddMesh(AddMesh(AddMesh(one, two), three), four)
 
-    print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result.toNumber())
+    print(one.toNumber() + two.toNumber() + three.toNumber() + four.toNumber(), '=', result.toNumber())
 
     result.nodes[3].setValue(not result.nodes[3].getValue())
     carryTracker.activateAll()
 
-    print(one.toNumber(), '+', two.toNumber(), '+', one.toNumber(), '=', result.toNumber())
+    print(one.toNumber() + two.toNumber() + three.toNumber() + four.toNumber(), '=', result.toNumber())
