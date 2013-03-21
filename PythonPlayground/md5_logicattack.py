@@ -520,6 +520,7 @@ def md5(message):
             messageTestMesh = MeshLayer.layerForNumber(messageMeshes[g].toNumber(), state_mutable)
             
             eightOff = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), cTestMesh), messageTestMesh)
+            eightOff.toNumber()
             eightOff.nodes[3].setValue(not eightOff.nodes[3].getValue())
             
             carryTracker.activateAll()
@@ -529,7 +530,9 @@ def md5(message):
             num = toRotateMesh.toNumber() & 0xffffffff
             testNum = (aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
             if not (num == testNum + 8 or num == testNum - 8):
-                print('my ans:', testNum, 'actual:', num)
+                print(aMesh.toNumber(), '+', fMesh.toNumber(), '+', constantMesh.toNumber(), '+', messageMeshes[g].toNumber(), '=', num & 0xffffffff)
+                print(aTestMesh.toNumber(), '+', fTestMesh.toNumber(), '+', cTestMesh.toNumber(), '+', messageTestMesh.toNumber(), '!=', num & 0xffffffff, '+/- 8')
+                print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
                 numberWrong += 1
             
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
@@ -609,16 +612,16 @@ if __name__=='__main__':
     print('Tests passed: ', testsPassed)
 
 
-    one = MeshLayer.layerForNumber(15, state_mutable)
-    two = MeshLayer.layerForNumber(31, state_mutable)
-    three = MeshLayer.layerForNumber(43, state_constant)
-    four = MeshLayer.layerForNumber(15, state_constant)
+    one = MeshLayer.layerForNumber(2196912166, state_mutable)
+    two = MeshLayer.layerForNumber(2549322821, state_mutable)
+    three = MeshLayer.layerForNumber(4254626195, state_constant)
+    four = MeshLayer.layerForNumber(0, state_constant)
     
     result = AddMesh(AddMesh(AddMesh(one, two), three), four)
 
-    print(one.toNumber() + two.toNumber() + three.toNumber() + four.toNumber(), '=', result.toNumber())
+    print((one.toNumber() + two.toNumber() + three.toNumber() + four.toNumber()) & 0xffffffff, '=', result.toNumber())
 
     result.nodes[3].setValue(not result.nodes[3].getValue())
     carryTracker.activateAll()
 
-    print(one.toNumber() + two.toNumber() + three.toNumber() + four.toNumber(), '=', result.toNumber())
+    print((one.toNumber() + two.toNumber() + three.toNumber() + four.toNumber()) & 0xffffffff, '=', result.toNumber())
