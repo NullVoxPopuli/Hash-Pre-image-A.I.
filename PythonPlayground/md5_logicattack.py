@@ -64,11 +64,11 @@ class MeshNode:
     
     def setValue(self, val):
         if self.isMutable():
-            #print(id(self), ' set to give', '1' if val else '0')
+            #print(id(self), 'in', self.Mesh.Nickname, ' set to give', '1' if val else '0')
             self.state = state_mutated
             self.value = val
             return True
-        #print(id(self), 'refused change (', self.state, ')')
+        #print(id(self), 'in', self.Mesh.Nickname, 'refused change (', self.state, ')')
         return False
     
     def getState(self):
@@ -181,6 +181,9 @@ class NotMeshNode(MeshNode):
         self.A.changeListeners.append(self)
     
     def resolve(self):
+        #print('')
+        #print('====== resolving NOT', id(self), '======')
+        
         self.notifyChangeListeners()
     
     def refreshCachedAnswer(self):
@@ -192,14 +195,17 @@ class NotMeshNode(MeshNode):
     def setValue(self):
         self.refreshCachedAnswer()
         #print('')
-        #print('AND >>', id(self), 'is forced to answer with', '1' if val else '0')
-        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0')
+        #print('NOT >>', id(self), 'is forced to answer with', '1' if val else '0')
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0')
         
         if self.getValue() == val:
             #print('no change needed')
             return True
         
-        return self.A.setValue(not val)
+        aset = self.A.setValue(not val)
+        if aset:
+            self.B.notifyChangeListeners()
+        return aset
 
 class NotMesh(MeshLayer):
     
@@ -222,6 +228,8 @@ class AndMeshNode(MeshNode):
         self.value = -1
     
     def resolve(self):
+        #print('')
+        #print('====== resolving AND', id(self), '======')
         val = self.getValue()
         
         if not self.setValue(val):
@@ -257,21 +265,27 @@ class AndMeshNode(MeshNode):
                 if (aset or bset) and (not (aset and bset)):
                     print('catastrophic AND failure')
                 self.refreshCachedAnswer()
+                self.A.notifyChangeListeners()
+                self.B.notifyChangeListeners()
                 return aset and bset
             elif self.A.getValue() and not self.B.getValue():
                 if self.B.setValue(True):
                     self.refreshCachedAnswer()
+                    self.B.notifyChangeListeners()
                     return True
                 return False
             elif self.B.getValue() and not self.A.getValue():
                 if self.A.setValue(True):
                     self.refreshCachedAnswer()
+                    self.A.notifyChangeListeners()
                     return True
                 return False
         else:
             set = self.A.setValue(False) or self.B.setValue(False)
             if set:
                 self.refreshCachedAnswer()
+                self.A.notifyChangeListeners()
+                self.B.notifyChangeListeners()
             return set
                     
         print('anomaly: andnode')
@@ -298,6 +312,8 @@ class OrMeshNode(MeshNode):
         self.value = -1
     
     def resolve(self):
+        #print('')
+        #print('====== resolving OR', id(self), '======')
         val = self.getValue()
         
         if not self.setValue(val):
@@ -339,15 +355,19 @@ class OrMeshNode(MeshNode):
                 if aset ^ bset:
                     print('catastrophic OR failure')
                 self.refreshCachedAnswer()
+                self.A.notifyChangeListeners()
+                self.B.notifyChangeListeners()
                 return True
             elif self.A.getValue() and not self.B.getValue():
                 if self.A.setValue(False):
                     self.refreshCachedAnswer()
+                    self.A.notifyChangeListeners()
                     return True
                 return False
             elif self.B.getValue() and not self.A.getValue():
                 if self.B.setValue(False):
                     self.refreshCachedAnswer()
+                    self.B.notifyChangeListeners()
                     return True
                 return False
 
@@ -420,12 +440,12 @@ class AddMeshNode(MeshNode):
             else:
                 self.value = 0
 
-    #print(id(self), 'returning value of ', '1' if self.value == 1 else '0')
+                    #print(id(self), 'returning value of ', '1' if self.value == 1 else '0')
         return self.value == 1
 
     def setShouldTakeCarry(self, takeCarry):
         #print('')
-        #print('>>>>', id(self), 'is forced to take carry of', '1' if takeCarry else '0')
+        #print('ADD >>', id(self), 'is forced to take carry of', '1' if takeCarry else '0')
         
         #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
         
@@ -461,7 +481,7 @@ class AddMeshNode(MeshNode):
     def resolve(self):
         
         #print('')
-        #print('====== resolving', id(self), '======')
+        #print('====== resolving ADD', id(self), '======')
         
         val = self.getValue()
         car = self.carry
@@ -475,7 +495,7 @@ class AddMeshNode(MeshNode):
     def setValue(self, val):
         self.refreshCachedAnswer()
         #print('')
-        #print('>>>>', id(self), 'is forced to give answer of', '1' if val else '0')
+        #print('ADD >>', id(self), 'is forced to give answer of', '1' if val else '0')
         #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'taking carry:', self.Prev.carry, 'from', id(self.Prev), 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
         if not (val ^ (self.value == 1) ):
             #print('no change needed')
@@ -844,7 +864,7 @@ if __name__=='__main__':
     testsPassed = True
     i = 0
     for message in demo:
-        #testsPassed = md5_to_hex(md5(message)) == output[i]
+        testsPassed = md5_to_hex(md5(message)) == output[i]
         if (not testsPassed):
             break
         i += 1
