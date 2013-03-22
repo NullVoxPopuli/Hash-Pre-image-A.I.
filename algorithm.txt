@@ -1,0 +1,41 @@
+Ans needed		Crec	A	B	Action
+1			1	1	1	-
+					0	change B to 1  ||  change A to 0 and stop giving carry
+				0	1	change A to 1  ||  change B to 0 and stop giving carry
+					0	-
+			0	1	1	change B to 0 stop carry  ||  change A to 0 stop carry
+					0	-
+				0	1	-
+					0	change B to 1  ||  change A to 1
+-----------------------------------------------------------------------------------------------------------------------------------------------
+0			1	1	1	change A to 0  ||  change B to 0
+					0	-
+				0	1	-
+					0	change A to 1 and start giving carry  ||  change B to 1 and start giving carry
+			0	1	1	-
+					0	change A to 0  ||  change B to 1 and start giving carry
+				0	1	change A to 1 and start giving carry  ||  change B to 0
+					0	-
+
+
+Forced carry		crec	A	B		Ans	Action
+0			1	0	0		1	set A to 1  ||  set B to 1
+					1		0	set A to 1  ||  set B to 0 and stop giving a carry
+				1	0		0	set B to 1  ||  set A to 0 and stop
+					1		1	set A to 0 and stop giving carry  ||  set B to 0 and stop giving carry
+--------------------------------------------------------------------------------------------------------------------------------------------------
+1			0	0	0		0	set A to 1 and start giving carry  ||  set B to 1 and start giving carry
+					1		1	set A to 1 and start giving carry  ||  set B to 1
+				1	0		1	set A to 0  ||  set B to 1 and start giving a carry
+					1		0	set A to 0  ||  set B to 0
+
+
+changing	fixed		carry		ans	action
+0 to 1		1		1		
+				0
+		0		1
+				0
+1 to 0		1		1
+				0
+		0		1
+				0

@@ -1,68 +1,168 @@
 import math
 
-state_mutable = 777
-state_fixed = 778
-state_changed = 779
+state_resolved = 500
+state_needs_resolved = 501
+
+state_constant = 400
+state_mutable = 401
+state_mutated = 402
+
+carrychange_none = 500
+carrychange_totrue = 501
+carrychange_tofalse = 502
+
+mutableNodes = []
+
+def resetAllMutableNodes():
+    for node in mutableNodes:
+        node.state = state_mutable
+
+class Tracker:
+
+    def __init__(self):
+        self.listOfLists = []
+
+    def getCarryTrackingLevel(self, level):
+        while level > len(self.listOfLists)-1:
+            self.listOfLists.append([])
+        return self.listOfLists[level]
+
+    def activateAll(self):
+        #print('')
+        #print('================')
+        #print('\tfixing carries in next column')
+        #print('================')
+        #print('')
+        oldCarryTracking = list(self.listOfLists)
+        self.listOfLists = []
+        oldLen = len(oldCarryTracking)
+        i = oldLen-1
+        carryTrackingList = []
+        while i >= 0:
+            wrapperList = oldCarryTracking[i]
+            for nodeWrapper in wrapperList:
+                nodeWrapper.activate()
+            i -= 1
+        if oldLen > 0:
+            self.activateAll()
+
+carryTracker = Tracker()
 
 class MeshNode:
 
-    def __init__(self, val, mesh):
+    def __init__(self, val, s, mesh, level):
         self.value = val
-        self.Mesh = mesh
+        self.state = s
+        if s == state_mutable:
+            mutableNodes.append(self)
         self.changeListeners = []
+        self.Mesh = mesh
+        self.Level = level
+
+    def refreshCachedAnswer(self):
+        return True
     
     def getValue(self):
         return self.value
     
     def setValue(self, val):
-        self.setValueR(val, None)
+        if self.isMutable():
+            #print(id(self), 'in', self.Mesh.Nickname, ' set to give', '1' if val else '0')
+            self.state = state_mutated
+            self.value = val
+            return True
+        #print(id(self), 'in', self.Mesh.Nickname, 'refused change (', self.state, ')')
+        return False
     
-    def setValueR(self, val, resolvingParent):
-        self.value = val
+    def getState(self):
+        return self.state
+
+    def isMutable(self):
+        return self.state == state_mutable
+
+    def notifyChangeListeners(self):
         for node in self.changeListeners:
-            if not node == resolvingParent:
-                node.resolve()
+            node.resolve()
+
+    def hasChangingCarry(self):
+        return False
 
 class MeshLayer:
     
-    def __init__(self):
-        self.nodes = [MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+    def __init__(self, state):
+        self.nodes = [MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
                       
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
                       
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
                       
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self),
-                      MeshNode(False, self), MeshNode(False, self), MeshNode(False, self), MeshNode(False, self)]
-        self.state = state_mutable
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0),
+                      MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0), MeshNode(False, state, self, 0)]
     
-    def layerForNumber(number):
-        resultLayer = MeshLayer()
+    def printLayer(self):
+        str = ''
+        i = 31
+        while i > -1:
+            str += '1' if self.nodes[i].getValue() else '0'
+            i -= 1
+        print(str)
+    
+    def layerForNumber(number, state):
+        resultLayer = MeshLayer(state)
         index = 0
     
         while number > 0:
-            newNode = MeshNode(False, resultLayer)
+            newNode = resultLayer.nodes[index]
+            state = newNode.state
             if number & 1 == 1:
-                newNode.setValue(True)
+                newNode.value = True
             else:
-                newNode.setValue(False)
-            resultLayer.nodes[index] = newNode
+                newNode.value = False
+            newNode.state = state
         
             number >>= 1
             index += 1
 
         return resultLayer
+    
+    def set(self, index, val):
+        answers = []
+        for node in self.nodes:
+            answers.append(node.getValue())
+        answers[index] = val
+    
+                
+    #print('')
+                #print('================')
+        if not self.nodes[index].setValue(val):
+            print('set failure')
+        carryTracker.activateAll()
+                
+        resetAllMutableNodes()
+    
+        i = index+1
+        while i < 32:
+            self.nodes[i].refreshCachedAnswer()
+            if not (self.nodes[i].getValue() == answers[i]):
+                print('number difference occurred later')
+                if not self.nodes[i].setValue(answers[i]):
+                    print('set failure')
+                #print('')
+                #print('================')
+                carryTracker.activateAll()
+                resetAllMutableNodes()
+            i += 1
 
     def toNumber(self):
         step = 1
@@ -78,233 +178,431 @@ class MeshLayer:
 
 class NotMeshNode(MeshNode):
 
-    def __init__(self, a):
+    def __init__(self, a, mesh):
+        super(NotMeshNode, self).__init__(False, state_mutable, mesh, a.Level+1)
         self.A = a
+        self.A.changeListeners.append(self)
+    
+    def resolve(self):
+        #print('')
+        #print('====== resolving NOT', id(self), '======')
+        
+        self.notifyChangeListeners()
+    
+    def refreshCachedAnswer(self):
+        self.A.refreshCachedAnswer()
 
     def getValue(self):
         return (not self.A.getValue())
 
+    def setValue(self, val):
+        self.refreshCachedAnswer()
+        #print('')
+        #print('NOT >>', id(self), 'is forced to answer with', '1' if val else '0')
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0')
+        
+        if self.getValue() == val:
+            #print('no change needed')
+            return True
+        
+        aset = self.A.setValue(not val)
+        if aset:
+            self.A.notifyChangeListeners()
+        return aset
+
 class NotMesh(MeshLayer):
     
     def __init__(self, input_mesh):
-        super(NotMesh, self).__init__()
+        super(NotMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
-            self.nodes[i] = NotMeshNode(input_mesh.nodes[i])
+            self.nodes[i] = NotMeshNode(input_mesh.nodes[i], self)
             i += 1
 
 class AndMeshNode(MeshNode):
     
-    def __init__(self, a, b):
+    def __init__(self, a, b, mesh):
+        level = max(a.Level, b.Level)
+        super(AndMeshNode, self).__init__(False, state_mutable, mesh, level+1)
         self.A = a
+        self.A.changeListeners.append(self)
         self.B = b
+        self.B.changeListeners.append(self)
+        self.value = -1
+    
+    def resolve(self):
+        #print('')
+        #print('====== resolving AND', id(self), '======')
+        val = self.getValue()
+        
+        if not self.setValue(val):
+            self.notifyChangeListeners()
+    
+    def refreshCachedAnswer(self):
+        self.value = -1
+        self.getValue()
     
     def getValue(self):
-        return (self.A.getValue() and self.B.getValue())
+        if self.value == -1:
+            if self.A.getValue():
+                self.value += 1
+            if self.B.getValue():
+                self.value += 1
+        
+        return self.value > 0
     
     def setValue(self, val):
-        self.value = val
+        self.refreshCachedAnswer()
+        #print('')
+        #print('AND >>', id(self), 'is forced to answer with', '1' if val else '0')
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0')
+                    
+        if self.getValue() == val:
+            #print('no change needed')
+            return True
+                    
+        if val:
+            if (not self.A.getValue()) and (not self.B.getValue()):
+                aset = self.A.setValue(True)
+                bset = self.B.setValue(True)
+                if (aset or bset) and (not (aset and bset)):
+                    print('catastrophic AND failure')
+                self.refreshCachedAnswer()
+                self.A.notifyChangeListeners()
+                self.B.notifyChangeListeners()
+                return aset and bset
+            elif self.A.getValue() and not self.B.getValue():
+                if self.B.setValue(True):
+                    self.refreshCachedAnswer()
+                    self.B.notifyChangeListeners()
+                    return True
+                return False
+            elif self.B.getValue() and not self.A.getValue():
+                if self.A.setValue(True):
+                    self.refreshCachedAnswer()
+                    self.A.notifyChangeListeners()
+                    return True
+                return False
+        else:
+            set = self.A.setValue(False) or self.B.setValue(False)
+            if set:
+                self.refreshCachedAnswer()
+                self.A.notifyChangeListeners()
+                self.B.notifyChangeListeners()
+            return set
+                    
+        print('anomaly: andnode')
+        return False
 
 class AndMesh(MeshLayer):
     
     def __init__(self, meshA, meshB):
-        super(AndMesh, self).__init__()
+        super(AndMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
-            self.nodes[i] = AndMeshNode(meshA.nodes[i], meshB.nodes[i])
+            self.nodes[i] = AndMeshNode(meshA.nodes[i], meshB.nodes[i], self)
             i += 1
 
 class OrMeshNode(MeshNode):
 
-    def __init__(self, a, b):
+    def __init__(self, a, b, mesh):
+        level = max(a.Level, b.Level)
+        super(OrMeshNode, self).__init__(False, state_mutable, mesh, level+1)
         self.A = a
+        self.A.changeListeners.append(self)
         self.B = b
+        self.B.changeListeners.append(self)
+        self.value = -1
+    
+    def resolve(self):
+        #print('')
+        #print('====== resolving OR', id(self), '======')
+        val = self.getValue()
+        
+        if not self.setValue(val):
+            self.notifyChangeListeners()
+
+    def refreshCachedAnswer(self):
+        self.value = -1
+        self.getValue()
 
     def getValue(self):
-        return (self.A.getValue() or self.B.getValue())
+        if self.value == -1:
+            self.value = 0
+            if self.A.getValue():
+                self.value += 1
+            if self.B.getValue():
+                self.value += 1
+        
+        return self.value > 0
+
+    def setValue(self, val):
+        self.refreshCachedAnswer()
+        #print('')
+        #print('OR >>', id(self), 'is forced to answer with', '1' if val else '0')
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0')
+
+        if self.getValue() == val:
+            #print('no change needed')
+            return True
+        
+        if val:
+            set = self.A.setValue(True) or self.B.setValue(True)
+            if set:
+                self.refreshCachedAnswer()
+            return set
+        else:
+            if self.A.getValue() and self.B.getValue():
+                aset = self.A.setValue(False)
+                bset = self.B.setValue(False)
+                if aset ^ bset:
+                    print('catastrophic OR failure')
+                self.refreshCachedAnswer()
+                self.A.notifyChangeListeners()
+                self.B.notifyChangeListeners()
+                return True
+            elif self.A.getValue() and not self.B.getValue():
+                if self.A.setValue(False):
+                    self.refreshCachedAnswer()
+                    self.A.notifyChangeListeners()
+                    return True
+                return False
+            elif self.B.getValue() and not self.A.getValue():
+                if self.B.setValue(False):
+                    self.refreshCachedAnswer()
+                    self.B.notifyChangeListeners()
+                    return True
+                return False
+
+        print('anomaly: ornode')
+        return False
 
 class OrMesh(MeshLayer):
 
     def __init__(self, meshA, meshB):
-        super(OrMesh, self).__init__()
+        super(OrMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
-            self.nodes[i] = OrMeshNode(meshA.nodes[i], meshB.nodes[i])
+            self.nodes[i] = OrMeshNode(meshA.nodes[i], meshB.nodes[i], self)
             i += 1
+
+class AddNodeWrapper():
+
+    def __init__(self, node, shouldTakeCarry):
+        self.Node = node
+        self.ShouldTake = shouldTakeCarry
+
+    def activate(self):
+        #print('')
+        #print('cantakecarry: ', self.Node.setShouldTakeCarry(self.ShouldTake))
+        if not self.Node.setShouldTakeCarry(self.ShouldTake):
+            self.Node.resolve()
 
 class AddMeshNode(MeshNode):
 
-    def __init__(self, a, b, cb, mesh):
-        super(AddMeshNode, self).__init__(-1, mesh)
-
+    def __init__(self, a, b, previous, mesh):
+        level = max(a.Level, b.Level)
+        super(AddMeshNode, self).__init__(False, state_mutable, mesh, level+1)
+        a.changeListeners.append(self)
         self.A = a
-        self.A.changeListeners.append(self)
-        
+        b.changeListeners.append(self)
         self.B = b
-        self.B.changeListeners.append(self)
-        
         self.carry = False
-        self.CB = cb
+        self.Prev = previous
+        self.Next = None
         self.value = -1
-        self.Mesh = mesh
 
     def getValue(self):
         if self.value == -1:
+            #print(id(self), 'is evaluating its result')
             val = 0
             self.carry = False
 
             if self.A.getValue():
+                #print('a')
                 val += 1
             if self.B.getValue():
+                #print('b')
                 val += 1
     
-            if self.CB is not None:
-                if self.CB.value == -1:
-                    self.CB.getValue()
-                if self.CB.carry:
+            if self.Prev is not None:
+                if self.Prev.value == -1:
+                    self.Prev.getValue()
+                if self.Prev.carry:
+                    #print('car')
                     val += 1
     
             if val > 1:
                 self.carry = True
+            else:
+                self.carry = False
 
+#print('val', val)
             if val == 1 or val == 3:
                 self.value = 1
             else:
                 self.value = 0
 
+                    #print(id(self), 'returning value of ', '1' if self.value == 1 else '0')
         return self.value == 1
-    
-    def setShouldGiveCarry(self, giveCarry):
-        if not (giveCarry ^ self.carry):
-            print('anomaly 11380315')
 
-        if self.carry:
-            #need to stop giving a carry
-            self.carry = False
-            if self.value == 1:
-                #giving a carry and a 1
-                if self.CB.carry:
-                    self.A.setValue(False)
-                    self.B.setValue(False)
-                else:
-                    print('anomaly 11490315')
-            else:
-                #giving a carry and a 0
-                if self.CB.carry:
-                    ###need to set whichever's 1 to 0 and stop the carry that we're getting
-                    if self.A.getValue():
-                        self.A.setValue(False)
-                    elif self.B.getValue():
-                        self.B.setValue(False)
-                    else:
-                        print('anomaly 12060315')
-                    self.CB.setShouldGiveCarry(False)
-                else:
-                    #both are 1
-                    self.A.setValue(False)
-                    self.B.setValue(False)
-                        
-        else:
-            #need to give a carry
-            self.carry = True
-            if self.value == 1:
-                #not giving a carry, but giving a 1
-                if self.CB.carry:
-                    self.A.setValue(True)
-                    self.B.setValue(True)
-                else:
-                    ###need to set whichever's 0 to 1 and get a carry
-                    if not self.A.getValue():
-                        self.A.setValue(True)
-                    elif not self.B.getValue():
-                        self.B.setValue(True)
-                    else:
-                        print('anomaly 12070315')
-                    self.CB.setShouldGiveCarry(True)
-            else:
-                # no carry and 0
-                self.A.setValue(True)
-                self.B.setValue(True)
-
-    def adjust(self, cause):
-        self.resolve()
-
-    def setValue(self, val):
-        if not (val ^ (self.value == 1) ):
-            print('anomaly 11340315')
-            return
+    def setShouldTakeCarry(self, takeCarry):
+        #print('')
+        #print('ADD >>', id(self), 'is forced to take carry of', '1' if takeCarry else '0')
         
-        self.value = 1 if val else 0
-        self.resolve()
-        for node in self.changeListeners:
-            print('resolving')
-            node.resolve()
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
+        
+        if not takeCarry:
+            if self.A.getValue() and self.B.getValue() and self.getValue():
+                return self.setNodeOrOtherNode(self.A, False, carrychange_tofalse, self.B, False, carrychange_tofalse)
+            elif (not self.A.getValue()) and (not self.B.getValue()) and self.getValue():
+                return self.setNodeOrOtherNode(self.A, True, carrychange_none, self.B, True, carrychange_none)
+            elif self.A.getValue() and (not self.B.getValue()) and (not self.getValue()):
+                return self.setNodeOrOtherNode(self.B, True, carrychange_none, self.A, False, carrychange_tofalse)
+            elif self.B.getValue() and (not self.A.getValue()) and (not self.getValue()):
+                return self.setNodeOrOtherNode(self.A, True, carrychange_none, self.B, False, carrychange_tofalse)
+        else:
+            if self.A.getValue() and self.B.getValue() and (not self.getValue()):
+                return self.setNodeOrOtherNode(self.A, False, carrychange_none, self.B, False, carrychange_none)
+            elif not self.A.getValue() and not self.B.getValue() and (not self.getValue()):
+                return self.setNodeOrOtherNode(self.A, True, carrychange_totrue, self.B, True, carrychange_totrue)
+            elif self.A.getValue() and (not self.B.getValue()) and self.getValue():
+                return self.setNodeOrOtherNode(self.A, False, carrychange_none, self.B, True, carrychange_totrue)
+            elif self.B.getValue() and (not self.A.getValue()) and self.getValue():
+                return self.setNodeOrOtherNode(self.B, False, carrychange_none, self.A, True, carrychange_totrue)
+
+                    #print('no change needed')
+        return True
+
+    def refreshCachedAnswer(self):
+        self.value = -1
+        car = self.carry
+        self.getValue()
+        if not car == self.carry:
+            carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, self.carry))
 
     def resolve(self):
-        if not self.value:
-            #need to give 0, were giving a 1
-            if self.carry:
-                #we were giving a carry and need to keep doing that
-                #only possible state A:1 B:1 C:1
-                self.A.setValueR(False, self)
-            else:
-                #were not giving a carry
-                if not self.CB.carry:
-                    #not receiving a carry
-                    #one of them was one and it needs to be zero
-                    if self.A.getValue():
-                        self.A.setValueR(False, self)
-                    elif self.B.getValue():
-                        self.B.setValueR(False, self)
-                    else:
-                        print('anomaly 10070315')
+        
+        #print('')
+        #print('====== resolving ADD', id(self), '======')
+        
+        val = self.getValue()
+        
+        if not self.setValue(val):
+            self.notifyChangeListeners()
+    
+                #if not self.carry == car:
+    #carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, self.carry))
+
+    def setValue(self, val):
+        self.refreshCachedAnswer()
+        #print('')
+        #print('ADD >>', id(self), 'is forced to give answer of', '1' if val else '0')
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'taking carry:', self.Prev.carry, 'from', id(self.Prev), 'Ans:', '1' if self.value == 1 else '0', 'give carry:', self.carry)
+        if not (val ^ (self.value == 1) ):
+            #print('no change needed')
+            return True
+                
+        if not val:
+            if self.Prev.carry:
+                if self.A.getValue() and self.B.getValue():
+                    #print('setting a or b to false')
+                    return self.setNodeOrOtherNode(self.A, False, carrychange_none, self.B, False, carrychange_none)
+                elif not self.A.getValue() and not self.B.getValue():
+                    #print('setting a or b to true and starting carry')
+                    return self.setNodeOrOtherNode(self.A, True, carrychange_totrue, self.B, True, carrychange_totrue)
                 else:
-                    #receiving a carry
-                    #can't give a carry, everything was 0 since we were giving a 1
-                    #need to stop the carry to give a 0
-                    self.CB.setShouldGiveCarry(False)
+                    print('anomaly 01200318')
+            else:
+                if self.A.getValue() and self.B.getValue():
+                    print('anomaly 09010319')
+                elif self.A.getValue():
+                    return self.setNodeOrOtherNode(self.A, False, carrychange_none, self.B, True, carrychange_totrue)
+                elif self.B.getValue():
+                    return self.setNodeOrOtherNode(self.B, False, carrychange_none, self.A, True, carrychange_totrue)
+                else:
+                    print('anomaly 01220318')
 
         else:
-            #need to give 1, were giving a 0
-            if self.carry:
-                #we were giving a carry
-                if self.CB.carry:
-                    #A or B was 1 and we need them both to be
-                    if not self.A.getValue():
-                        self.A.setValueR(True, self)
-                    elif not self.B.getValue():
-                        self.B.setValueR(True, self)
-                    else:
-                        print('anomaly 10580315')
+            if self.Prev.carry:
+                if self.B.getValue() and self.A.getValue():
+                    print('anomaly 08570319')
+                elif self.A.getValue():
+                    return self.setNodeOrOtherNode(self.B, True, carrychange_none, self.A, False, carrychange_tofalse)
+                elif self.B.getValue():
+                    return self.setNodeOrOtherNode(self.A, True, carrychange_none, self.B, False, carrychange_tofalse)
                 else:
-                    #A and B were 1, we need a carry
-                    ###
-                    self.CB.setShouldGiveCarry(True)
+                    print('anomaly 01225318')
             else:
-                #weren't giving a carry, both A and B were 0
-                self.A.setValueR(True, self)
+                if self.A.getValue() and self.B.getValue():
+                    return self.setNodeOrOtherNode(self.A, False, carrychange_tofalse, self.B, False, carrychange_tofalse)
+                elif not self.A.getValue() and not self.B.getValue():
+                    return self.setNodeOrOtherNode(self.A, True, carrychange_none, self.B, True, carrychange_none)
+                else:
+                    print('anomaly 01300318')
 
-class EmptyCB(MeshNode):
+                #print('')
+#print('<<<<', id(self), 'providing forced answer now')
+
+    def setNodeOrOtherNode(self, nodeA, valA, carrychangeA, nodeB, valB, carrychangeB):
+        if nodeA.hasChangingCarry():
+            if self.setNode(nodeA, valA, carrychangeA):
+                return True
+            else:
+                return self.setNode(nodeB, valB, carrychangeB)
+            
+        if nodeB.hasChangingCarry():
+            if self.setNode(nodeB, valB, carrychangeB):
+                return True
+            else:
+                return self.setNode(nodeA, valA, carrychangeA)
+                    
+        return self.setNode(nodeA, valA, carrychangeA) or self.setNode(nodeB, valB, carrychangeB)
+
+    def hasChangingCarry(self):
+        cList = carryTracker.getCarryTrackingLevel(self.Level)
+        if self in cList:
+            return True
+        else:
+            return self.A.hasChangingCarry() or self.B.hasChangingCarry()
+
+    def setNode(self, node, val, carrychange):
+        setSuccessful = node.setValue(val)
+        if setSuccessful:
+            self.refreshCachedAnswer()
+            node.notifyChangeListeners()
+        return setSuccessful
+
+class EmptyNode(MeshNode):
     
     def __init__(self):
+        super(EmptyNode, self).__init__(self, state_constant, None, 0)
         self.carry = False
         self.value = 0
+    
+    def resolve(self):
+        return True
+
+    def setShouldTakeCarry(self, takeCarry):
+        return True
 
 class AddMesh(MeshLayer):
 
     def __init__(self, meshA, meshB):
-        super(AddMesh, self).__init__()
+        super(AddMesh, self).__init__(state_mutable)
         i = 0
-        previousNode = EmptyCB()
+        previousNode = EmptyNode()
         while i < 32:
             self.nodes[i] = AddMeshNode(meshA.nodes[i], meshB.nodes[i], previousNode, self)
+            previousNode.Next = self.nodes[i]
             previousNode = self.nodes[i]
             i += 1
+        previousNode.Next = EmptyNode()
 
 class LeftRotateMesh(MeshLayer):
 
     def __init__(self, input_mesh, amount):
-        super(LeftRotateMesh, self).__init__()
+        super(LeftRotateMesh, self).__init__(state_mutable)
         i = 0
         index = 32 - amount
         while i < 32:
@@ -316,20 +614,22 @@ class LeftRotateMesh(MeshLayer):
             i += 1
 
 class XorMeshNode(MeshNode):
-    def __init__(self, a, b):
+    def __init__(self, a, b, mesh):
+        level = max(a.Level, b.Level)
+        super(XorMeshNode, self).__init__(False, state_mutable, mesh, level+1)
         self.A = a
         self.B = b
-        
+    
     def getValue(self):
         return (self.A.getValue() ^ self.B.getValue())
 
 class XorMesh(MeshLayer):
     
     def __init__(self, meshA, meshB):
-        super(XorMesh, self).__init__()
+        super(XorMesh, self).__init__(state_mutable)
         i = 0
         while i < 32:
-            self.nodes[i] = XorMeshNode(meshA.nodes[i], meshB.nodes[i])
+            self.nodes[i] = XorMeshNode(meshA.nodes[i], meshB.nodes[i], self)
             i += 1
 
 rotate_amounts = [7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
@@ -385,34 +685,76 @@ def md5(message):
         chunk = message[chunk_ofst:chunk_ofst+64]
         numberWrong = 0
             
-        aMesh = MeshLayer.layerForNumber(a)
-        bMesh = MeshLayer.layerForNumber(b)
-        cMesh = MeshLayer.layerForNumber(c)
-        dMesh = MeshLayer.layerForNumber(d)
+        aMesh = MeshLayer.layerForNumber(a, state_constant)
+        bMesh = MeshLayer.layerForNumber(b, state_constant)
+        cMesh = MeshLayer.layerForNumber(c, state_constant)
+        dMesh = MeshLayer.layerForNumber(d, state_constant)
+        
+        messageTestMeshes = []
+        for i in range(16):
+            messageNumber = int.from_bytes(chunk[4*i:4*i+4], byteorder='little')
+            messageTestMeshes.append(MeshLayer.layerForNumber(messageNumber, state_mutable))
         
         messageMeshes = []
         for i in range(16):
             messageNumber = int.from_bytes(chunk[4*i:4*i+4], byteorder='little')
-            messageMeshes.append(MeshLayer.layerForNumber(messageNumber))
+            messageMeshes.append(MeshLayer.layerForNumber(messageNumber, state_constant))
         
+        aTestMesh = MeshLayer.layerForNumber(a, state_constant)
+        bTestMesh = MeshLayer.layerForNumber(b, state_constant)
+        cTestMesh = MeshLayer.layerForNumber(c, state_constant)
+        dTestMesh = MeshLayer.layerForNumber(d, state_constant)
+    
         for i in range(0,16):
             fMesh = OrMesh(AndMesh(bMesh, cMesh), AndMesh(dMesh, NotMesh(bMesh)))
+            fTestMesh  = OrMesh(AndMesh(bTestMesh, cTestMesh), AndMesh(dTestMesh, NotMesh(bTestMesh)))
             g = i
             
-            constantMesh = MeshLayer.layerForNumber(constants[i])
+            constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
             
+            toRotateTestMesh = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), constantMesh), messageTestMeshes[g])
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             
+            newBTestMesh = AddMesh(bTestMesh, LeftRotateMesh(toRotateTestMesh, rotate_amounts[i]))
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
+            
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
-        
+            aTestMesh, bTestMesh, cTestMesh, dTestMesh = dTestMesh, newBTestMesh, bTestMesh, cTestMesh
+
+
+        aTestMesh.set(3, not aTestMesh.nodes[3].getValue())
+        carryTracker.activateAll()
+        mutableNodes = []
+
+
         for i in range(16, 32):
             fMesh = OrMesh(AndMesh(dMesh, bMesh), AndMesh(cMesh, NotMesh(dMesh)))
             g = ( 5*i + 1 )%16
 
-            constantMesh = MeshLayer.layerForNumber(constants[i])
+            constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
 
+            aTestMesh = MeshLayer.layerForNumber(aMesh.toNumber(), state_mutable)
+            fTestMesh = MeshLayer.layerForNumber(fMesh.toNumber(), state_mutable)
+            cTestMesh = MeshLayer.layerForNumber(constants[i], state_constant)
+            messageTestMesh = MeshLayer.layerForNumber(messageMeshes[g].toNumber(), state_mutable)
+            
+            eightOff = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), cTestMesh), messageTestMesh)
+            eightOff.toNumber()
+            eightOff.nodes[3].setValue(not eightOff.nodes[3].getValue())
+            
+            carryTracker.activateAll()
+            
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
+            
+            num = toRotateMesh.toNumber() & 0xffffffff
+            testNum = (aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
+            if not (num == testNum + 8 or num == testNum - 8):
+                #print(aMesh.toNumber(), '+', fMesh.toNumber(), '+', constantMesh.toNumber(), '+', messageMeshes[g].toNumber(), '=', num & 0xffffffff)
+                #print(aTestMesh.toNumber(), '+', fTestMesh.toNumber(), '+', cTestMesh.toNumber(), '+', messageTestMesh.toNumber(), '!=', num & 0xffffffff, '+/- 8')
+                #print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
+                numberWrong += 1
+            
+            
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
@@ -420,9 +762,29 @@ def md5(message):
             fMesh = XorMesh(XorMesh(bMesh, cMesh), dMesh)
             g = ( 3*i + 5 )%16
             
-            constantMesh = MeshLayer.layerForNumber(constants[i])
+            constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
             
-            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh ,fMesh), constantMesh), messageMeshes[g])
+            aTestMesh = MeshLayer.layerForNumber(aMesh.toNumber(), state_mutable)
+            fTestMesh = MeshLayer.layerForNumber(fMesh.toNumber(), state_mutable)
+            cTestMesh = MeshLayer.layerForNumber(constants[i], state_constant)
+            messageTestMesh = MeshLayer.layerForNumber(messageMeshes[g].toNumber(), state_mutable)
+            
+            eightOff = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), cTestMesh), messageTestMesh)
+            eightOff.toNumber()
+            eightOff.nodes[3].setValue(not eightOff.nodes[3].getValue())
+            
+            carryTracker.activateAll()
+            
+            toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
+            
+            num = toRotateMesh.toNumber() & 0xffffffff
+            testNum = (aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
+            if not (num == testNum + 8 or num == testNum - 8):
+                #print(aMesh.toNumber(), '+', fMesh.toNumber(), '+', constantMesh.toNumber(), '+', messageMeshes[g].toNumber(), '=', num & 0xffffffff)
+                #print(aTestMesh.toNumber(), '+', fTestMesh.toNumber(), '+', cTestMesh.toNumber(), '+', messageTestMesh.toNumber(), '!=', num & 0xffffffff, '+/- 8')
+                #print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
+                numberWrong += 1
+            
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
@@ -430,9 +792,29 @@ def md5(message):
             fMesh = XorMesh(cMesh, OrMesh(bMesh, NotMesh(dMesh)))
             g = ( 7*i )%16
             
-            constantMesh = MeshLayer.layerForNumber(constants[i])
+            constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
+            
+            aTestMesh = MeshLayer.layerForNumber(aMesh.toNumber(), state_mutable)
+            fTestMesh = MeshLayer.layerForNumber(fMesh.toNumber(), state_mutable)
+            cTestMesh = MeshLayer.layerForNumber(constants[i], state_constant)
+            messageTestMesh = MeshLayer.layerForNumber(messageMeshes[g].toNumber(), state_mutable)
+            
+            eightOff = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), cTestMesh), messageTestMesh)
+            eightOff.toNumber()
+            eightOff.nodes[3].setValue(not eightOff.nodes[3].getValue())
+            
+            carryTracker.activateAll()
             
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
+            
+            num = toRotateMesh.toNumber() & 0xffffffff
+            testNum = (aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
+            if not (num == testNum + 8 or num == testNum - 8):
+                #print(aMesh.toNumber(), '+', fMesh.toNumber(), '+', constantMesh.toNumber(), '+', messageMeshes[g].toNumber(), '=', num & 0xffffffff)
+                #print(aTestMesh.toNumber(), '+', fTestMesh.toNumber(), '+', cTestMesh.toNumber(), '+', messageTestMesh.toNumber(), '!=', num & 0xffffffff, '+/- 8')
+                #print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
+                numberWrong += 1
+            
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
 
@@ -441,7 +823,7 @@ def md5(message):
             hash_pieces[i] += val
             hash_pieces[i] &= 0xFFFFFFFF
 
-                #print('WRONG: ', numberWrong)
+        print('WRONG: ', numberWrong)
  
     return sum(x<<(32*i) for i, x in enumerate(hash_pieces))
  
@@ -471,25 +853,42 @@ if __name__=='__main__':
     
     testsPassed = True
     i = 0
-    ##for message in demo:
-        ##testsPassed = md5_to_hex(md5(message)) == output[i]
-        ##if (not testsPassed):
-            ##break
-        ##i += 1
+    for message in demo:
+        testsPassed = md5_to_hex(md5(message)) == output[i]
+        if (not testsPassed):
+            break
+        i += 1
 
-    ##print('Tests passed: ', testsPassed)
+    print('Tests passed: ', testsPassed)
 
 
-    one = MeshLayer.layerForNumber(1)
-    two = MeshLayer.layerForNumber(0)
+    aMesh = MeshLayer.layerForNumber(271733878, state_mutable)
+    bMesh = MeshLayer.layerForNumber(3199795086, state_mutable)
+    cMesh = MeshLayer.layerForNumber(4023233417, state_mutable)
+    dMesh = MeshLayer.layerForNumber(2562383102, state_mutable)
 
-    a = AddMesh(two, one)
+    messageMesh = MeshLayer.layerForNumber(943142453, state_mutable)
+    constantMesh = MeshLayer.layerForNumber(3905402710, state_constant)
+    
+    fMesh = OrMesh(AndMesh(bMesh, cMesh), AndMesh(dMesh, NotMesh(bMesh)))
+    
+    aTestMesh = MeshLayer.layerForNumber(aMesh.toNumber(), state_mutable)
+    bTestMesh = MeshLayer.layerForNumber(bMesh.toNumber(), state_mutable)
+    cTestMesh = MeshLayer.layerForNumber(cMesh.toNumber(), state_mutable)
+    dTestMesh = MeshLayer.layerForNumber(dMesh.toNumber(), state_mutable)
 
-    result = AddMesh(a, two)
-    result.state = state_fixed
+    messageTestMesh = MeshLayer.layerForNumber(943142453, state_mutable)
 
-    print(one.toNumber(), '+', two.toNumber(), '+', two.toNumber(), '=', result.toNumber())
-
-    result.nodes[3].setValue(not result.nodes[3].getValue())
-
-    print(one.toNumber(), '+', two.toNumber(), '+', two.toNumber(), '=', result.toNumber())
+    fTestMesh  = OrMesh(AndMesh(bTestMesh, cTestMesh), AndMesh(dTestMesh, NotMesh(bTestMesh)))
+    
+    testMesh = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), constantMesh), messageTestMesh)
+    testMesh.set(3, not testMesh.nodes[3].getValue())
+    
+    carryTracker.activateAll()
+    
+    toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMesh)
+    
+    num = toRotateMesh.toNumber() & 0xffffffff
+    testNum = ((((bTestMesh.toNumber() & cTestMesh.toNumber()) | (dTestMesh.toNumber() & NotMesh(bTestMesh).toNumber())) & 0xffffffff) + aTestMesh.toNumber() + constantMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
+    print('myans:\t', testNum)
+    print('num:\t', num)
