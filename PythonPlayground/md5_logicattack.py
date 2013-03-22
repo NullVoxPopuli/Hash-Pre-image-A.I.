@@ -236,7 +236,7 @@ class AndMeshNode(MeshNode):
         val = self.getValue()
         
         if not self.setValue(val):
-            print('ERROR: unable to resolve AND')
+            self.notifyChangeListeners()
     
     def refreshCachedAnswer(self):
         self.value = -1
@@ -320,7 +320,7 @@ class OrMeshNode(MeshNode):
         val = self.getValue()
         
         if not self.setValue(val):
-            print('ERROR: unable to resolve OR')
+            self.notifyChangeListeners()
 
     def refreshCachedAnswer(self):
         self.value = -1
@@ -487,10 +487,9 @@ class AddMeshNode(MeshNode):
         #print('====== resolving ADD', id(self), '======')
         
         val = self.getValue()
-        car = self.carry
         
         if not self.setValue(val):
-            print('failure to resolve')
+            self.notifyChangeListeners()
     
                 #if not self.carry == car:
     #carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, self.carry))
