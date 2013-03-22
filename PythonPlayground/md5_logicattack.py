@@ -58,6 +58,9 @@ class MeshNode:
         self.changeListeners = []
         self.Mesh = mesh
         self.Level = level
+
+    def refreshCachedAnswer(self):
+        return True
     
     def getValue(self):
         return self.value
@@ -192,7 +195,7 @@ class NotMeshNode(MeshNode):
     def getValue(self):
         return (not self.A.getValue())
 
-    def setValue(self):
+    def setValue(self, val):
         self.refreshCachedAnswer()
         #print('')
         #print('NOT >>', id(self), 'is forced to answer with', '1' if val else '0')
@@ -204,7 +207,7 @@ class NotMeshNode(MeshNode):
         
         aset = self.A.setValue(not val)
         if aset:
-            self.B.notifyChangeListeners()
+            self.A.notifyChangeListeners()
         return aset
 
 class NotMesh(MeshLayer):
@@ -688,55 +691,43 @@ def md5(message):
         cMesh = MeshLayer.layerForNumber(c, state_constant)
         dMesh = MeshLayer.layerForNumber(d, state_constant)
         
+        messageTestMeshes = []
+        for i in range(16):
+            messageNumber = int.from_bytes(chunk[4*i:4*i+4], byteorder='little')
+            messageTestMeshes.append(MeshLayer.layerForNumber(messageNumber, state_mutable))
+        
         messageMeshes = []
         for i in range(16):
             messageNumber = int.from_bytes(chunk[4*i:4*i+4], byteorder='little')
             messageMeshes.append(MeshLayer.layerForNumber(messageNumber, state_constant))
         
+        aTestMesh = MeshLayer.layerForNumber(a, state_constant)
+        bTestMesh = MeshLayer.layerForNumber(b, state_constant)
+        cTestMesh = MeshLayer.layerForNumber(c, state_constant)
+        dTestMesh = MeshLayer.layerForNumber(d, state_constant)
+    
         for i in range(0,16):
             fMesh = OrMesh(AndMesh(bMesh, cMesh), AndMesh(dMesh, NotMesh(bMesh)))
-            g = i
-            
-            aTestMesh = MeshLayer.layerForNumber(aMesh.toNumber(), state_mutable)
-            bTestMesh = MeshLayer.layerForNumber(bMesh.toNumber(), state_mutable)
-            cTestMesh = MeshLayer.layerForNumber(cMesh.toNumber(), state_mutable)
-            dTestMesh = MeshLayer.layerForNumber(dMesh.toNumber(), state_mutable)
-            
             fTestMesh  = OrMesh(AndMesh(bTestMesh, cTestMesh), AndMesh(dTestMesh, NotMesh(bTestMesh)))
-            
-            messageTestMesh = MeshLayer.layerForNumber(messageMeshes[g].toNumber(), state_mutable)
+            g = i
             
             constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
             
-            
-            
-            testMesh = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), constantMesh), messageTestMesh)
-            testMesh.set(3, not testMesh.nodes[3].getValue())
-            
-            carryTracker.activateAll()
-        
+            toRotateTestMesh = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), constantMesh), messageTestMeshes[g])
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             
-            num = toRotateMesh.toNumber() & 0xffffffff
-            testNum = ((((bTestMesh.toNumber() & cTestMesh.toNumber()) | (dTestMesh.toNumber() & NotMesh(bTestMesh).toNumber())) & 0xffffffff) + aTestMesh.toNumber() + constantMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
-            if not (num == testNum + 8 or num == testNum - 8):
-                print('a:', aMesh.toNumber())
-                print('b:', bMesh.toNumber())
-                print('c:', cMesh.toNumber())
-                print('d:', dMesh.toNumber())
-                
-                print('constant:', constantMesh.toNumber())
-                print('message:', messageMeshes[g].toNumber())
-                #print(aMesh.toNumber(), '+', fMesh.toNumber(), '+', constantMesh.toNumber(), '+', messageMeshes[g].toNumber(), '=', num & 0xffffffff)
-                #print(aTestMesh.toNumber(), '+', fTestMesh.toNumber(), '+', cTestMesh.toNumber(), '+', messageTestMesh.toNumber(), '!=', num & 0xffffffff, '+/- 8')
-                print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
-                numberWrong += 1
-            
-            mutableNodes = []
-            
+            newBTestMesh = AddMesh(bTestMesh, LeftRotateMesh(toRotateTestMesh, rotate_amounts[i]))
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
+            
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
-        
+            aTestMesh, bTestMesh, cTestMesh, dTestMesh = dTestMesh, newBTestMesh, bTestMesh, cTestMesh
+
+
+        aTestMesh.set(3, not aTestMesh.nodes[3].getValue())
+        carryTracker.activateAll()
+        mutableNodes = []
+
+
         for i in range(16, 32):
             fMesh = OrMesh(AndMesh(dMesh, bMesh), AndMesh(cMesh, NotMesh(dMesh)))
             g = ( 5*i + 1 )%16
