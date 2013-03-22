@@ -11,6 +11,12 @@ carrychange_none = 500
 carrychange_totrue = 501
 carrychange_tofalse = 502
 
+mutableNodes = []
+
+def resetAllMutableNodes():
+    for node in mutableNodes:
+        node.state = state_mutable
+
 class Tracker:
 
     def __init__(self):
@@ -47,6 +53,8 @@ class MeshNode:
     def __init__(self, val, s, mesh, level):
         self.value = val
         self.state = s
+        if s == state_mutable:
+            mutableNodes.append(self)
         self.changeListeners = []
         self.Mesh = mesh
         self.Level = level
@@ -60,7 +68,7 @@ class MeshNode:
             self.state = state_mutated
             self.value = val
             return True
-        #print(id(self), 'refused change')
+        #print(id(self), 'refused change (', self.state, ')')
         return False
     
     def getState(self):
@@ -124,6 +132,33 @@ class MeshLayer:
             index += 1
 
         return resultLayer
+    
+    def set(self, index, val):
+        answers = []
+        for node in self.nodes:
+            answers.append(node.getValue())
+        answers[index] = val
+    
+                
+    #print('')
+                #print('================')
+        if not self.nodes[index].setValue(val):
+            print('set failure')
+        carryTracker.activateAll()
+                
+        resetAllMutableNodes()
+    
+        i = index+1
+        while i < 32:
+            self.nodes[i].refreshCachedAnswer()
+            if not (self.nodes[i].getValue() == answers[i]):
+                if not self.nodes[i].setValue(answers[i]):
+                    print('set failure')
+                #print('')
+                #print('================')
+                carryTracker.activateAll()
+                resetAllMutableNodes()
+            i += 1
 
     def toNumber(self):
         step = 1
@@ -184,10 +219,67 @@ class OrMeshNode(MeshNode):
         level = max(a.Level, b.Level)
         super(OrMeshNode, self).__init__(False, state_mutable, mesh, level+1)
         self.A = a
+        self.A.changeListeners.append(self)
         self.B = b
+        self.B.changeListeners.append(self)
+        self.value = -1
+    
+    def resolve(self):
+        val = self.getValue()
+        
+        if not self.setValue(val):
+            print('ERROR: unable to resolve OR')
+
+    def refreshCachedAnswer(self):
+        self.value = -1
+        self.getValue()
 
     def getValue(self):
-        return (self.A.getValue() or self.B.getValue())
+        if self.value == -1:
+            self.value = 0
+            if self.A.getValue():
+                self.value += 1
+            if self.B.getValue():
+                self.value += 1
+        
+        return self.value > 0
+
+    def setValue(self, val):
+        self.refreshCachedAnswer()
+        #print('')
+        #print('OR >>', id(self), 'is forced to answer with', '1' if val else '0')
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0')
+
+        if self.getValue() == val:
+            #print('no change needed')
+            return True
+        
+        if val:
+            set = self.A.setValue(True) or self.B.setValue(True)
+            if set:
+                self.refreshCachedAnswer()
+            return set
+        else:
+            if self.A.getValue() and self.B.getValue():
+                aset = self.A.setValue(False)
+                bset = self.B.setValue(False)
+                if not (aset and bset):
+                    print('catastrophic OR failure')
+                self.refreshCachedAnswer()
+                return True
+            elif self.A.getValue() and not self.B.getValue():
+                if self.A.setValue(False):
+                    self.refreshCachedAnswer()
+                    return True
+                return False
+            elif self.B.getValue() and not self.A.getValue():
+                if self.B.setValue(False):
+                    self.refreshCachedAnswer()
+                    return True
+                return False
+
+        print('anomaly: ornode')
+        return False
 
 class OrMesh(MeshLayer):
 
@@ -207,7 +299,8 @@ class AddNodeWrapper():
     def activate(self):
         #print('')
         #print('cantakecarry: ', self.Node.setShouldTakeCarry(self.ShouldTake))
-        self.Node.setShouldTakeCarry(self.ShouldTake)
+        if not self.Node.setShouldTakeCarry(self.ShouldTake):
+            self.Node.resolve()
 
 class AddMeshNode(MeshNode):
 
@@ -300,7 +393,8 @@ class AddMeshNode(MeshNode):
         val = self.value
         car = self.carry
         
-        self.setValue(val)
+        if not self.setValue(val):
+            print('failure to resolve')
     
         if self.value == val and (not self.carry == car):
             carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, self.carry))
@@ -313,8 +407,6 @@ class AddMeshNode(MeshNode):
         if not (val ^ (self.value == 1) ):
             #print('no change needed')
             return True
-        
-        self.value = 1 if val else 0
                 
         if not val:
             if self.Prev.carry:
@@ -381,11 +473,8 @@ class AddMeshNode(MeshNode):
 
     def setNode(self, node, val, carrychange):
         setSuccessful = node.setValue(val)
-        if setSuccessful and not (carrychange == carrychange_none):
-            changeCarryTo = carrychange == carrychange_totrue
-            self.carry = changeCarryTo
-            carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, changeCarryTo))
         if setSuccessful:
+            self.refreshCachedAnswer()
             node.notifyChangeListeners()
         return setSuccessful
 
@@ -678,11 +767,13 @@ if __name__=='__main__':
     three = MeshLayer.layerForNumber(3905402710, state_constant)
     four = MeshLayer.layerForNumber(1212630597, state_constant)
     
-    result = AddMesh(AddMesh(AddMesh(one, two), three), four)
+    result = OrMesh(AddMesh(OrMesh(one, two), three), four)
+#result = OrMesh(one, two)
 
-    print((one.toNumber() + two.toNumber() + three.toNumber() + four.toNumber()) & 0xffffffff, '=', result.toNumber())
+    print((((one.toNumber() | two.toNumber()) + three.toNumber()) | four.toNumber()) & 0xffffffff, '=', result.toNumber())
+#print(one.toNumber() | two.toNumber(), '=', result.toNumber())
 
-    print('canset', result.nodes[3].setValue(not result.nodes[3].getValue()))
-    carryTracker.activateAll()
+    result.set(3, not result.nodes[3].getValue())
 
-    print((one.toNumber() + two.toNumber() + three.toNumber() + four.toNumber()) & 0xffffffff, '=', result.toNumber())
+    print((((one.toNumber() | two.toNumber()) + three.toNumber()) | four.toNumber()) & 0xffffffff, '=', result.toNumber())
+#print(one.toNumber() | two.toNumber(), '=', result.toNumber())
