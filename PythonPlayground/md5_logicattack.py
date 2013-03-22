@@ -152,6 +152,7 @@ class MeshLayer:
         while i < 32:
             self.nodes[i].refreshCachedAnswer()
             if not (self.nodes[i].getValue() == answers[i]):
+                print('number difference occurred later')
                 if not self.nodes[i].setValue(answers[i]):
                     print('set failure')
                 #print('')
@@ -177,9 +178,28 @@ class NotMeshNode(MeshNode):
     def __init__(self, a, mesh):
         super(NotMeshNode, self).__init__(False, state_mutable, mesh, a.Level+1)
         self.A = a
+        self.A.changeListeners.append(self)
+    
+    def resolve(self):
+        self.notifyChangeListeners()
+    
+    def refreshCachedAnswer(self):
+        self.A.refreshCachedAnswer()
 
     def getValue(self):
         return (not self.A.getValue())
+
+    def setValue(self):
+        self.refreshCachedAnswer()
+        #print('')
+        #print('AND >>', id(self), 'is forced to answer with', '1' if val else '0')
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0')
+        
+        if self.getValue() == val:
+            #print('no change needed')
+            return True
+        
+        return self.A.setValue(not val)
 
 class NotMesh(MeshLayer):
     
@@ -196,13 +216,66 @@ class AndMeshNode(MeshNode):
         level = max(a.Level, b.Level)
         super(AndMeshNode, self).__init__(False, state_mutable, mesh, level+1)
         self.A = a
+        self.A.changeListeners.append(self)
         self.B = b
+        self.B.changeListeners.append(self)
+        self.value = -1
+    
+    def resolve(self):
+        val = self.getValue()
+        
+        if not self.setValue(val):
+            print('ERROR: unable to resolve AND')
+    
+    def refreshCachedAnswer(self):
+        self.value = -1
+        self.getValue()
     
     def getValue(self):
-        return (self.A.getValue() and self.B.getValue())
+        if self.value == -1:
+            if self.A.getValue():
+                self.value += 1
+            if self.B.getValue():
+                self.value += 1
+        
+        return self.value > 0
     
     def setValue(self, val):
-        self.value = val
+        self.refreshCachedAnswer()
+        #print('')
+        #print('AND >>', id(self), 'is forced to answer with', '1' if val else '0')
+        #print('A (', id(self.A), '):', '1' if self.A.getValue() else '0', ', B (', id(self.B), '):', '1' if self.B.getValue() else '0', 'Ans:', '1' if self.value == 1 else '0')
+                    
+        if self.getValue() == val:
+            #print('no change needed')
+            return True
+                    
+        if val:
+            if (not self.A.getValue()) and (not self.B.getValue()):
+                aset = self.A.setValue(True)
+                bset = self.B.setValue(True)
+                if (aset or bset) and (not (aset and bset)):
+                    print('catastrophic AND failure')
+                self.refreshCachedAnswer()
+                return aset and bset
+            elif self.A.getValue() and not self.B.getValue():
+                if self.B.setValue(True):
+                    self.refreshCachedAnswer()
+                    return True
+                return False
+            elif self.B.getValue() and not self.A.getValue():
+                if self.A.setValue(True):
+                    self.refreshCachedAnswer()
+                    return True
+                return False
+        else:
+            set = self.A.setValue(False) or self.B.setValue(False)
+            if set:
+                self.refreshCachedAnswer()
+            return set
+                    
+        print('anomaly: andnode')
+        return False
 
 class AndMesh(MeshLayer):
     
@@ -263,7 +336,7 @@ class OrMeshNode(MeshNode):
             if self.A.getValue() and self.B.getValue():
                 aset = self.A.setValue(False)
                 bset = self.B.setValue(False)
-                if not (aset and bset):
+                if aset ^ bset:
                     print('catastrophic OR failure')
                 self.refreshCachedAnswer()
                 return True
@@ -390,14 +463,14 @@ class AddMeshNode(MeshNode):
         #print('')
         #print('====== resolving', id(self), '======')
         
-        val = self.value
+        val = self.getValue()
         car = self.carry
         
         if not self.setValue(val):
             print('failure to resolve')
     
-        if self.value == val and (not self.carry == car):
-            carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, self.carry))
+                #if not self.carry == car:
+    #carryTracker.getCarryTrackingLevel(self.Next.Level).append(AddNodeWrapper(self.Next, self.carry))
 
     def setValue(self, val):
         self.refreshCachedAnswer()
@@ -484,6 +557,9 @@ class EmptyNode(MeshNode):
         super(EmptyNode, self).__init__(self, state_constant, None, 0)
         self.carry = False
         self.value = 0
+    
+    def resolve(self):
+        return True
 
     def setShouldTakeCarry(self, takeCarry):
         return True
@@ -601,28 +677,35 @@ def md5(message):
             fMesh = OrMesh(AndMesh(bMesh, cMesh), AndMesh(dMesh, NotMesh(bMesh)))
             g = i
             
-            constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
-            
             aTestMesh = MeshLayer.layerForNumber(aMesh.toNumber(), state_mutable)
-            fTestMesh = MeshLayer.layerForNumber(fMesh.toNumber(), state_mutable)
-            cTestMesh = MeshLayer.layerForNumber(constants[i], state_constant)
+            bTestMesh = MeshLayer.layerForNumber(bMesh.toNumber(), state_mutable)
+            cTestMesh = MeshLayer.layerForNumber(cMesh.toNumber(), state_mutable)
+            dTestMesh = MeshLayer.layerForNumber(dMesh.toNumber(), state_mutable)
+            
+            fTestMesh  = OrMesh(AndMesh(bTestMesh, cTestMesh), AndMesh(dTestMesh, NotMesh(bTestMesh)))
+            
             messageTestMesh = MeshLayer.layerForNumber(messageMeshes[g].toNumber(), state_mutable)
             
-            eightOff = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), cTestMesh), messageTestMesh)
-            eightOff.toNumber()
-            eightOff.nodes[3].setValue(not eightOff.nodes[3].getValue())
+            constantMesh = MeshLayer.layerForNumber(constants[i], state_constant)
+            
+            
+            
+            testMesh = AddMesh(AddMesh(AddMesh(aTestMesh, fTestMesh), constantMesh), messageTestMesh)
+            testMesh.set(0, not testMesh.nodes[0].getValue())
             
             carryTracker.activateAll()
         
             toRotateMesh = AddMesh(AddMesh(AddMesh(aMesh, fMesh), constantMesh), messageMeshes[g])
             
             num = toRotateMesh.toNumber() & 0xffffffff
-            testNum = (aTestMesh.toNumber() + fTestMesh.toNumber() + cTestMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
-            if not (num == testNum + 8 or num == testNum - 8):
+            testNum = ((((bTestMesh.toNumber() & cTestMesh.toNumber()) | (dTestMesh.toNumber() & NotMesh(bTestMesh).toNumber())) & 0xffffffff) + aTestMesh.toNumber() + constantMesh.toNumber() + messageTestMesh.toNumber()) & 0xffffffff
+            if not (num == testNum + 1 or num == testNum - 1):
                 #print(aMesh.toNumber(), '+', fMesh.toNumber(), '+', constantMesh.toNumber(), '+', messageMeshes[g].toNumber(), '=', num & 0xffffffff)
                 #print(aTestMesh.toNumber(), '+', fTestMesh.toNumber(), '+', cTestMesh.toNumber(), '+', messageTestMesh.toNumber(), '!=', num & 0xffffffff, '+/- 8')
-                #print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
+                print('my ans:', testNum, 'actual:', num, 'difference:', testNum-num)
                 numberWrong += 1
+            
+            mutableNodes = []
             
             newBMesh = AddMesh(bMesh, LeftRotateMesh(toRotateMesh, rotate_amounts[i]))
             aMesh, bMesh, cMesh, dMesh = dMesh, newBMesh, bMesh, cMesh
@@ -767,13 +850,13 @@ if __name__=='__main__':
     three = MeshLayer.layerForNumber(3905402710, state_constant)
     four = MeshLayer.layerForNumber(1212630597, state_constant)
     
-    result = OrMesh(AddMesh(OrMesh(one, two), three), four)
+    result = AndMesh(AddMesh(AndMesh(one, two), three), four)
 #result = OrMesh(one, two)
 
-    print((((one.toNumber() | two.toNumber()) + three.toNumber()) | four.toNumber()) & 0xffffffff, '=', result.toNumber())
+    print((((one.toNumber() & two.toNumber()) + three.toNumber()) & four.toNumber()) & 0xffffffff, '=', result.toNumber())
 #print(one.toNumber() | two.toNumber(), '=', result.toNumber())
 
-    result.set(3, not result.nodes[3].getValue())
+    result.set(2, not result.nodes[2].getValue())
 
-    print((((one.toNumber() | two.toNumber()) + three.toNumber()) | four.toNumber()) & 0xffffffff, '=', result.toNumber())
+    print((((one.toNumber() & two.toNumber()) + three.toNumber()) & four.toNumber()) & 0xffffffff, '=', result.toNumber())
 #print(one.toNumber() | two.toNumber(), '=', result.toNumber())
