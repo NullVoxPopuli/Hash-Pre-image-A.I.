@@ -55,7 +55,6 @@ def md5(msg)
 			m << bit_chunk_32
 		}
 
-
 		a, b, c, d = initial_values
 
 		# main loop
