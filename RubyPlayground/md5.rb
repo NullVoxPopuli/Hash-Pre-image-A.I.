@@ -83,13 +83,13 @@ def md5(msg)
 			end
 
 			a, c, d = d, b, c
-			ap [a, b, c, d, f, constants[i], m[g], rotate_amounts[i]]
-			b = b + left_rotate((a + f + constants[i] + m[g]), rotate_amounts[i])
+			ap [ a, b, c, d, f, constants[ i ], m[ g ], rotate_amounts[ i ] ]
+			b = b + left_rotate( ( a + f + constants[ i ] + m[ g ] ), rotate_amounts[ i ] )
 
 		}
 
 		# Add this chunk's hash to the result so far
-		initial_values = [a, b, c, d].zip(initial_values).map { | x | x.inject(:+) }
+		initial_values = [ a, b, c, d ].zip( initial_values ).map { | x | x.inject( :+ ) }
 	}
 
 	result = initial_values.join
@@ -97,7 +97,7 @@ def md5(msg)
 end
 
 
-my_md5s = samples.map{ | e | md5( e ) }
+my_md5s = samples.map{ | e | md5( e ).to_i.to_s(16) }
 puts "Actual MD5s:"
 ap ruby_md5s
 puts "my md5s:"
