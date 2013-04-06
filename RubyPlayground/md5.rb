@@ -24,6 +24,7 @@ end
 # based off http://en.wikipedia.org/wiki/MD5
 # and http://rosettacode.org/wiki/MD5/Implementation#Python
 def md5(msg)
+	ap "yeah debug prints!"
 	rotate_amounts = [ 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
 	                   5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20,
 	                   4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
@@ -41,19 +42,22 @@ def md5(msg)
 	msg << 0b1
 
 	# Pre-processing: padding with zeros
-	while ((msg.bytesize * 8) % 512) < 448
+	while ((msg.bytesize * 8) % 512) < 488
 		msg << 0b0
 	end
 
+	ap "begin main loop"
+
 	# Process the message in successive 512-bit chunks
 	msg.split("").each_slice( 64 ) { |bit_chunk_512|
+		ap bit_chunk_512
 		# 512_bit_chunk is an arary of characters (64, if ascii or utf-8, utf-16 would be 32 chars..)
 		# lets not worry about encoding right now
 
 		# break chunk into 32 bitwords (4 is bytes)
 		m = []
 		bit_chunk_512.each_slice( 4 ) { | bit_chunk_32 |
-			m << bit_chunk_32.join
+			m << bit_chunk_32.join.to_i(2)
 		}
 
 		a, b, c, d = initial_values
@@ -79,6 +83,7 @@ def md5(msg)
 			end
 
 			a, c, d = d, b, c
+			ap [a, b, c, d, f, constants[i], m[g], rotate_amounts[i]]
 			b = b + left_rotate((a + f + constants[i] + m[g]), rotate_amounts[i])
 
 		}
