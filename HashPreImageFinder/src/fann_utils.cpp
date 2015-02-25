@@ -118,6 +118,7 @@ string pad_word(string word_to_pad, int width)
 
 void generate_train_file()
 {
+	cout << "Using: " << Config::fmap[Config::current_hash_function] << "\n";
 	cout << "Generating training file ... \n";
 
 	ofstream file;

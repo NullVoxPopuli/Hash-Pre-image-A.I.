@@ -47,6 +47,7 @@ const char* Config::DATA_FILE_NAME = "hash_training_data.fanndata";
 
 unsigned int (*Config::current_hash_function)(unsigned int) = kennys_hash_16;
 
+
 function_name_map_type Config::fmap;
 
 

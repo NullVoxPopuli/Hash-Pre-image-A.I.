@@ -1,0 +1,4 @@
+HashPreImageFinder/NetworkConfig
+HashPreImageFinder/hPif
+HashPreImageFinder/hash_training_data.*
+HashPreImageFinder/*.fanndata

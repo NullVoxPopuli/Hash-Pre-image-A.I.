@@ -47,7 +47,7 @@ void save_network_to_folder(struct fann * network, const char * save_name)
 	}
 
 	
-	fann_save(network, (boost::format("%s/%s/%s") % config_folder % Config::fmap[Config::current_hash_function] % save_name).str().c_str());
+	fann_save(network, (boost::format("%s/%s/%s") % config_folder.string() % Config::fmap[Config::current_hash_function] % save_name).str().c_str());
 	
 	
 	

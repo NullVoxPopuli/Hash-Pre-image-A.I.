@@ -94,6 +94,9 @@ void train_network_no_file()
     fann_destroy(ann);
 }
 
+/*
+	Generates a training data for the configured hash
+*/
 struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_output, unsigned int num_pairs)
 {
 	struct fann_train_data *data = (struct fann_train_data *) malloc(sizeof(struct fann_train_data));
@@ -126,6 +129,9 @@ struct fann_train_data *generate_data(unsigned int num_input, unsigned int num_o
 
 		for(j = 0; j != num_input; j++)
 		{
+			/*
+				sets the input value for input i to the result of hash for every bit, j
+			*/
 			data->input[i][j] = hash[j];
 		}
 

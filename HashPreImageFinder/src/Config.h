@@ -56,7 +56,4 @@ public:
 	
 	static function_name_map_type fmap;
 
-	
-
-	
 };

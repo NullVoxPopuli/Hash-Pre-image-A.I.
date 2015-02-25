@@ -36,7 +36,7 @@ int main (int argc, const char * argv[])
 {
 	register_hash_names();
 	init_blank_network_config();
-	fann_type *fann_input;
+	const char* test_input;
 
 	// swarm specfic booleans
 	// Ø
@@ -72,6 +72,8 @@ int main (int argc, const char * argv[])
 			if (strcmp(argv[i], "-test") == 0)
 			{
 				does_single_test_need_to_happen = true;
+				test_input = argv[i + 1];
+				i++;
 			}
 			else if (strcmp(argv[i], "-autoTest") == 0)
 			{
@@ -351,7 +353,11 @@ int main (int argc, const char * argv[])
 			if ( does_single_test_need_to_happen )
 			{
 				struct fann * trained_network = load_trained_network();
-				test_network(trained_network, fann_input);
+
+				unsigned int hashed_value = Config::current_hash_function((ulong)test_input);
+
+				test_swarm_with_value(&trained_network, hashed_value);
+				// test_network(trained_network, fann_input);
 				fann_destroy(trained_network); 
 			}
 			
@@ -388,7 +394,7 @@ void display_help()
 	cout << "Available Options: \n";
 	cout << "\t -mTrnData 123\t\t[" << Config::MAX_NUMBER_OF_TRAINING_DATA << "] Max Number of Training Data Sets\n";
 	cout << "\t -genTrain \t\tGenerates the training file to train the neural network with\n";
-	cout << "\t -train <mode> \t\tTrains the network using the specified training mode\n";
+	cout << "\t -train <mode> \t\tTrains the network using the specified training mode. See: Training Modes.\n";
 	cout << "\t -test 1010101001 \tRuns a trained network with the given input (should be the hash you\n";
 						cout << "\t\t\t\t are trying to find the pre-image for) [Needs to be Implemented]\n";
 	cout << "\t -autoTest strt end n \t Auto test a trained newwork between two values for n number of values.\n";
@@ -424,9 +430,19 @@ void display_help()
 	cout << "\n\nDeveloper Options: \n";
 	cout << "\t -bypass \tUsed for skipping all normal functionality and for testing specific functions\n";
 	
-	cout << "\n\n Example: ./hPif -genTrain -train -test 1111000011110000\n";
-	cout << "\t\t Generates the training file, trains the network, and tests the network (assuming the \n";
-	cout << "\t\t\tnetwork is set up for a 16 bit hash) with the value F0F0\n\n";
+	cout << "\n\n Example: \n";
+	cout << "\t\t ./hPif -genTrain -train -test 1111000011110000\n";
+	cout << "\t\t\t Generates the training file, trains the network, and tests the network (assuming the \n";
+	cout << "\t\t\t network is set up for a 16 bit hash) with the value F0F0\n";
+	cout << "\n";
+	cout << "\t\t ./hPif -genTrain -prestons_hash_8\n";
+	cout << "\t\t\t Generates training data based on a pre-configured hash function. See Selecting Hashes\n";
+	cout << "\n";
+	cout << "\t\t ./hPif -train file -prestons_hash_8\n";
+	cout << "\t\t\t Begins Training the network using the outpul file from genTrain\n";
+	cout << "\t\t\t The file to train on must be called hash_training_data.fanndata\n";
+	cout << "\n";
+	cout << "\n\n";
 	
 	cout << "* Numbers contained in brackets ( [number] ) are the default value...\n\n";
 	
